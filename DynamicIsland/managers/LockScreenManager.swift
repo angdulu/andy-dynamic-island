@@ -95,6 +95,7 @@ class LockScreenManager: ObservableObject {
     // MARK: - Event Handlers
     
     @objc private func screenLocked() {
+        guard !Defaults[.dictationOnlyMode] else { return }
         guard !isLocked else {
             print("[\(timestamp())] LockScreenManager: 🔁 Duplicate LOCK event ignored")
             return
@@ -145,6 +146,7 @@ class LockScreenManager: ObservableObject {
     }
     
     @objc private func screenUnlocked() {
+        guard !Defaults[.dictationOnlyMode] else { return }
         guard isLocked else {
             print("[\(timestamp())] LockScreenManager: 🔁 Unlock event ignored (already unlocked)")
             return

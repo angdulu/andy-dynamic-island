@@ -761,6 +761,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if change.newValue {
                     self.cleanAllDynamicIslandWindows()
                     self.updateBackgroundMonitoringStates()
+                    LockScreenPanelManager.shared.hidePanel()
+                    LockScreenWeatherManager.shared.hideWeatherWidget()
+                    LockScreenLiveActivityWindowManager.shared.showUnlockAndScheduleHide()
+                    LockScreenTimerWidgetManager.shared.handleLockStateChange(isLocked: false)
                     Task { @MainActor in
                         await SystemHUDManager.shared.updateObserverStateForDictationMode()
                     }
