@@ -1,0 +1,4542 @@
+[
+  {
+    "label": "Attention Lookatdevice 01",
+    "path": "anim_attention_lookatdevice_01.json"
+  },
+  {
+    "label": "Avs Back2listen 03",
+    "path": "anim_avs_back2listen_03.json"
+  },
+  {
+    "label": "Avs Error Getin 01",
+    "path": "anim_avs_error_getin_01.json"
+  },
+  {
+    "label": "Avs Error Getout 01",
+    "path": "anim_avs_error_getout_01.json"
+  },
+  {
+    "label": "Avs Error Loop 01",
+    "path": "anim_avs_error_loop_01.json"
+  },
+  {
+    "label": "Avs Fail 03",
+    "path": "anim_avs_fail_03.json"
+  },
+  {
+    "label": "Avs L Getin 03",
+    "path": "anim_avs_l_getin_03.json"
+  },
+  {
+    "label": "Avs L Loop 03",
+    "path": "anim_avs_l_loop_03.json"
+  },
+  {
+    "label": "Avs Listen Timeout 03",
+    "path": "anim_avs_listen_timeout_03.json"
+  },
+  {
+    "label": "Avs Listen2error 01",
+    "path": "anim_avs_listen2error_01.json"
+  },
+  {
+    "label": "Avs Listen2neutral 03",
+    "path": "anim_avs_listen2neutral_03.json"
+  },
+  {
+    "label": "Avs Listen2notification 01",
+    "path": "anim_avs_listen2notification_01.json"
+  },
+  {
+    "label": "Avs Listen2speak 03",
+    "path": "anim_avs_listen2speak_03.json"
+  },
+  {
+    "label": "Avs Listen2think 01",
+    "path": "anim_avs_listen2think_01.json"
+  },
+  {
+    "label": "Avs Listen2timer 03",
+    "path": "anim_avs_listen2timer_03.json"
+  },
+  {
+    "label": "Avs Listen2weather 03",
+    "path": "anim_avs_listen2weather_03.json"
+  },
+  {
+    "label": "Avs Notification Getin 01",
+    "path": "anim_avs_notification_getin_01.json"
+  },
+  {
+    "label": "Avs Notification Getout 01",
+    "path": "anim_avs_notification_getout_01.json"
+  },
+  {
+    "label": "Avs Notification Loop 01",
+    "path": "anim_avs_notification_loop_01.json"
+  },
+  {
+    "label": "Avs Notification Quick 01",
+    "path": "anim_avs_notification_quick_01.json"
+  },
+  {
+    "label": "Avs Notification2listen 01",
+    "path": "anim_avs_notification2listen_01.json"
+  },
+  {
+    "label": "Avs Notification2speak 01",
+    "path": "anim_avs_notification2speak_01.json"
+  },
+  {
+    "label": "Avs Notification2think 01",
+    "path": "anim_avs_notification2think_01.json"
+  },
+  {
+    "label": "Avs Speak Getout 03",
+    "path": "anim_avs_speak_getout_03.json"
+  },
+  {
+    "label": "Avs Speak Loop 03",
+    "path": "anim_avs_speak_loop_03.json"
+  },
+  {
+    "label": "Avs Speak2error 01",
+    "path": "anim_avs_speak2error_01.json"
+  },
+  {
+    "label": "Avs Speak2notification 01",
+    "path": "anim_avs_speak2notification_01.json"
+  },
+  {
+    "label": "Avs Suddenerror 01",
+    "path": "anim_avs_suddenerror_01.json"
+  },
+  {
+    "label": "Avs Suddennotification 01",
+    "path": "anim_avs_suddennotification_01.json"
+  },
+  {
+    "label": "Avs Suddenspeak 03",
+    "path": "anim_avs_suddenspeak_03.json"
+  },
+  {
+    "label": "Avs Think Fail 01",
+    "path": "anim_avs_think_fail_01.json"
+  },
+  {
+    "label": "Avs Think Loop 01",
+    "path": "anim_avs_think_loop_01.json"
+  },
+  {
+    "label": "Avs Think Timeout 01",
+    "path": "anim_avs_think_timeout_01.json"
+  },
+  {
+    "label": "Avs Think2error 01",
+    "path": "anim_avs_think2error_01.json"
+  },
+  {
+    "label": "Avs Think2notification 01",
+    "path": "anim_avs_think2notification_01.json"
+  },
+  {
+    "label": "Avs Think2speak 01",
+    "path": "anim_avs_think2speak_01.json"
+  },
+  {
+    "label": "Blackjack Deal 01",
+    "path": "anim_blackjack_deal_01.json"
+  },
+  {
+    "label": "Blackjack Getin 01",
+    "path": "anim_blackjack_getin_01.json"
+  },
+  {
+    "label": "Blackjack Goodluck 01",
+    "path": "anim_blackjack_goodluck_01.json"
+  },
+  {
+    "label": "Blackjack Idle 01",
+    "path": "anim_blackjack_idle_01.json"
+  },
+  {
+    "label": "Blackjack Ok 01",
+    "path": "anim_blackjack_ok_01.json"
+  },
+  {
+    "label": "Blackjack Quit 01",
+    "path": "anim_blackjack_quit_01.json"
+  },
+  {
+    "label": "Blackjack Speech 01",
+    "path": "anim_blackjack_speech_01.json"
+  },
+  {
+    "label": "Blackjack Speech Tts 01",
+    "path": "anim_blackjack_speech_tts_01.json"
+  },
+  {
+    "label": "Blackjack Spread 01",
+    "path": "anim_blackjack_spread_01.json"
+  },
+  {
+    "label": "Blackjack Swipe 01",
+    "path": "anim_blackjack_swipe_01.json"
+  },
+  {
+    "label": "Blackjack Victorbjacklose 01",
+    "path": "anim_blackjack_victorbjacklose_01.json"
+  },
+  {
+    "label": "Blackjack Victorbjackwin 01",
+    "path": "anim_blackjack_victorbjackwin_01.json"
+  },
+  {
+    "label": "Blackjack Victorbust 01",
+    "path": "anim_blackjack_victorbust_01.json"
+  },
+  {
+    "label": "Blackjack Victorlose 01",
+    "path": "anim_blackjack_victorlose_01.json"
+  },
+  {
+    "label": "Blackjack Victorpush 01",
+    "path": "anim_blackjack_victorpush_01.json"
+  },
+  {
+    "label": "Blackjack Victorwin 01",
+    "path": "anim_blackjack_victorwin_01.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Binaryeyes 01",
+    "path": "anim_chargerdocking_comeoff_binaryeyes_01.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Left 01",
+    "path": "anim_chargerdocking_comeoff_left_01.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Left 02",
+    "path": "anim_chargerdocking_comeoff_left_02.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Right 01",
+    "path": "anim_chargerdocking_comeoff_right_01.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Right 02",
+    "path": "anim_chargerdocking_comeoff_right_02.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Straight 01",
+    "path": "anim_chargerdocking_comeoff_straight_01.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Straight 02",
+    "path": "anim_chargerdocking_comeoff_straight_02.json"
+  },
+  {
+    "label": "Chargerdocking Comeoff Straight 03",
+    "path": "anim_chargerdocking_comeoff_straight_03.json"
+  },
+  {
+    "label": "Chargerdocking Leftturn 01",
+    "path": "anim_chargerdocking_leftturn_01.json"
+  },
+  {
+    "label": "Chargerdocking Leftturn All",
+    "path": "anim_chargerdocking_leftturn_all.json"
+  },
+  {
+    "label": "Chargerdocking Liftup 01",
+    "path": "anim_chargerdocking_liftup_01.json"
+  },
+  {
+    "label": "Chargerdocking Pickup 01",
+    "path": "anim_chargerdocking_pickup_01.json"
+  },
+  {
+    "label": "Chargerdocking Reaction 01",
+    "path": "anim_chargerdocking_reaction_01.json"
+  },
+  {
+    "label": "Chargerdocking Request1 01",
+    "path": "anim_chargerdocking_request1_01.json"
+  },
+  {
+    "label": "Chargerdocking Requestgetout 01",
+    "path": "anim_chargerdocking_requestgetout_01.json"
+  },
+  {
+    "label": "Chargerdocking Requestwait 01",
+    "path": "anim_chargerdocking_requestwait_01.json"
+  },
+  {
+    "label": "Chargerdocking Rightturn 01",
+    "path": "anim_chargerdocking_rightturn_01.json"
+  },
+  {
+    "label": "Chargerdocking Rightturn All",
+    "path": "anim_chargerdocking_rightturn_all.json"
+  },
+  {
+    "label": "Chargerdocking Searchforcharger 01",
+    "path": "anim_chargerdocking_searchforcharger_01.json"
+  },
+  {
+    "label": "Chargerdocking Searchforcharger Canthelp",
+    "path": "anim_chargerdocking_searchforcharger_canthelp.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns 01",
+    "path": "anim_chargerdocking_searchforchargerturns_01.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns 02",
+    "path": "anim_chargerdocking_searchforchargerturns_02.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns 03",
+    "path": "anim_chargerdocking_searchforchargerturns_03.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns Default 01",
+    "path": "anim_chargerdocking_searchforchargerturns_default_01.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns Default 02",
+    "path": "anim_chargerdocking_searchforchargerturns_default_02.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns Default 03",
+    "path": "anim_chargerdocking_searchforchargerturns_default_03.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns Default Getout",
+    "path": "anim_chargerdocking_searchforchargerturns_default_getout.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns Default Loop 01",
+    "path": "anim_chargerdocking_searchforchargerturns_default_loop_01.json"
+  },
+  {
+    "label": "Chargerdocking Searchforchargerturns Default Loop 02",
+    "path": "anim_chargerdocking_searchforchargerturns_default_loop_02.json"
+  },
+  {
+    "label": "Chargerdocking Settle 01",
+    "path": "anim_chargerdocking_settle_01.json"
+  },
+  {
+    "label": "Chargerdocking Severerequest 01",
+    "path": "anim_chargerdocking_severerequest_01.json"
+  },
+  {
+    "label": "Chargerdocking Severergetout 01",
+    "path": "anim_chargerdocking_severergetout_01.json"
+  },
+  {
+    "label": "Chargerdocking Severergetout 02",
+    "path": "anim_chargerdocking_severergetout_02.json"
+  },
+  {
+    "label": "Codelab Getin 01",
+    "path": "anim_codelab_getin_01.json"
+  },
+  {
+    "label": "Codelab Getout 01",
+    "path": "anim_codelab_getout_01.json"
+  },
+  {
+    "label": "Communication Cantdothat 01",
+    "path": "anim_communication_cantdothat_01.json"
+  },
+  {
+    "label": "Communication Cantdothat 02",
+    "path": "anim_communication_cantdothat_02.json"
+  },
+  {
+    "label": "Communication Cantdothat 03",
+    "path": "anim_communication_cantdothat_03.json"
+  },
+  {
+    "label": "Communication Cantdothat 04",
+    "path": "anim_communication_cantdothat_04.json"
+  },
+  {
+    "label": "Communication Pickup Cantdothat 01",
+    "path": "anim_communication_pickup_cantdothat_01.json"
+  },
+  {
+    "label": "Cube Drive Getin 01",
+    "path": "anim_cube_drive_getin_01.json"
+  },
+  {
+    "label": "Cube Drive Getout 01",
+    "path": "anim_cube_drive_getout_01.json"
+  },
+  {
+    "label": "Cube Drive Loop 01",
+    "path": "anim_cube_drive_loop_01.json"
+  },
+  {
+    "label": "Cube Psychic 01",
+    "path": "anim_cube_psychic_01.json"
+  },
+  {
+    "label": "Cube Success Getout 01",
+    "path": "anim_cube_success_getout_01.json"
+  },
+  {
+    "label": "Cubeconnection Connectionfailure 01",
+    "path": "anim_cubeconnection_connectionfailure_01.json"
+  },
+  {
+    "label": "Cubeconnection Connectionlost 01",
+    "path": "anim_cubeconnection_connectionlost_01.json"
+  },
+  {
+    "label": "Cubeconnection Connectionsuccess 01",
+    "path": "anim_cubeconnection_connectionsuccess_01.json"
+  },
+  {
+    "label": "Cubeconnection Getin 01",
+    "path": "anim_cubeconnection_getin_01.json"
+  },
+  {
+    "label": "Cubeconnection Loop 01",
+    "path": "anim_cubeconnection_loop_01.json"
+  },
+  {
+    "label": "Cubeconnection Loop 02",
+    "path": "anim_cubeconnection_loop_02.json"
+  },
+  {
+    "label": "Cubeconnection Loop 03",
+    "path": "anim_cubeconnection_loop_03.json"
+  },
+  {
+    "label": "Cubeconnection Loop 04",
+    "path": "anim_cubeconnection_loop_04.json"
+  },
+  {
+    "label": "Cubedocking Drive Getin 01",
+    "path": "anim_cubedocking_drive_getin_01.json"
+  },
+  {
+    "label": "Cubedocking Drive Getout 01",
+    "path": "anim_cubedocking_drive_getout_01.json"
+  },
+  {
+    "label": "Cubedocking Drive Loop 01",
+    "path": "anim_cubedocking_drive_loop_01.json"
+  },
+  {
+    "label": "Cubedocking Fail 01",
+    "path": "anim_cubedocking_fail_01.json"
+  },
+  {
+    "label": "Cubespinner Anticgamefail 01",
+    "path": "anim_cubespinner_anticgamefail_01.json"
+  },
+  {
+    "label": "Cubespinner Anticgamefail 02",
+    "path": "anim_cubespinner_anticgamefail_02.json"
+  },
+  {
+    "label": "Cubespinner Anticgamesuccess 01",
+    "path": "anim_cubespinner_anticgamesuccess_01.json"
+  },
+  {
+    "label": "Cubespinner Anticroundsuccess 01",
+    "path": "anim_cubespinner_anticroundsuccess_01.json"
+  },
+  {
+    "label": "Cubespinner Anticsessionfail 01",
+    "path": "anim_cubespinner_anticsessionfail_01.json"
+  },
+  {
+    "label": "Cubespinner Anticsessionsuccess 01",
+    "path": "anim_cubespinner_anticsessionsuccess_01.json"
+  },
+  {
+    "label": "Cubespinner Faketap 01",
+    "path": "anim_cubespinner_faketap_01.json"
+  },
+  {
+    "label": "Cubespinner Gamefail 01",
+    "path": "anim_cubespinner_gamefail_01.json"
+  },
+  {
+    "label": "Cubespinner Gamefail 02",
+    "path": "anim_cubespinner_gamefail_02.json"
+  },
+  {
+    "label": "Cubespinner Gamesuccess 01",
+    "path": "anim_cubespinner_gamesuccess_01.json"
+  },
+  {
+    "label": "Cubespinner Getin 01",
+    "path": "anim_cubespinner_getin_01.json"
+  },
+  {
+    "label": "Cubespinner Loop 01",
+    "path": "anim_cubespinner_loop_01.json"
+  },
+  {
+    "label": "Cubespinner Loop 02",
+    "path": "anim_cubespinner_loop_02.json"
+  },
+  {
+    "label": "Cubespinner Loop 03",
+    "path": "anim_cubespinner_loop_03.json"
+  },
+  {
+    "label": "Cubespinner Loop 04",
+    "path": "anim_cubespinner_loop_04.json"
+  },
+  {
+    "label": "Cubespinner Reaction 01",
+    "path": "anim_cubespinner_reaction_01.json"
+  },
+  {
+    "label": "Cubespinner Roundsuccess 01",
+    "path": "anim_cubespinner_roundsuccess_01.json"
+  },
+  {
+    "label": "Cubespinner Rtcubemoved 01",
+    "path": "anim_cubespinner_rtcubemoved_01.json"
+  },
+  {
+    "label": "Cubespinner Sessionfail 01",
+    "path": "anim_cubespinner_sessionfail_01.json"
+  },
+  {
+    "label": "Cubespinner Sessionsuccess 01",
+    "path": "anim_cubespinner_sessionsuccess_01.json"
+  },
+  {
+    "label": "Dancebeat Cantdothat 01",
+    "path": "anim_dancebeat_cantdothat_01.json"
+  },
+  {
+    "label": "Dancebeat Eyebeat 01",
+    "path": "anim_dancebeat_eyebeat_01.json"
+  },
+  {
+    "label": "Dancebeat Eyebeat Left 01",
+    "path": "anim_dancebeat_eyebeat_left_01.json"
+  },
+  {
+    "label": "Dancebeat Eyebeat Right 01",
+    "path": "anim_dancebeat_eyebeat_right_01.json"
+  },
+  {
+    "label": "Dancebeat Eyehold 01",
+    "path": "anim_dancebeat_eyehold_01.json"
+  },
+  {
+    "label": "Dancebeat Getin 01",
+    "path": "anim_dancebeat_getin_01.json"
+  },
+  {
+    "label": "Dancebeat Getin 02",
+    "path": "anim_dancebeat_getin_02.json"
+  },
+  {
+    "label": "Dancebeat Getout 01",
+    "path": "anim_dancebeat_getout_01.json"
+  },
+  {
+    "label": "Dancebeat Getout 02",
+    "path": "anim_dancebeat_getout_02.json"
+  },
+  {
+    "label": "Dancebeat Getready 01",
+    "path": "anim_dancebeat_getready_01.json"
+  },
+  {
+    "label": "Dancebeat Headlift 01",
+    "path": "anim_dancebeat_headlift_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Back 01",
+    "path": "anim_dancebeat_headliftbody_back_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Fwd 01",
+    "path": "anim_dancebeat_headliftbody_fwd_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Left Large 01",
+    "path": "anim_dancebeat_headliftbody_left_large_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Left Med 01",
+    "path": "anim_dancebeat_headliftbody_left_med_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Left Small 01",
+    "path": "anim_dancebeat_headliftbody_left_small_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Right Large 01",
+    "path": "anim_dancebeat_headliftbody_right_large_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Right Med 01",
+    "path": "anim_dancebeat_headliftbody_right_med_01.json"
+  },
+  {
+    "label": "Dancebeat Headliftbody Right Small 01",
+    "path": "anim_dancebeat_headliftbody_right_small_01.json"
+  },
+  {
+    "label": "Dancebeat Headnod 01",
+    "path": "anim_dancebeat_headnod_01.json"
+  },
+  {
+    "label": "Dancebeat Headnod Down 01",
+    "path": "anim_dancebeat_headnod_down_01.json"
+  },
+  {
+    "label": "Dancebeat Idle 01",
+    "path": "anim_dancebeat_idle_01.json"
+  },
+  {
+    "label": "Dancebeat Listening 01",
+    "path": "anim_dancebeat_listening_01.json"
+  },
+  {
+    "label": "Dancebeat Listening 02",
+    "path": "anim_dancebeat_listening_02.json"
+  },
+  {
+    "label": "Dancebeat Listening 03",
+    "path": "anim_dancebeat_listening_03.json"
+  },
+  {
+    "label": "Dancebeat Pivot Left 01",
+    "path": "anim_dancebeat_pivot_left_01.json"
+  },
+  {
+    "label": "Dancebeat Pivot Right 01",
+    "path": "anim_dancebeat_pivot_right_01.json"
+  },
+  {
+    "label": "Dancebeat Quit 01",
+    "path": "anim_dancebeat_quit_01.json"
+  },
+  {
+    "label": "Dancebeat Scoot Left 01",
+    "path": "anim_dancebeat_scoot_left_01.json"
+  },
+  {
+    "label": "Dancebeat Scoot Right 01",
+    "path": "anim_dancebeat_scoot_right_01.json"
+  },
+  {
+    "label": "Dizzy Pickup 01",
+    "path": "anim_dizzy_pickup_01.json"
+  },
+  {
+    "label": "Dizzy Pickup 02",
+    "path": "anim_dizzy_pickup_02.json"
+  },
+  {
+    "label": "Dizzy Pickup 03",
+    "path": "anim_dizzy_pickup_03.json"
+  },
+  {
+    "label": "Dizzy Reaction Hard 01",
+    "path": "anim_dizzy_reaction_hard_01.json"
+  },
+  {
+    "label": "Dizzy Reaction Medium 01",
+    "path": "anim_dizzy_reaction_medium_01.json"
+  },
+  {
+    "label": "Dizzy Reaction Medium 02",
+    "path": "anim_dizzy_reaction_medium_02.json"
+  },
+  {
+    "label": "Dizzy Reaction Medium 03",
+    "path": "anim_dizzy_reaction_medium_03.json"
+  },
+  {
+    "label": "Dizzy Reaction Soft 01",
+    "path": "anim_dizzy_reaction_soft_01.json"
+  },
+  {
+    "label": "Dizzy Reaction Soft 02",
+    "path": "anim_dizzy_reaction_soft_02.json"
+  },
+  {
+    "label": "Dizzy Reaction Soft 03",
+    "path": "anim_dizzy_reaction_soft_03.json"
+  },
+  {
+    "label": "Dizzy Shake Loop 01",
+    "path": "anim_dizzy_shake_loop_01.json"
+  },
+  {
+    "label": "Dizzy Shake Stop 01",
+    "path": "anim_dizzy_shake_stop_01.json"
+  },
+  {
+    "label": "Driving Upset End 01",
+    "path": "anim_driving_upset_end_01.json"
+  },
+  {
+    "label": "Driving Upset Loop 01",
+    "path": "anim_driving_upset_loop_01.json"
+  },
+  {
+    "label": "Driving Upset Loop 02",
+    "path": "anim_driving_upset_loop_02.json"
+  },
+  {
+    "label": "Driving Upset Loop 03",
+    "path": "anim_driving_upset_loop_03.json"
+  },
+  {
+    "label": "Driving Upset Start 01",
+    "path": "anim_driving_upset_start_01.json"
+  },
+  {
+    "label": "Explorer Center Left 01",
+    "path": "anim_explorer_center_left_01.json"
+  },
+  {
+    "label": "Explorer Center Right 01",
+    "path": "anim_explorer_center_right_01.json"
+  },
+  {
+    "label": "Explorer Huh 01",
+    "path": "anim_explorer_huh_01.json"
+  },
+  {
+    "label": "Explorer Huh 01 Head Angle -10",
+    "path": "anim_explorer_huh_01_head_angle_-10.json"
+  },
+  {
+    "label": "Explorer Huh 01 Head Angle -20",
+    "path": "anim_explorer_huh_01_head_angle_-20.json"
+  },
+  {
+    "label": "Explorer Huh 01 Head Angle 10",
+    "path": "anim_explorer_huh_01_head_angle_10.json"
+  },
+  {
+    "label": "Explorer Huh 01 Head Angle 20",
+    "path": "anim_explorer_huh_01_head_angle_20.json"
+  },
+  {
+    "label": "Explorer Huh 01 Head Angle 30",
+    "path": "anim_explorer_huh_01_head_angle_30.json"
+  },
+  {
+    "label": "Explorer Huh 01 Head Angle 40",
+    "path": "anim_explorer_huh_01_head_angle_40.json"
+  },
+  {
+    "label": "Explorer Huh Close 01",
+    "path": "anim_explorer_huh_close_01.json"
+  },
+  {
+    "label": "Explorer Huh Far 01",
+    "path": "anim_explorer_huh_far_01.json"
+  },
+  {
+    "label": "Explorer Idle 01",
+    "path": "anim_explorer_idle_01.json"
+  },
+  {
+    "label": "Explorer Idle 01 Head Angle -10",
+    "path": "anim_explorer_idle_01_head_angle_-10.json"
+  },
+  {
+    "label": "Explorer Idle 01 Head Angle -20",
+    "path": "anim_explorer_idle_01_head_angle_-20.json"
+  },
+  {
+    "label": "Explorer Idle 01 Head Angle 10",
+    "path": "anim_explorer_idle_01_head_angle_10.json"
+  },
+  {
+    "label": "Explorer Idle 01 Head Angle 20",
+    "path": "anim_explorer_idle_01_head_angle_20.json"
+  },
+  {
+    "label": "Explorer Idle 01 Head Angle 30",
+    "path": "anim_explorer_idle_01_head_angle_30.json"
+  },
+  {
+    "label": "Explorer Idle 01 Head Angle 40",
+    "path": "anim_explorer_idle_01_head_angle_40.json"
+  },
+  {
+    "label": "Explorer Idle 02",
+    "path": "anim_explorer_idle_02.json"
+  },
+  {
+    "label": "Explorer Idle 02 Head Angle -10",
+    "path": "anim_explorer_idle_02_head_angle_-10.json"
+  },
+  {
+    "label": "Explorer Idle 02 Head Angle -20",
+    "path": "anim_explorer_idle_02_head_angle_-20.json"
+  },
+  {
+    "label": "Explorer Idle 02 Head Angle 10",
+    "path": "anim_explorer_idle_02_head_angle_10.json"
+  },
+  {
+    "label": "Explorer Idle 02 Head Angle 20",
+    "path": "anim_explorer_idle_02_head_angle_20.json"
+  },
+  {
+    "label": "Explorer Idle 02 Head Angle 30",
+    "path": "anim_explorer_idle_02_head_angle_30.json"
+  },
+  {
+    "label": "Explorer Idle 02 Head Angle 40",
+    "path": "anim_explorer_idle_02_head_angle_40.json"
+  },
+  {
+    "label": "Explorer Idle 03",
+    "path": "anim_explorer_idle_03.json"
+  },
+  {
+    "label": "Explorer Idle 03 Head Angle -10",
+    "path": "anim_explorer_idle_03_head_angle_-10.json"
+  },
+  {
+    "label": "Explorer Idle 03 Head Angle -20",
+    "path": "anim_explorer_idle_03_head_angle_-20.json"
+  },
+  {
+    "label": "Explorer Idle 03 Head Angle 10",
+    "path": "anim_explorer_idle_03_head_angle_10.json"
+  },
+  {
+    "label": "Explorer Idle 03 Head Angle 20",
+    "path": "anim_explorer_idle_03_head_angle_20.json"
+  },
+  {
+    "label": "Explorer Idle 03 Head Angle 30",
+    "path": "anim_explorer_idle_03_head_angle_30.json"
+  },
+  {
+    "label": "Explorer Idle 03 Head Angle 40",
+    "path": "anim_explorer_idle_03_head_angle_40.json"
+  },
+  {
+    "label": "Explorer Lookaround 01",
+    "path": "anim_explorer_lookaround_01.json"
+  },
+  {
+    "label": "Explorer Planning Getin 01",
+    "path": "anim_explorer_planning_getin_01.json"
+  },
+  {
+    "label": "Explorer Planning Getin 02",
+    "path": "anim_explorer_planning_getin_02.json"
+  },
+  {
+    "label": "Explorer Planning Getout 01",
+    "path": "anim_explorer_planning_getout_01.json"
+  },
+  {
+    "label": "Explorer Planning Getout 02",
+    "path": "anim_explorer_planning_getout_02.json"
+  },
+  {
+    "label": "Explorer Planning Idle 01",
+    "path": "anim_explorer_planning_idle_01.json"
+  },
+  {
+    "label": "Explorer Scan Left 01",
+    "path": "anim_explorer_scan_left_01.json"
+  },
+  {
+    "label": "Explorer Scan Left 02",
+    "path": "anim_explorer_scan_left_02.json"
+  },
+  {
+    "label": "Explorer Scan Right 01",
+    "path": "anim_explorer_scan_right_01.json"
+  },
+  {
+    "label": "Explorer Scan Right 02",
+    "path": "anim_explorer_scan_right_02.json"
+  },
+  {
+    "label": "Explorer Scan Short 01",
+    "path": "anim_explorer_scan_short_01.json"
+  },
+  {
+    "label": "Explorer Scan Short 02",
+    "path": "anim_explorer_scan_short_02.json"
+  },
+  {
+    "label": "Explorer Scan Short 03",
+    "path": "anim_explorer_scan_short_03.json"
+  },
+  {
+    "label": "Explorer Scan Short 04",
+    "path": "anim_explorer_scan_short_04.json"
+  },
+  {
+    "label": "Eyecolorreact Getin 01",
+    "path": "anim_eyecolorreact_getin_01.json"
+  },
+  {
+    "label": "Eyecolorreact Getout 01",
+    "path": "anim_eyecolorreact_getout_01.json"
+  },
+  {
+    "label": "Eyecolorreact Idle 01",
+    "path": "anim_eyecolorreact_idle_01.json"
+  },
+  {
+    "label": "Eyecolorreact Random",
+    "path": "anim_eyecolorreact_random.json"
+  },
+  {
+    "label": "Eyecolorreact Switch 01",
+    "path": "anim_eyecolorreact_switch_01.json"
+  },
+  {
+    "label": "Eyecolorreact Switch 02",
+    "path": "anim_eyecolorreact_switch_02.json"
+  },
+  {
+    "label": "Eyecontact Center Contact 01",
+    "path": "anim_eyecontact_center_contact_01.json"
+  },
+  {
+    "label": "Eyecontact Center Contact 01 Head Angle -20",
+    "path": "anim_eyecontact_center_contact_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Center Contact 01 Head Angle 20",
+    "path": "anim_eyecontact_center_contact_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Center Contact 01 Head Angle 40",
+    "path": "anim_eyecontact_center_contact_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Center Thought 01",
+    "path": "anim_eyecontact_center_thought_01.json"
+  },
+  {
+    "label": "Eyecontact Center Thought 01 Head Angle -20",
+    "path": "anim_eyecontact_center_thought_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Center Thought 01 Head Angle 20",
+    "path": "anim_eyecontact_center_thought_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Center Thought 01 Head Angle 40",
+    "path": "anim_eyecontact_center_thought_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Getout 01",
+    "path": "anim_eyecontact_getout_01.json"
+  },
+  {
+    "label": "Eyecontact Getout 01 Head Angle -20",
+    "path": "anim_eyecontact_getout_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Getout 01 Head Angle 20",
+    "path": "anim_eyecontact_getout_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Getout 01 Head Angle 40",
+    "path": "anim_eyecontact_getout_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Giggle 01",
+    "path": "anim_eyecontact_giggle_01.json"
+  },
+  {
+    "label": "Eyecontact Giggle 01 Head Angle -20",
+    "path": "anim_eyecontact_giggle_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Giggle 01 Head Angle 20",
+    "path": "anim_eyecontact_giggle_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Giggle 01 Head Angle 40",
+    "path": "anim_eyecontact_giggle_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Left Contact 01",
+    "path": "anim_eyecontact_left_contact_01.json"
+  },
+  {
+    "label": "Eyecontact Left Contact 01 Head Angle -20",
+    "path": "anim_eyecontact_left_contact_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Left Contact 01 Head Angle 20",
+    "path": "anim_eyecontact_left_contact_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Left Contact 01 Head Angle 40",
+    "path": "anim_eyecontact_left_contact_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Left Thought 01",
+    "path": "anim_eyecontact_left_thought_01.json"
+  },
+  {
+    "label": "Eyecontact Left Thought 01 Head Angle -20",
+    "path": "anim_eyecontact_left_thought_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Left Thought 01 Head Angle 20",
+    "path": "anim_eyecontact_left_thought_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Left Thought 01 Head Angle 40",
+    "path": "anim_eyecontact_left_thought_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 01",
+    "path": "anim_eyecontact_lookloop_01.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 01 Head Angle -20",
+    "path": "anim_eyecontact_lookloop_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 01 Head Angle 20",
+    "path": "anim_eyecontact_lookloop_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 01 Head Angle 40",
+    "path": "anim_eyecontact_lookloop_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 02",
+    "path": "anim_eyecontact_lookloop_02.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 02 Head Angle -20",
+    "path": "anim_eyecontact_lookloop_02_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 02 Head Angle 20",
+    "path": "anim_eyecontact_lookloop_02_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Lookloop 02 Head Angle 40",
+    "path": "anim_eyecontact_lookloop_02_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Right Contact 01",
+    "path": "anim_eyecontact_right_contact_01.json"
+  },
+  {
+    "label": "Eyecontact Right Contact 01 Head Angle -20",
+    "path": "anim_eyecontact_right_contact_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Right Contact 01 Head Angle 20",
+    "path": "anim_eyecontact_right_contact_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Right Contact 01 Head Angle 40",
+    "path": "anim_eyecontact_right_contact_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Right Thought 01",
+    "path": "anim_eyecontact_right_thought_01.json"
+  },
+  {
+    "label": "Eyecontact Right Thought 01 Head Angle -20",
+    "path": "anim_eyecontact_right_thought_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Right Thought 01 Head Angle 20",
+    "path": "anim_eyecontact_right_thought_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Right Thought 01 Head Angle 40",
+    "path": "anim_eyecontact_right_thought_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Smile 01",
+    "path": "anim_eyecontact_smile_01.json"
+  },
+  {
+    "label": "Eyecontact Smile 01 Head Angle -20",
+    "path": "anim_eyecontact_smile_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Smile 01 Head Angle 20",
+    "path": "anim_eyecontact_smile_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Smile 01 Head Angle 40",
+    "path": "anim_eyecontact_smile_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyecontact Squint 01",
+    "path": "anim_eyecontact_squint_01.json"
+  },
+  {
+    "label": "Eyecontact Squint 01 Head Angle -20",
+    "path": "anim_eyecontact_squint_01_head_angle_-20.json"
+  },
+  {
+    "label": "Eyecontact Squint 01 Head Angle 20",
+    "path": "anim_eyecontact_squint_01_head_angle_20.json"
+  },
+  {
+    "label": "Eyecontact Squint 01 Head Angle 40",
+    "path": "anim_eyecontact_squint_01_head_angle_40.json"
+  },
+  {
+    "label": "Eyepose All Faces",
+    "path": "anim_eyepose_all_faces.json"
+  },
+  {
+    "label": "Eyepose Angry",
+    "path": "anim_eyepose_angry.json"
+  },
+  {
+    "label": "Eyepose Asleep",
+    "path": "anim_eyepose_asleep.json"
+  },
+  {
+    "label": "Eyepose Awe",
+    "path": "anim_eyepose_awe.json"
+  },
+  {
+    "label": "Eyepose Blink",
+    "path": "anim_eyepose_blink.json"
+  },
+  {
+    "label": "Eyepose Blink Bd L",
+    "path": "anim_eyepose_blink_bd_l.json"
+  },
+  {
+    "label": "Eyepose Blink Bd R",
+    "path": "anim_eyepose_blink_bd_r.json"
+  },
+  {
+    "label": "Eyepose Blink High",
+    "path": "anim_eyepose_blink_high.json"
+  },
+  {
+    "label": "Eyepose Blink Low",
+    "path": "anim_eyepose_blink_low.json"
+  },
+  {
+    "label": "Eyepose Bliss",
+    "path": "anim_eyepose_bliss.json"
+  },
+  {
+    "label": "Eyepose Bothered",
+    "path": "anim_eyepose_bothered.json"
+  },
+  {
+    "label": "Eyepose Captivated",
+    "path": "anim_eyepose_captivated.json"
+  },
+  {
+    "label": "Eyepose Concerned",
+    "path": "anim_eyepose_concerned.json"
+  },
+  {
+    "label": "Eyepose Curious",
+    "path": "anim_eyepose_curious.json"
+  },
+  {
+    "label": "Eyepose Default",
+    "path": "anim_eyepose_default.json"
+  },
+  {
+    "label": "Eyepose Determined",
+    "path": "anim_eyepose_determined.json"
+  },
+  {
+    "label": "Eyepose Focused",
+    "path": "anim_eyepose_focused.json"
+  },
+  {
+    "label": "Eyepose Frustrated",
+    "path": "anim_eyepose_frustrated.json"
+  },
+  {
+    "label": "Eyepose Furious",
+    "path": "anim_eyepose_furious.json"
+  },
+  {
+    "label": "Eyepose Happy",
+    "path": "anim_eyepose_happy.json"
+  },
+  {
+    "label": "Eyepose Hurt",
+    "path": "anim_eyepose_hurt.json"
+  },
+  {
+    "label": "Eyepose Joy",
+    "path": "anim_eyepose_joy.json"
+  },
+  {
+    "label": "Eyepose Normal L",
+    "path": "anim_eyepose_normal_l.json"
+  },
+  {
+    "label": "Eyepose Normal L Push",
+    "path": "anim_eyepose_normal_l_push.json"
+  },
+  {
+    "label": "Eyepose Normal R",
+    "path": "anim_eyepose_normal_r.json"
+  },
+  {
+    "label": "Eyepose Normal R Push",
+    "path": "anim_eyepose_normal_r_push.json"
+  },
+  {
+    "label": "Eyepose Sad",
+    "path": "anim_eyepose_sad.json"
+  },
+  {
+    "label": "Eyepose Sad Down",
+    "path": "anim_eyepose_sad_down.json"
+  },
+  {
+    "label": "Eyepose Sad Down01",
+    "path": "anim_eyepose_sad_down01.json"
+  },
+  {
+    "label": "Eyepose Sad Instronspect",
+    "path": "anim_eyepose_sad_instronspect.json"
+  },
+  {
+    "label": "Eyepose Sad Up",
+    "path": "anim_eyepose_sad_up.json"
+  },
+  {
+    "label": "Eyepose Scared",
+    "path": "anim_eyepose_scared.json"
+  },
+  {
+    "label": "Eyepose Scrutinizing",
+    "path": "anim_eyepose_scrutinizing.json"
+  },
+  {
+    "label": "Eyepose Shocked",
+    "path": "anim_eyepose_shocked.json"
+  },
+  {
+    "label": "Eyepose Squint",
+    "path": "anim_eyepose_squint.json"
+  },
+  {
+    "label": "Eyepose Startled",
+    "path": "anim_eyepose_startled.json"
+  },
+  {
+    "label": "Eyepose Suspicious",
+    "path": "anim_eyepose_suspicious.json"
+  },
+  {
+    "label": "Eyepose Unsure",
+    "path": "anim_eyepose_unsure.json"
+  },
+  {
+    "label": "Eyepose Worried",
+    "path": "anim_eyepose_worried.json"
+  },
+  {
+    "label": "Fastbump Getin 01",
+    "path": "anim_fastbump_getin_01.json"
+  },
+  {
+    "label": "Fastbump Getout 01",
+    "path": "anim_fastbump_getout_01.json"
+  },
+  {
+    "label": "Fastbump Loop 01",
+    "path": "anim_fastbump_loop_01.json"
+  },
+  {
+    "label": "Feedback Apology 01",
+    "path": "anim_feedback_apology_01.json"
+  },
+  {
+    "label": "Feedback Apology 02",
+    "path": "anim_feedback_apology_02.json"
+  },
+  {
+    "label": "Feedback Badrobot 01",
+    "path": "anim_feedback_badrobot_01.json"
+  },
+  {
+    "label": "Feedback Badrobot 02",
+    "path": "anim_feedback_badrobot_02.json"
+  },
+  {
+    "label": "Feedback Bequiet 01",
+    "path": "anim_feedback_bequiet_01.json"
+  },
+  {
+    "label": "Feedback Bequiet 02",
+    "path": "anim_feedback_bequiet_02.json"
+  },
+  {
+    "label": "Feedback Goodrobot 01",
+    "path": "anim_feedback_goodrobot_01.json"
+  },
+  {
+    "label": "Feedback Goodrobot 02",
+    "path": "anim_feedback_goodrobot_02.json"
+  },
+  {
+    "label": "Feedback Iloveyou 01",
+    "path": "anim_feedback_iloveyou_01.json"
+  },
+  {
+    "label": "Feedback Iloveyou 02",
+    "path": "anim_feedback_iloveyou_02.json"
+  },
+  {
+    "label": "Feedback Meanwords 01",
+    "path": "anim_feedback_meanwords_01.json"
+  },
+  {
+    "label": "Feedback Meanwords 02",
+    "path": "anim_feedback_meanwords_02.json"
+  },
+  {
+    "label": "Feedback Shutup 01",
+    "path": "anim_feedback_shutup_01.json"
+  },
+  {
+    "label": "Feedback Shutup 02",
+    "path": "anim_feedback_shutup_02.json"
+  },
+  {
+    "label": "Findcube Request 01",
+    "path": "anim_findcube_request_01.json"
+  },
+  {
+    "label": "Findcube Searchforcubesturns 01",
+    "path": "anim_findcube_searchforcubesturns_01.json"
+  },
+  {
+    "label": "Findcube Searchforcubesturns 02",
+    "path": "anim_findcube_searchforcubesturns_02.json"
+  },
+  {
+    "label": "Findcube Searchforcubesturns 03",
+    "path": "anim_findcube_searchforcubesturns_03.json"
+  },
+  {
+    "label": "Fistbump Fail 01",
+    "path": "anim_fistbump_fail_01.json"
+  },
+  {
+    "label": "Fistbump Getin 01",
+    "path": "anim_fistbump_getin_01.json"
+  },
+  {
+    "label": "Fistbump Idle 01",
+    "path": "anim_fistbump_idle_01.json"
+  },
+  {
+    "label": "Fistbump Idle 02",
+    "path": "anim_fistbump_idle_02.json"
+  },
+  {
+    "label": "Fistbump Idle 03",
+    "path": "anim_fistbump_idle_03.json"
+  },
+  {
+    "label": "Fistbump Requestonce 01",
+    "path": "anim_fistbump_requestonce_01.json"
+  },
+  {
+    "label": "Fistbump Requestonce 02",
+    "path": "anim_fistbump_requestonce_02.json"
+  },
+  {
+    "label": "Fistbump Requestoncelong 01",
+    "path": "anim_fistbump_requestoncelong_01.json"
+  },
+  {
+    "label": "Fistbump Requesttwice 01",
+    "path": "anim_fistbump_requesttwice_01.json"
+  },
+  {
+    "label": "Fistbump Success 01",
+    "path": "anim_fistbump_success_01.json"
+  },
+  {
+    "label": "Fistbump Success 02",
+    "path": "anim_fistbump_success_02.json"
+  },
+  {
+    "label": "Fistbump Success 03",
+    "path": "anim_fistbump_success_03.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Identified 01",
+    "path": "anim_freeplay_reacttoface_identified_01.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Identified 02",
+    "path": "anim_freeplay_reacttoface_identified_02.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Identified 03",
+    "path": "anim_freeplay_reacttoface_identified_03.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Like 01",
+    "path": "anim_freeplay_reacttoface_like_01.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Longname 01",
+    "path": "anim_freeplay_reacttoface_longname_01.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 01",
+    "path": "anim_freeplay_reacttoface_sayname_01.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 01 Head Angle -20",
+    "path": "anim_freeplay_reacttoface_sayname_01_head_angle_-20.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 01 Head Angle 20",
+    "path": "anim_freeplay_reacttoface_sayname_01_head_angle_20.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 01 Head Angle 40",
+    "path": "anim_freeplay_reacttoface_sayname_01_head_angle_40.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 02",
+    "path": "anim_freeplay_reacttoface_sayname_02.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 02 Head Angle -20",
+    "path": "anim_freeplay_reacttoface_sayname_02_head_angle_-20.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 02 Head Angle 20",
+    "path": "anim_freeplay_reacttoface_sayname_02_head_angle_20.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 02 Head Angle 40",
+    "path": "anim_freeplay_reacttoface_sayname_02_head_angle_40.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 03",
+    "path": "anim_freeplay_reacttoface_sayname_03.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 03 Head Angle -20",
+    "path": "anim_freeplay_reacttoface_sayname_03_head_angle_-20.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 03 Head Angle 20",
+    "path": "anim_freeplay_reacttoface_sayname_03_head_angle_20.json"
+  },
+  {
+    "label": "Freeplay Reacttoface Sayname 03 Head Angle 40",
+    "path": "anim_freeplay_reacttoface_sayname_03_head_angle_40.json"
+  },
+  {
+    "label": "Frequency Test 01",
+    "path": "anim_frequency_test_01.json"
+  },
+  {
+    "label": "Frequency Test 02",
+    "path": "anim_frequency_test_02.json"
+  },
+  {
+    "label": "Frequency Test 03",
+    "path": "anim_frequency_test_03.json"
+  },
+  {
+    "label": "Frequency Test 04",
+    "path": "anim_frequency_test_04.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Left 01",
+    "path": "anim_gazing_lookatfaces_getin_left_01.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Left 01 Head Angle -20",
+    "path": "anim_gazing_lookatfaces_getin_left_01_head_angle_-20.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Left 01 Head Angle 20",
+    "path": "anim_gazing_lookatfaces_getin_left_01_head_angle_20.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Left 01 Head Angle 40",
+    "path": "anim_gazing_lookatfaces_getin_left_01_head_angle_40.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Right 01",
+    "path": "anim_gazing_lookatfaces_getin_right_01.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Right 01 Head Angle -20",
+    "path": "anim_gazing_lookatfaces_getin_right_01_head_angle_-20.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Right 01 Head Angle 20",
+    "path": "anim_gazing_lookatfaces_getin_right_01_head_angle_20.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Getin Right 01 Head Angle 40",
+    "path": "anim_gazing_lookatfaces_getin_right_01_head_angle_40.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Turn Left 01",
+    "path": "anim_gazing_lookatfaces_turn_left_01.json"
+  },
+  {
+    "label": "Gazing Lookatfaces Turn Right 01",
+    "path": "anim_gazing_lookatfaces_turn_right_01.json"
+  },
+  {
+    "label": "Gazing Lookatsurface Reaction 01",
+    "path": "anim_gazing_lookatsurface_reaction_01.json"
+  },
+  {
+    "label": "Gazing Lookatsurface Reaction 02",
+    "path": "anim_gazing_lookatsurface_reaction_02.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Left 01",
+    "path": "anim_gazing_lookatsurfaces_getin_left_01.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Left 01 Head Angle -20",
+    "path": "anim_gazing_lookatsurfaces_getin_left_01_head_angle_-20.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Left 01 Head Angle 20",
+    "path": "anim_gazing_lookatsurfaces_getin_left_01_head_angle_20.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Left 01 Head Angle 40",
+    "path": "anim_gazing_lookatsurfaces_getin_left_01_head_angle_40.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Right 01",
+    "path": "anim_gazing_lookatsurfaces_getin_right_01.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Right 01 Head Angle -20",
+    "path": "anim_gazing_lookatsurfaces_getin_right_01_head_angle_-20.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Right 01 Head Angle 20",
+    "path": "anim_gazing_lookatsurfaces_getin_right_01_head_angle_20.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Getin Right 01 Head Angle 40",
+    "path": "anim_gazing_lookatsurfaces_getin_right_01_head_angle_40.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Turn Left 01",
+    "path": "anim_gazing_lookatsurfaces_turn_left_01.json"
+  },
+  {
+    "label": "Gazing Lookatsurfaces Turn Right 01",
+    "path": "anim_gazing_lookatsurfaces_turn_right_01.json"
+  },
+  {
+    "label": "Gazing Lookatvector Reaction 01",
+    "path": "anim_gazing_lookatvector_reaction_01.json"
+  },
+  {
+    "label": "Gazing Lookatvector Reaction 01 Head Angle -20",
+    "path": "anim_gazing_lookatvector_reaction_01_head_angle_-20.json"
+  },
+  {
+    "label": "Gazing Lookatvector Reaction 01 Head Angle 20",
+    "path": "anim_gazing_lookatvector_reaction_01_head_angle_20.json"
+  },
+  {
+    "label": "Gazing Lookatvector Reaction 01 Head Angle 40",
+    "path": "anim_gazing_lookatvector_reaction_01_head_angle_40.json"
+  },
+  {
+    "label": "Generic Look Stright 01",
+    "path": "anim_generic_look_stright_01.json"
+  },
+  {
+    "label": "Generic Look Up 01",
+    "path": "anim_generic_look_up_01.json"
+  },
+  {
+    "label": "Generic Look Up Idle 01",
+    "path": "anim_generic_look_up_idle_01.json"
+  },
+  {
+    "label": "Generic Look Up Idle 02",
+    "path": "anim_generic_look_up_idle_02.json"
+  },
+  {
+    "label": "Getin Tts 01",
+    "path": "anim_getin_tts_01.json"
+  },
+  {
+    "label": "Getout Tts 02",
+    "path": "anim_getout_tts_02.json"
+  },
+  {
+    "label": "Gif Gleeserious 01",
+    "path": "anim_gif_gleeserious_01.json"
+  },
+  {
+    "label": "Gif Idk 01",
+    "path": "anim_gif_idk_01.json"
+  },
+  {
+    "label": "Gif No 01",
+    "path": "anim_gif_no_01.json"
+  },
+  {
+    "label": "Gotosleep Getin 01",
+    "path": "anim_gotosleep_getin_01.json"
+  },
+  {
+    "label": "Gotosleep Getout 01",
+    "path": "anim_gotosleep_getout_01.json"
+  },
+  {
+    "label": "Gotosleep Getout 02",
+    "path": "anim_gotosleep_getout_02.json"
+  },
+  {
+    "label": "Gotosleep Getout 03",
+    "path": "anim_gotosleep_getout_03.json"
+  },
+  {
+    "label": "Gotosleep Getout 04",
+    "path": "anim_gotosleep_getout_04.json"
+  },
+  {
+    "label": "Gotosleep Off 01",
+    "path": "anim_gotosleep_off_01.json"
+  },
+  {
+    "label": "Gotosleep Sleeping 01",
+    "path": "anim_gotosleep_sleeping_01.json"
+  },
+  {
+    "label": "Gotosleep Sleeping 02",
+    "path": "anim_gotosleep_sleeping_02.json"
+  },
+  {
+    "label": "Gotosleep Sleeping 03",
+    "path": "anim_gotosleep_sleeping_03.json"
+  },
+  {
+    "label": "Gotosleep Sleeping 04",
+    "path": "anim_gotosleep_sleeping_04.json"
+  },
+  {
+    "label": "Gotosleep Sleeping 05",
+    "path": "anim_gotosleep_sleeping_05.json"
+  },
+  {
+    "label": "Gotosleep Sleeploop 01",
+    "path": "anim_gotosleep_sleeploop_01.json"
+  },
+  {
+    "label": "Gotosleep Wakeup 01",
+    "path": "anim_gotosleep_wakeup_01.json"
+  },
+  {
+    "label": "Greeting Goodbye 01",
+    "path": "anim_greeting_goodbye_01.json"
+  },
+  {
+    "label": "Greeting Goodbye 02",
+    "path": "anim_greeting_goodbye_02.json"
+  },
+  {
+    "label": "Greeting Goodmorning 01",
+    "path": "anim_greeting_goodmorning_01.json"
+  },
+  {
+    "label": "Greeting Goodmorning 02",
+    "path": "anim_greeting_goodmorning_02.json"
+  },
+  {
+    "label": "Greeting Goodnight 01",
+    "path": "anim_greeting_goodnight_01.json"
+  },
+  {
+    "label": "Greeting Goodnight 02",
+    "path": "anim_greeting_goodnight_02.json"
+  },
+  {
+    "label": "Greeting Happy 03",
+    "path": "anim_greeting_happy_03.json"
+  },
+  {
+    "label": "Greeting Happy 03 Head Angle -20",
+    "path": "anim_greeting_happy_03_head_angle_-20.json"
+  },
+  {
+    "label": "Greeting Happy 03 Head Angle 20",
+    "path": "anim_greeting_happy_03_head_angle_20.json"
+  },
+  {
+    "label": "Greeting Happy 03 Head Angle 40",
+    "path": "anim_greeting_happy_03_head_angle_40.json"
+  },
+  {
+    "label": "Greeting Hello 01",
+    "path": "anim_greeting_hello_01.json"
+  },
+  {
+    "label": "Greeting Hello 02",
+    "path": "anim_greeting_hello_02.json"
+  },
+  {
+    "label": "Greeting Imhome 01",
+    "path": "anim_greeting_imhome_01.json"
+  },
+  {
+    "label": "Handdetection Drive Loop 01",
+    "path": "anim_handdetection_drive_loop_01.json"
+  },
+  {
+    "label": "Handdetection Getin 01",
+    "path": "anim_handdetection_getin_01.json"
+  },
+  {
+    "label": "Handdetection Getout 01",
+    "path": "anim_handdetection_getout_01.json"
+  },
+  {
+    "label": "Handdetection Lift 01",
+    "path": "anim_handdetection_lift_01.json"
+  },
+  {
+    "label": "Handdetection Reaction 01",
+    "path": "anim_handdetection_reaction_01.json"
+  },
+  {
+    "label": "Handdetection Reaction 02",
+    "path": "anim_handdetection_reaction_02.json"
+  },
+  {
+    "label": "Heldonpalm Edge Nervous 01",
+    "path": "anim_heldonpalm_edge_nervous_01.json"
+  },
+  {
+    "label": "Heldonpalm Edge Relaxed 01",
+    "path": "anim_heldonpalm_edge_relaxed_01.json"
+  },
+  {
+    "label": "Heldonpalm Getin Nervous 01",
+    "path": "anim_heldonpalm_getin_nervous_01.json"
+  },
+  {
+    "label": "Heldonpalm Getin Relaxed 01",
+    "path": "anim_heldonpalm_getin_relaxed_01.json"
+  },
+  {
+    "label": "Heldonpalm Jolt 01",
+    "path": "anim_heldonpalm_jolt_01.json"
+  },
+  {
+    "label": "Heldonpalm Looking Nervous 01",
+    "path": "anim_heldonpalm_looking_nervous_01.json"
+  },
+  {
+    "label": "Heldonpalm Nestling 01",
+    "path": "anim_heldonpalm_nestling_01.json"
+  },
+  {
+    "label": "Heldonpalm Pickup Nervous 01",
+    "path": "anim_heldonpalm_pickup_nervous_01.json"
+  },
+  {
+    "label": "Heldonpalm Pickup Relaxed 01",
+    "path": "anim_heldonpalm_pickup_relaxed_01.json"
+  },
+  {
+    "label": "Heldonpalm Putdown Nervous 01",
+    "path": "anim_heldonpalm_putdown_nervous_01.json"
+  },
+  {
+    "label": "Heldonpalm Putdown Relaxed 01",
+    "path": "anim_heldonpalm_putdown_relaxed_01.json"
+  },
+  {
+    "label": "Heldonpalm Relaxed Idle 01",
+    "path": "anim_heldonpalm_relaxed_idle_01.json"
+  },
+  {
+    "label": "Heldonpalm Rolloff 01",
+    "path": "anim_heldonpalm_rolloff_01.json"
+  },
+  {
+    "label": "Heldonpalm Transition2relaxed 01",
+    "path": "anim_heldonpalm_transition2relaxed_01.json"
+  },
+  {
+    "label": "Hiking Driving End 01",
+    "path": "anim_hiking_driving_end_01.json"
+  },
+  {
+    "label": "Hiking Driving End 02",
+    "path": "anim_hiking_driving_end_02.json"
+  },
+  {
+    "label": "Hiking Driving Loop 01",
+    "path": "anim_hiking_driving_loop_01.json"
+  },
+  {
+    "label": "Hiking Driving Loop 02",
+    "path": "anim_hiking_driving_loop_02.json"
+  },
+  {
+    "label": "Hiking Driving Loop 03",
+    "path": "anim_hiking_driving_loop_03.json"
+  },
+  {
+    "label": "Hiking Driving Loop 04",
+    "path": "anim_hiking_driving_loop_04.json"
+  },
+  {
+    "label": "Hiking Driving Loop 05",
+    "path": "anim_hiking_driving_loop_05.json"
+  },
+  {
+    "label": "Hiking Driving Loop 06",
+    "path": "anim_hiking_driving_loop_06.json"
+  },
+  {
+    "label": "Hiking Driving Start 01",
+    "path": "anim_hiking_driving_start_01.json"
+  },
+  {
+    "label": "Hiking Driving Start 02",
+    "path": "anim_hiking_driving_start_02.json"
+  },
+  {
+    "label": "Hiking Driving Start 03",
+    "path": "anim_hiking_driving_start_03.json"
+  },
+  {
+    "label": "Hiking Driving Start 04",
+    "path": "anim_hiking_driving_start_04.json"
+  },
+  {
+    "label": "Hiking Lookaround 01",
+    "path": "anim_hiking_lookaround_01.json"
+  },
+  {
+    "label": "Hiking Lookaround 02",
+    "path": "anim_hiking_lookaround_02.json"
+  },
+  {
+    "label": "Hiking Lookaround 03",
+    "path": "anim_hiking_lookaround_03.json"
+  },
+  {
+    "label": "Hiking Observe 01",
+    "path": "anim_hiking_observe_01.json"
+  },
+  {
+    "label": "Hiking React 01",
+    "path": "anim_hiking_react_01.json"
+  },
+  {
+    "label": "Hiking React 02",
+    "path": "anim_hiking_react_02.json"
+  },
+  {
+    "label": "Hiking React 03",
+    "path": "anim_hiking_react_03.json"
+  },
+  {
+    "label": "Hiking React 04",
+    "path": "anim_hiking_react_04.json"
+  },
+  {
+    "label": "Hiking React 05",
+    "path": "anim_hiking_react_05.json"
+  },
+  {
+    "label": "Hiking React 06",
+    "path": "anim_hiking_react_06.json"
+  },
+  {
+    "label": "Hiking React 07",
+    "path": "anim_hiking_react_07.json"
+  },
+  {
+    "label": "Holiday Hh Lights 01",
+    "path": "anim_holiday_hh_lights_01.json"
+  },
+  {
+    "label": "Holiday Hh Lights 02",
+    "path": "anim_holiday_hh_lights_02.json"
+  },
+  {
+    "label": "Holiday Hny Fireworks 01",
+    "path": "anim_holiday_hny_fireworks_01.json"
+  },
+  {
+    "label": "Holiday Hyn Confetti 01",
+    "path": "anim_holiday_hyn_confetti_01.json"
+  },
+  {
+    "label": "Howold Fastloop 01",
+    "path": "anim_howold_fastloop_01.json"
+  },
+  {
+    "label": "Howold Getin Even 01",
+    "path": "anim_howold_getin_even_01.json"
+  },
+  {
+    "label": "Howold Getin Odd 01",
+    "path": "anim_howold_getin_odd_01.json"
+  },
+  {
+    "label": "Howold Getout 01",
+    "path": "anim_howold_getout_01.json"
+  },
+  {
+    "label": "Howold Slowloop 01",
+    "path": "anim_howold_slowloop_01.json"
+  },
+  {
+    "label": "Inspectheldcube Cubemissing 01",
+    "path": "anim_inspectheldcube_cubemissing_01.json"
+  },
+  {
+    "label": "Inspectheldcube Cubeonground 01",
+    "path": "anim_inspectheldcube_cubeonground_01.json"
+  },
+  {
+    "label": "Inspectheldcube Getin 01",
+    "path": "anim_inspectheldcube_getin_01.json"
+  },
+  {
+    "label": "Inspectheldcube Loop 01",
+    "path": "anim_inspectheldcube_loop_01.json"
+  },
+  {
+    "label": "Inspectheldcube Loop 02",
+    "path": "anim_inspectheldcube_loop_02.json"
+  },
+  {
+    "label": "Inspectheldcube Loop 03",
+    "path": "anim_inspectheldcube_loop_03.json"
+  },
+  {
+    "label": "Inspectheldcube Loop 04",
+    "path": "anim_inspectheldcube_loop_04.json"
+  },
+  {
+    "label": "Inspectheldcube Loop 05",
+    "path": "anim_inspectheldcube_loop_05.json"
+  },
+  {
+    "label": "Inspectheldcube Timeout 01",
+    "path": "anim_inspectheldcube_timeout_01.json"
+  },
+  {
+    "label": "Iperformance Tangram 01",
+    "path": "anim_iperformance_tangram_01.json"
+  },
+  {
+    "label": "Keepalive Blink 01",
+    "path": "anim_keepalive_blink_01.json"
+  },
+  {
+    "label": "Keepalive Eyes 01 Forward",
+    "path": "anim_keepalive_eyes_01_forward.json"
+  },
+  {
+    "label": "Keepalive Eyes 01 Right",
+    "path": "anim_keepalive_eyes_01_right.json"
+  },
+  {
+    "label": "Keepalive Eyes 01 Updown",
+    "path": "anim_keepalive_eyes_01_updown.json"
+  },
+  {
+    "label": "Keepalive Eyesonly Loop 01",
+    "path": "anim_keepalive_eyesonly_loop_01.json"
+  },
+  {
+    "label": "Keepalive Eyesonly Loop 02",
+    "path": "anim_keepalive_eyesonly_loop_02.json"
+  },
+  {
+    "label": "Keepalive Eyesonly Loop 03",
+    "path": "anim_keepalive_eyesonly_loop_03.json"
+  },
+  {
+    "label": "Keepalive Eyesonly Loop 04",
+    "path": "anim_keepalive_eyesonly_loop_04.json"
+  },
+  {
+    "label": "Keepaway Backup 01",
+    "path": "anim_keepaway_backup_01.json"
+  },
+  {
+    "label": "Keepaway Bored Idle 01",
+    "path": "anim_keepaway_bored_idle_01.json"
+  },
+  {
+    "label": "Keepaway Bored Idle 02",
+    "path": "anim_keepaway_bored_idle_02.json"
+  },
+  {
+    "label": "Keepaway Driving Loop 01",
+    "path": "anim_keepaway_driving_loop_01.json"
+  },
+  {
+    "label": "Keepaway Driving Loop 02",
+    "path": "anim_keepaway_driving_loop_02.json"
+  },
+  {
+    "label": "Keepaway Driving Loop 03",
+    "path": "anim_keepaway_driving_loop_03.json"
+  },
+  {
+    "label": "Keepaway Fakeout 01",
+    "path": "anim_keepaway_fakeout_01.json"
+  },
+  {
+    "label": "Keepaway Fakeout 02",
+    "path": "anim_keepaway_fakeout_02.json"
+  },
+  {
+    "label": "Keepaway Fakeout 03",
+    "path": "anim_keepaway_fakeout_03.json"
+  },
+  {
+    "label": "Keepaway Fakeout 04",
+    "path": "anim_keepaway_fakeout_04.json"
+  },
+  {
+    "label": "Keepaway Fakeout 05",
+    "path": "anim_keepaway_fakeout_05.json"
+  },
+  {
+    "label": "Keepaway Fakeout 06",
+    "path": "anim_keepaway_fakeout_06.json"
+  },
+  {
+    "label": "Keepaway Getin 01",
+    "path": "anim_keepaway_getin_01.json"
+  },
+  {
+    "label": "Keepaway Getin 02",
+    "path": "anim_keepaway_getin_02.json"
+  },
+  {
+    "label": "Keepaway Getin 03",
+    "path": "anim_keepaway_getin_03.json"
+  },
+  {
+    "label": "Keepaway Getin Focus 01",
+    "path": "anim_keepaway_getin_focus_01.json"
+  },
+  {
+    "label": "Keepaway Getout 01",
+    "path": "anim_keepaway_getout_01.json"
+  },
+  {
+    "label": "Keepaway Getout 02",
+    "path": "anim_keepaway_getout_02.json"
+  },
+  {
+    "label": "Keepaway Getout 03",
+    "path": "anim_keepaway_getout_03.json"
+  },
+  {
+    "label": "Keepaway Getout Engaged 01",
+    "path": "anim_keepaway_getout_engaged_01.json"
+  },
+  {
+    "label": "Keepaway Getout Exit 01",
+    "path": "anim_keepaway_getout_exit_01.json"
+  },
+  {
+    "label": "Keepaway Getout Frustrated 01",
+    "path": "anim_keepaway_getout_frustrated_01.json"
+  },
+  {
+    "label": "Keepaway Getout Loseinterest 01",
+    "path": "anim_keepaway_getout_loseinterest_01.json"
+  },
+  {
+    "label": "Keepaway Getout Satisfied 01",
+    "path": "anim_keepaway_getout_satisfied_01.json"
+  },
+  {
+    "label": "Keepaway Getready 01",
+    "path": "anim_keepaway_getready_01.json"
+  },
+  {
+    "label": "Keepaway Getready 02",
+    "path": "anim_keepaway_getready_02.json"
+  },
+  {
+    "label": "Keepaway Getready 03",
+    "path": "anim_keepaway_getready_03.json"
+  },
+  {
+    "label": "Keepaway Getreadyset 01",
+    "path": "anim_keepaway_getreadyset_01.json"
+  },
+  {
+    "label": "Keepaway Hit Reaction 01",
+    "path": "anim_keepaway_hit_reaction_01.json"
+  },
+  {
+    "label": "Keepaway Idle 01",
+    "path": "anim_keepaway_idle_01.json"
+  },
+  {
+    "label": "Keepaway Idle 02",
+    "path": "anim_keepaway_idle_02.json"
+  },
+  {
+    "label": "Keepaway Idle 03",
+    "path": "anim_keepaway_idle_03.json"
+  },
+  {
+    "label": "Keepaway Idle Glance 01",
+    "path": "anim_keepaway_idle_glance_01.json"
+  },
+  {
+    "label": "Keepaway Idle Inplace 03",
+    "path": "anim_keepaway_idle_inplace_03.json"
+  },
+  {
+    "label": "Keepaway Idle Side 02",
+    "path": "anim_keepaway_idle_side_02.json"
+  },
+  {
+    "label": "Keepaway Idleliftdown 01",
+    "path": "anim_keepaway_idleliftdown_01.json"
+  },
+  {
+    "label": "Keepaway Idleliftdown 02",
+    "path": "anim_keepaway_idleliftdown_02.json"
+  },
+  {
+    "label": "Keepaway Losegame 01",
+    "path": "anim_keepaway_losegame_01.json"
+  },
+  {
+    "label": "Keepaway Losegame 02",
+    "path": "anim_keepaway_losegame_02.json"
+  },
+  {
+    "label": "Keepaway Losegame 03",
+    "path": "anim_keepaway_losegame_03.json"
+  },
+  {
+    "label": "Keepaway Losehand 01",
+    "path": "anim_keepaway_losehand_01.json"
+  },
+  {
+    "label": "Keepaway Losehand 02",
+    "path": "anim_keepaway_losehand_02.json"
+  },
+  {
+    "label": "Keepaway Losehand 03",
+    "path": "anim_keepaway_losehand_03.json"
+  },
+  {
+    "label": "Keepaway Miss Reaction 01",
+    "path": "anim_keepaway_miss_reaction_01.json"
+  },
+  {
+    "label": "Keepaway Pounce 01",
+    "path": "anim_keepaway_pounce_01.json"
+  },
+  {
+    "label": "Keepaway Pounce 02",
+    "path": "anim_keepaway_pounce_02.json"
+  },
+  {
+    "label": "Keepaway Pounce 03",
+    "path": "anim_keepaway_pounce_03.json"
+  },
+  {
+    "label": "Keepaway Pounce 04",
+    "path": "anim_keepaway_pounce_04.json"
+  },
+  {
+    "label": "Keepaway Pounce 05",
+    "path": "anim_keepaway_pounce_05.json"
+  },
+  {
+    "label": "Keepaway Pounce Getin 01",
+    "path": "anim_keepaway_pounce_getin_01.json"
+  },
+  {
+    "label": "Keepaway Pounce Mousetrap 04",
+    "path": "anim_keepaway_pounce_mousetrap_04.json"
+  },
+  {
+    "label": "Keepaway Pounce Quick 01",
+    "path": "anim_keepaway_pounce_quick_01.json"
+  },
+  {
+    "label": "Keepaway Pounce Shake 02",
+    "path": "anim_keepaway_pounce_shake_02.json"
+  },
+  {
+    "label": "Keepaway Pounce Slow 05",
+    "path": "anim_keepaway_pounce_slow_05.json"
+  },
+  {
+    "label": "Keepaway Stopshort 01",
+    "path": "anim_keepaway_stopshort_01.json"
+  },
+  {
+    "label": "Keepaway Stopshort 02",
+    "path": "anim_keepaway_stopshort_02.json"
+  },
+  {
+    "label": "Keepaway Wingame 01",
+    "path": "anim_keepaway_wingame_01.json"
+  },
+  {
+    "label": "Keepaway Wingame 02",
+    "path": "anim_keepaway_wingame_02.json"
+  },
+  {
+    "label": "Keepaway Wingame 03",
+    "path": "anim_keepaway_wingame_03.json"
+  },
+  {
+    "label": "Keepaway Winhand 01",
+    "path": "anim_keepaway_winhand_01.json"
+  },
+  {
+    "label": "Keepaway Winhand 02",
+    "path": "anim_keepaway_winhand_02.json"
+  },
+  {
+    "label": "Keepaway Winhand 03",
+    "path": "anim_keepaway_winhand_03.json"
+  },
+  {
+    "label": "Knowledgegraph Fail 01",
+    "path": "anim_knowledgegraph_fail_01.json"
+  },
+  {
+    "label": "Knowledgegraph Fail Getout 01",
+    "path": "anim_knowledgegraph_fail_getout_01.json"
+  },
+  {
+    "label": "Knowledgegraph Getin 01",
+    "path": "anim_knowledgegraph_getin_01.json"
+  },
+  {
+    "label": "Knowledgegraph Getout 01",
+    "path": "anim_knowledgegraph_getout_01.json"
+  },
+  {
+    "label": "Knowledgegraph Success 01",
+    "path": "anim_knowledgegraph_success_01.json"
+  },
+  {
+    "label": "Laser Drive 01",
+    "path": "anim_laser_drive_01.json"
+  },
+  {
+    "label": "Laser Drive 02",
+    "path": "anim_laser_drive_02.json"
+  },
+  {
+    "label": "Laser Drive 03",
+    "path": "anim_laser_drive_03.json"
+  },
+  {
+    "label": "Launch Cubediscovery",
+    "path": "anim_launch_cubediscovery.json"
+  },
+  {
+    "label": "Launch Drivingloop 01",
+    "path": "anim_launch_drivingloop_01.json"
+  },
+  {
+    "label": "Launch Drivingloop 02",
+    "path": "anim_launch_drivingloop_02.json"
+  },
+  {
+    "label": "Launch Drivingloop 03",
+    "path": "anim_launch_drivingloop_03.json"
+  },
+  {
+    "label": "Launch Enddriving 01",
+    "path": "anim_launch_enddriving_01.json"
+  },
+  {
+    "label": "Launch Reacttocube",
+    "path": "anim_launch_reacttocube.json"
+  },
+  {
+    "label": "Launch Reacttocubepickup",
+    "path": "anim_launch_reacttocubepickup.json"
+  },
+  {
+    "label": "Launch Reacttoputdown",
+    "path": "anim_launch_reacttoputdown.json"
+  },
+  {
+    "label": "Launch Sleeping 01",
+    "path": "anim_launch_sleeping_01.json"
+  },
+  {
+    "label": "Launch Startdriving 01",
+    "path": "anim_launch_startdriving_01.json"
+  },
+  {
+    "label": "Launch Startsleeping 01",
+    "path": "anim_launch_startsleeping_01.json"
+  },
+  {
+    "label": "Launch Wakeup 01",
+    "path": "anim_launch_wakeup_01.json"
+  },
+  {
+    "label": "Launch Wakeup 02",
+    "path": "anim_launch_wakeup_02.json"
+  },
+  {
+    "label": "Launch Wakeup 03",
+    "path": "anim_launch_wakeup_03.json"
+  },
+  {
+    "label": "Launch Wakeup 04",
+    "path": "anim_launch_wakeup_04.json"
+  },
+  {
+    "label": "Launch Wakeup 05",
+    "path": "anim_launch_wakeup_05.json"
+  },
+  {
+    "label": "Launch Wakeup Drivingloop 01",
+    "path": "anim_launch_wakeup_drivingloop_01.json"
+  },
+  {
+    "label": "Launch Wakeup Drivingloop 02",
+    "path": "anim_launch_wakeup_drivingloop_02.json"
+  },
+  {
+    "label": "Launch Wakeup Enddriving 01",
+    "path": "anim_launch_wakeup_enddriving_01.json"
+  },
+  {
+    "label": "Launch Wakeup Startdriving 01",
+    "path": "anim_launch_wakeup_startdriving_01.json"
+  },
+  {
+    "label": "Loco Driving01 End 01",
+    "path": "anim_loco_driving01_end_01.json"
+  },
+  {
+    "label": "Loco Driving01 Loop 01",
+    "path": "anim_loco_driving01_loop_01.json"
+  },
+  {
+    "label": "Loco Driving01 Loop 02",
+    "path": "anim_loco_driving01_loop_02.json"
+  },
+  {
+    "label": "Loco Driving01 Loop 03",
+    "path": "anim_loco_driving01_loop_03.json"
+  },
+  {
+    "label": "Loco Driving01 Start 01",
+    "path": "anim_loco_driving01_start_01.json"
+  },
+  {
+    "label": "Loco Driving01 Start 02",
+    "path": "anim_loco_driving01_start_02.json"
+  },
+  {
+    "label": "Look Left 01",
+    "path": "anim_look_left_01.json"
+  },
+  {
+    "label": "Look Right 01",
+    "path": "anim_look_right_01.json"
+  },
+  {
+    "label": "Lookatdevice Getin",
+    "path": "anim_lookatdevice_getin.json"
+  },
+  {
+    "label": "Lookatdevice Icon",
+    "path": "anim_lookatdevice_icon.json"
+  },
+  {
+    "label": "Lookatdevice Icon End",
+    "path": "anim_lookatdevice_icon_end.json"
+  },
+  {
+    "label": "Lookatdvice Getout",
+    "path": "anim_lookatdvice_getout.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long",
+    "path": "anim_lookinplaceforfaces_keepalive_long.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 02",
+    "path": "anim_lookinplaceforfaces_keepalive_long_02.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 02 Head Angle -20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_02_head_angle_-20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 02 Head Angle 20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_02_head_angle_20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 02 Head Angle 40",
+    "path": "anim_lookinplaceforfaces_keepalive_long_02_head_angle_40.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 03",
+    "path": "anim_lookinplaceforfaces_keepalive_long_03.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 03 Head Angle -20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_03_head_angle_-20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 03 Head Angle 20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_03_head_angle_20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 03 Head Angle 40",
+    "path": "anim_lookinplaceforfaces_keepalive_long_03_head_angle_40.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 04",
+    "path": "anim_lookinplaceforfaces_keepalive_long_04.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 04 Head Angle -20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_04_head_angle_-20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 04 Head Angle 20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_04_head_angle_20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long 04 Head Angle 40",
+    "path": "anim_lookinplaceforfaces_keepalive_long_04_head_angle_40.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long Head Angle -20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_head_angle_-20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long Head Angle 20",
+    "path": "anim_lookinplaceforfaces_keepalive_long_head_angle_20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Long Head Angle 40",
+    "path": "anim_lookinplaceforfaces_keepalive_long_head_angle_40.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Medium",
+    "path": "anim_lookinplaceforfaces_keepalive_medium.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Medium Head Angle -20",
+    "path": "anim_lookinplaceforfaces_keepalive_medium_head_angle_-20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Medium Head Angle 20",
+    "path": "anim_lookinplaceforfaces_keepalive_medium_head_angle_20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Medium Head Angle 40",
+    "path": "anim_lookinplaceforfaces_keepalive_medium_head_angle_40.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Short",
+    "path": "anim_lookinplaceforfaces_keepalive_short.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Short Head Angle -20",
+    "path": "anim_lookinplaceforfaces_keepalive_short_head_angle_-20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Short Head Angle 20",
+    "path": "anim_lookinplaceforfaces_keepalive_short_head_angle_20.json"
+  },
+  {
+    "label": "Lookinplaceforfaces Keepalive Short Head Angle 40",
+    "path": "anim_lookinplaceforfaces_keepalive_short_head_angle_40.json"
+  },
+  {
+    "label": "Lowlightcharger Search Getin 01",
+    "path": "anim_lowlightcharger_search_getin_01.json"
+  },
+  {
+    "label": "Lowlightcharger Search Getin 02",
+    "path": "anim_lowlightcharger_search_getin_02.json"
+  },
+  {
+    "label": "Lowlightcharger Search Getout 01",
+    "path": "anim_lowlightcharger_search_getout_01.json"
+  },
+  {
+    "label": "Lowlightcharger Search Loop 01",
+    "path": "anim_lowlightcharger_search_loop_01.json"
+  },
+  {
+    "label": "Lowlightcharger Search Loop 02",
+    "path": "anim_lowlightcharger_search_loop_02.json"
+  },
+  {
+    "label": "Meetvictor Alreadyknowbob 01",
+    "path": "anim_meetvictor_alreadyknowbob_01.json"
+  },
+  {
+    "label": "Meetvictor Getin 01",
+    "path": "anim_meetvictor_getin_01.json"
+  },
+  {
+    "label": "Meetvictor Getin 01 Head Angle -20",
+    "path": "anim_meetvictor_getin_01_head_angle_-20.json"
+  },
+  {
+    "label": "Meetvictor Getin 01 Head Angle 20",
+    "path": "anim_meetvictor_getin_01_head_angle_20.json"
+  },
+  {
+    "label": "Meetvictor Getin 01 Head Angle 40",
+    "path": "anim_meetvictor_getin_01_head_angle_40.json"
+  },
+  {
+    "label": "Meetvictor Lookface Interrupted 01",
+    "path": "anim_meetvictor_lookface_interrupted_01.json"
+  },
+  {
+    "label": "Meetvictor Lookface Loop 01",
+    "path": "anim_meetvictor_lookface_loop_01.json"
+  },
+  {
+    "label": "Meetvictor Lookface Loop 02",
+    "path": "anim_meetvictor_lookface_loop_02.json"
+  },
+  {
+    "label": "Meetvictor Lookface Loop 03",
+    "path": "anim_meetvictor_lookface_loop_03.json"
+  },
+  {
+    "label": "Meetvictor Lookface Timeout 01",
+    "path": "anim_meetvictor_lookface_timeout_01.json"
+  },
+  {
+    "label": "Meetvictor Sayname 01",
+    "path": "anim_meetvictor_sayname_01.json"
+  },
+  {
+    "label": "Meetvictor Sayname 03",
+    "path": "anim_meetvictor_sayname_03.json"
+  },
+  {
+    "label": "Meetvictor Sayname 04",
+    "path": "anim_meetvictor_sayname_04.json"
+  },
+  {
+    "label": "Meetvictor Sayname02 01",
+    "path": "anim_meetvictor_sayname02_01.json"
+  },
+  {
+    "label": "Meetvictor Sayname02 02",
+    "path": "anim_meetvictor_sayname02_02.json"
+  },
+  {
+    "label": "Meetvictor Sayname02 04",
+    "path": "anim_meetvictor_sayname02_04.json"
+  },
+  {
+    "label": "Meetvictor Youarebob 01",
+    "path": "anim_meetvictor_youarebob_01.json"
+  },
+  {
+    "label": "Message Announce Tonoone 01",
+    "path": "anim_message_announce_tonoone_01.json"
+  },
+  {
+    "label": "Message Announce Toplayer 01",
+    "path": "anim_message_announce_toplayer_01.json"
+  },
+  {
+    "label": "Message Play Reaction 01",
+    "path": "anim_message_play_reaction_01.json"
+  },
+  {
+    "label": "Message Record Reaction 01",
+    "path": "anim_message_record_reaction_01.json"
+  },
+  {
+    "label": "Micstate Micoff 01",
+    "path": "anim_micstate_micoff_01.json"
+  },
+  {
+    "label": "Micstate Micon 01",
+    "path": "anim_micstate_micon_01.json"
+  },
+  {
+    "label": "Movement Alreadyhere 01",
+    "path": "anim_movement_alreadyhere_01.json"
+  },
+  {
+    "label": "Movement Alreadyhere 01 Head Angle -20",
+    "path": "anim_movement_alreadyhere_01_head_angle_-20.json"
+  },
+  {
+    "label": "Movement Alreadyhere 01 Head Angle 20",
+    "path": "anim_movement_alreadyhere_01_head_angle_20.json"
+  },
+  {
+    "label": "Movement Alreadyhere 01 Head Angle 40",
+    "path": "anim_movement_alreadyhere_01_head_angle_40.json"
+  },
+  {
+    "label": "Movement Backward 01",
+    "path": "anim_movement_backward_01.json"
+  },
+  {
+    "label": "Movement Comehere 01",
+    "path": "anim_movement_comehere_01.json"
+  },
+  {
+    "label": "Movement Comehere Greeting 01",
+    "path": "anim_movement_comehere_greeting_01.json"
+  },
+  {
+    "label": "Movement Comehere Greeting 02",
+    "path": "anim_movement_comehere_greeting_02.json"
+  },
+  {
+    "label": "Movement Comehere Reaction 01",
+    "path": "anim_movement_comehere_reaction_01.json"
+  },
+  {
+    "label": "Movement Forward 01",
+    "path": "anim_movement_forward_01.json"
+  },
+  {
+    "label": "Movement Left 01",
+    "path": "anim_movement_left_01.json"
+  },
+  {
+    "label": "Movement Left 02",
+    "path": "anim_movement_left_02.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Long",
+    "path": "anim_movement_lookinplaceforfaces_long.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Long Head Angle -20",
+    "path": "anim_movement_lookinplaceforfaces_long_head_angle_-20.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Long Head Angle 20",
+    "path": "anim_movement_lookinplaceforfaces_long_head_angle_20.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Long Head Angle 40",
+    "path": "anim_movement_lookinplaceforfaces_long_head_angle_40.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Medium",
+    "path": "anim_movement_lookinplaceforfaces_medium.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Medium Head Angle -20",
+    "path": "anim_movement_lookinplaceforfaces_medium_head_angle_-20.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Medium Head Angle 20",
+    "path": "anim_movement_lookinplaceforfaces_medium_head_angle_20.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Medium Head Angle 40",
+    "path": "anim_movement_lookinplaceforfaces_medium_head_angle_40.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Short",
+    "path": "anim_movement_lookinplaceforfaces_short.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Short Head Angle -20",
+    "path": "anim_movement_lookinplaceforfaces_short_head_angle_-20.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Short Head Angle 20",
+    "path": "anim_movement_lookinplaceforfaces_short_head_angle_20.json"
+  },
+  {
+    "label": "Movement Lookinplaceforfaces Short Head Angle 40",
+    "path": "anim_movement_lookinplaceforfaces_short_head_angle_40.json"
+  },
+  {
+    "label": "Movement Reacttoface 01",
+    "path": "anim_movement_reacttoface_01.json"
+  },
+  {
+    "label": "Movement Reacttoface 01 Head Angle -20",
+    "path": "anim_movement_reacttoface_01_head_angle_-20.json"
+  },
+  {
+    "label": "Movement Reacttoface 01 Head Angle 20",
+    "path": "anim_movement_reacttoface_01_head_angle_20.json"
+  },
+  {
+    "label": "Movement Reacttoface 01 Head Angle 40",
+    "path": "anim_movement_reacttoface_01_head_angle_40.json"
+  },
+  {
+    "label": "Movement Right 01",
+    "path": "anim_movement_right_01.json"
+  },
+  {
+    "label": "Movement Turnaround 01",
+    "path": "anim_movement_turnaround_01.json"
+  },
+  {
+    "label": "Neutral Eyes 01",
+    "path": "anim_neutral_eyes_01.json"
+  },
+  {
+    "label": "Nocloud Icon 01",
+    "path": "anim_nocloud_icon_01.json"
+  },
+  {
+    "label": "Nowifi Getin 01",
+    "path": "anim_nowifi_getin_01.json"
+  },
+  {
+    "label": "Nowifi Getin 02",
+    "path": "anim_nowifi_getin_02.json"
+  },
+  {
+    "label": "Nowifi Icon 01",
+    "path": "anim_nowifi_icon_01.json"
+  },
+  {
+    "label": "Nowifi Trouble Icon 01",
+    "path": "anim_nowifi_trouble_icon_01.json"
+  },
+  {
+    "label": "Observe Onchager Getin 01",
+    "path": "anim_observe_onchager_getin_01.json"
+  },
+  {
+    "label": "Observe Oncharger Getout 01",
+    "path": "anim_observe_oncharger_getout_01.json"
+  },
+  {
+    "label": "Observing Around Subtle 01",
+    "path": "anim_observing_around_subtle_01.json"
+  },
+  {
+    "label": "Observing Around Subtle 02",
+    "path": "anim_observing_around_subtle_02.json"
+  },
+  {
+    "label": "Observing Distance Area 01",
+    "path": "anim_observing_distance_area_01.json"
+  },
+  {
+    "label": "Observing Far Subtle 01",
+    "path": "anim_observing_far_subtle_01.json"
+  },
+  {
+    "label": "Observing Nearby Area 01",
+    "path": "anim_observing_nearby_area_01.json"
+  },
+  {
+    "label": "Observing Nearby Area 02",
+    "path": "anim_observing_nearby_area_02.json"
+  },
+  {
+    "label": "Observing Self Absorbed 01",
+    "path": "anim_observing_self_absorbed_01.json"
+  },
+  {
+    "label": "Observing Sides Area 01",
+    "path": "anim_observing_sides_area_01.json"
+  },
+  {
+    "label": "Onboarding Cube Drive Getin 01",
+    "path": "anim_onboarding_cube_drive_getin_01.json"
+  },
+  {
+    "label": "Onboarding Cube Drive Getout 01",
+    "path": "anim_onboarding_cube_drive_getout_01.json"
+  },
+  {
+    "label": "Onboarding Cube Drive Loop 01",
+    "path": "anim_onboarding_cube_drive_loop_01.json"
+  },
+  {
+    "label": "Onboarding Cube Psychic 01",
+    "path": "anim_onboarding_cube_psychic_01.json"
+  },
+  {
+    "label": "Onboarding Cube Reacttocube",
+    "path": "anim_onboarding_cube_reacttocube.json"
+  },
+  {
+    "label": "Onboarding Cube Success Getout 01",
+    "path": "anim_onboarding_cube_success_getout_01.json"
+  },
+  {
+    "label": "Onboarding Drive Getout 01",
+    "path": "anim_onboarding_drive_getout_01.json"
+  },
+  {
+    "label": "Onboarding Drive To Face 01",
+    "path": "anim_onboarding_drive_to_face_01.json"
+  },
+  {
+    "label": "Onboarding Driveoff Charger 01",
+    "path": "anim_onboarding_driveoff_charger_01.json"
+  },
+  {
+    "label": "Onboarding Driveoff Charger Alt 01",
+    "path": "anim_onboarding_driveoff_charger_alt_01.json"
+  },
+  {
+    "label": "Onboarding Eyecontact Loop 01",
+    "path": "anim_onboarding_eyecontact_loop_01.json"
+  },
+  {
+    "label": "Onboarding Eyecontact Loop Getout 01",
+    "path": "anim_onboarding_eyecontact_loop_getout_01.json"
+  },
+  {
+    "label": "Onboarding Lookaround Loop 01",
+    "path": "anim_onboarding_lookaround_loop_01.json"
+  },
+  {
+    "label": "Onboarding Lookdown Lookaround 01",
+    "path": "anim_onboarding_lookdown_lookaround_01.json"
+  },
+  {
+    "label": "Onboarding Lookdown Lookaround Loop 01",
+    "path": "anim_onboarding_lookdown_lookaround_loop_01.json"
+  },
+  {
+    "label": "Onboarding Reacttoface Happy 01",
+    "path": "anim_onboarding_reacttoface_happy_01.json"
+  },
+  {
+    "label": "Onboarding Reacttoface Happy 01 Head Angle -20",
+    "path": "anim_onboarding_reacttoface_happy_01_head_angle_-20.json"
+  },
+  {
+    "label": "Onboarding Reacttoface Happy 01 Head Angle 20",
+    "path": "anim_onboarding_reacttoface_happy_01_head_angle_20.json"
+  },
+  {
+    "label": "Onboarding Reacttoface Happy 01 Head Angle 40",
+    "path": "anim_onboarding_reacttoface_happy_01_head_angle_40.json"
+  },
+  {
+    "label": "Onboarding Wakeup 01",
+    "path": "anim_onboarding_wakeup_01.json"
+  },
+  {
+    "label": "Onboarding Wakeword Getin 01",
+    "path": "anim_onboarding_wakeword_getin_01.json"
+  },
+  {
+    "label": "Onboarding Wakeword Getout 01",
+    "path": "anim_onboarding_wakeword_getout_01.json"
+  },
+  {
+    "label": "Onboarding Wakeword Getout 02",
+    "path": "anim_onboarding_wakeword_getout_02.json"
+  },
+  {
+    "label": "Onboarding Wakeword Loop 01",
+    "path": "anim_onboarding_wakeword_loop_01.json"
+  },
+  {
+    "label": "Onboarding Wakeword Loop 02",
+    "path": "anim_onboarding_wakeword_loop_02.json"
+  },
+  {
+    "label": "Pause Idle 01",
+    "path": "anim_pause_idle_01.json"
+  },
+  {
+    "label": "Pause Idle 02",
+    "path": "anim_pause_idle_02.json"
+  },
+  {
+    "label": "Pause Idle 03",
+    "path": "anim_pause_idle_03.json"
+  },
+  {
+    "label": "Petdetection Reaction Cat 01",
+    "path": "anim_petdetection_reaction_cat_01.json"
+  },
+  {
+    "label": "Petdetection Reaction Cat 02",
+    "path": "anim_petdetection_reaction_cat_02.json"
+  },
+  {
+    "label": "Petdetection Reaction Cat 03",
+    "path": "anim_petdetection_reaction_cat_03.json"
+  },
+  {
+    "label": "Petdetection Reaction Cat 04",
+    "path": "anim_petdetection_reaction_cat_04.json"
+  },
+  {
+    "label": "Petdetection Reaction Dog 01",
+    "path": "anim_petdetection_reaction_dog_01.json"
+  },
+  {
+    "label": "Petdetection Reaction Dog 02",
+    "path": "anim_petdetection_reaction_dog_02.json"
+  },
+  {
+    "label": "Petdetection Reaction Dog 03",
+    "path": "anim_petdetection_reaction_dog_03.json"
+  },
+  {
+    "label": "Petdetection Reaction Dog 04",
+    "path": "anim_petdetection_reaction_dog_04.json"
+  },
+  {
+    "label": "Petting Bliss Getout 01",
+    "path": "anim_petting_bliss_getout_01.json"
+  },
+  {
+    "label": "Petting Bliss Getout 02",
+    "path": "anim_petting_bliss_getout_02.json"
+  },
+  {
+    "label": "Petting Blissloop 01",
+    "path": "anim_petting_blissloop_01.json"
+  },
+  {
+    "label": "Petting Blissloop 02",
+    "path": "anim_petting_blissloop_02.json"
+  },
+  {
+    "label": "Petting Blissloop 03",
+    "path": "anim_petting_blissloop_03.json"
+  },
+  {
+    "label": "Petting Getin 01",
+    "path": "anim_petting_getin_01.json"
+  },
+  {
+    "label": "Petting Lvl1 01",
+    "path": "anim_petting_lvl1_01.json"
+  },
+  {
+    "label": "Petting Lvl1 Getout 01",
+    "path": "anim_petting_lvl1_getout_01.json"
+  },
+  {
+    "label": "Petting Lvl2 01",
+    "path": "anim_petting_lvl2_01.json"
+  },
+  {
+    "label": "Petting Lvl2 Getout 01",
+    "path": "anim_petting_lvl2_getout_01.json"
+  },
+  {
+    "label": "Petting Lvl2 Getout 02",
+    "path": "anim_petting_lvl2_getout_02.json"
+  },
+  {
+    "label": "Petting Lvl3 01",
+    "path": "anim_petting_lvl3_01.json"
+  },
+  {
+    "label": "Petting Lvl3 Getout 01",
+    "path": "anim_petting_lvl3_getout_01.json"
+  },
+  {
+    "label": "Petting Lvl3 Getout 02",
+    "path": "anim_petting_lvl3_getout_02.json"
+  },
+  {
+    "label": "Petting Lvl4 01",
+    "path": "anim_petting_lvl4_01.json"
+  },
+  {
+    "label": "Petting Lvl4 Getout 01",
+    "path": "anim_petting_lvl4_getout_01.json"
+  },
+  {
+    "label": "Photo Focus 01",
+    "path": "anim_photo_focus_01.json"
+  },
+  {
+    "label": "Photo Shutter 01",
+    "path": "anim_photo_shutter_01.json"
+  },
+  {
+    "label": "Pounce 01",
+    "path": "anim_pounce_01.json"
+  },
+  {
+    "label": "Pounce 02",
+    "path": "anim_pounce_02.json"
+  },
+  {
+    "label": "Pounce 03",
+    "path": "anim_pounce_03.json"
+  },
+  {
+    "label": "Pounce 04",
+    "path": "anim_pounce_04.json"
+  },
+  {
+    "label": "Pounce Drive 01",
+    "path": "anim_pounce_drive_01.json"
+  },
+  {
+    "label": "Pounce Drive 02",
+    "path": "anim_pounce_drive_02.json"
+  },
+  {
+    "label": "Pounce Drive 03",
+    "path": "anim_pounce_drive_03.json"
+  },
+  {
+    "label": "Pounce Fail 01",
+    "path": "anim_pounce_fail_01.json"
+  },
+  {
+    "label": "Pounce Fail 02",
+    "path": "anim_pounce_fail_02.json"
+  },
+  {
+    "label": "Pounce Fail 03",
+    "path": "anim_pounce_fail_03.json"
+  },
+  {
+    "label": "Pounce Fail 04",
+    "path": "anim_pounce_fail_04.json"
+  },
+  {
+    "label": "Pounce Long 01",
+    "path": "anim_pounce_long_01.json"
+  },
+  {
+    "label": "Pounce Lookgetout 01",
+    "path": "anim_pounce_lookgetout_01.json"
+  },
+  {
+    "label": "Pounce Lookloop 01",
+    "path": "anim_pounce_lookloop_01.json"
+  },
+  {
+    "label": "Pounce Lookloop 02",
+    "path": "anim_pounce_lookloop_02.json"
+  },
+  {
+    "label": "Pounce Lookloop 03",
+    "path": "anim_pounce_lookloop_03.json"
+  },
+  {
+    "label": "Pounce Reacttoobj 01 Shorter",
+    "path": "anim_pounce_reacttoobj_01_shorter.json"
+  },
+  {
+    "label": "Pounce Success 01",
+    "path": "anim_pounce_success_01.json"
+  },
+  {
+    "label": "Pounce Success 02",
+    "path": "anim_pounce_success_02.json"
+  },
+  {
+    "label": "Pounce Success 03",
+    "path": "anim_pounce_success_03.json"
+  },
+  {
+    "label": "Pounce Success 04",
+    "path": "anim_pounce_success_04.json"
+  },
+  {
+    "label": "Power Offon 01",
+    "path": "anim_power_offon_01.json"
+  },
+  {
+    "label": "Power Offon 02",
+    "path": "anim_power_offon_02.json"
+  },
+  {
+    "label": "Power Offon 03",
+    "path": "anim_power_offon_03.json"
+  },
+  {
+    "label": "Power Offon 04",
+    "path": "anim_power_offon_04.json"
+  },
+  {
+    "label": "Power Onoff 01",
+    "path": "anim_power_onoff_01.json"
+  },
+  {
+    "label": "Powersavemode Temperature 01",
+    "path": "anim_powersavemode_temperature_01.json"
+  },
+  {
+    "label": "Qa Head Updown",
+    "path": "anim_qa_head_updown.json"
+  },
+  {
+    "label": "Qa Head Updown Alt",
+    "path": "anim_qa_head_updown_alt.json"
+  },
+  {
+    "label": "Qa Intervals 30frame",
+    "path": "anim_qa_intervals_30frame.json"
+  },
+  {
+    "label": "Qa Lift Updown",
+    "path": "anim_qa_lift_updown.json"
+  },
+  {
+    "label": "Qa Lift Updown Alt",
+    "path": "anim_qa_lift_updown_alt.json"
+  },
+  {
+    "label": "Qa Reset To Neutral",
+    "path": "anim_qa_reset_to_neutral.json"
+  },
+  {
+    "label": "Qa Sync 3 30 30",
+    "path": "anim_qa_sync_3_30_30.json"
+  },
+  {
+    "label": "Qa Sync 5 10 50",
+    "path": "anim_qa_sync_5_10_50.json"
+  },
+  {
+    "label": "Qa Sync 5sec",
+    "path": "anim_qa_sync_5sec.json"
+  },
+  {
+    "label": "Qa Sync Head",
+    "path": "anim_qa_sync_head.json"
+  },
+  {
+    "label": "Qa Sync Lift",
+    "path": "anim_qa_sync_lift.json"
+  },
+  {
+    "label": "Qa Sync Treads",
+    "path": "anim_qa_sync_treads.json"
+  },
+  {
+    "label": "React2block 02",
+    "path": "anim_react2block_02.json"
+  },
+  {
+    "label": "Reacttoblock Admirecubetower 01",
+    "path": "anim_reacttoblock_admirecubetower_01.json"
+  },
+  {
+    "label": "Reacttoblock Ask 01 0",
+    "path": "anim_reacttoblock_ask_01_0.json"
+  },
+  {
+    "label": "Reacttoblock Dropfail 01",
+    "path": "anim_reacttoblock_dropfail_01.json"
+  },
+  {
+    "label": "Reacttoblock Dropfail 02",
+    "path": "anim_reacttoblock_dropfail_02.json"
+  },
+  {
+    "label": "Reacttoblock Dropsuccess 01",
+    "path": "anim_reacttoblock_dropsuccess_01.json"
+  },
+  {
+    "label": "Reacttoblock Focusedeyes 01",
+    "path": "anim_reacttoblock_focusedeyes_01.json"
+  },
+  {
+    "label": "Reacttoblock Frustrated 01",
+    "path": "anim_reacttoblock_frustrated_01.json"
+  },
+  {
+    "label": "Reacttoblock Happydetermined 01",
+    "path": "anim_reacttoblock_happydetermined_01.json"
+  },
+  {
+    "label": "Reacttoblock Happydetermined 02",
+    "path": "anim_reacttoblock_happydetermined_02.json"
+  },
+  {
+    "label": "Reacttoblock Lifteffortpickup 01",
+    "path": "anim_reacttoblock_lifteffortpickup_01.json"
+  },
+  {
+    "label": "Reacttoblock Lifteffortplacehigh 01",
+    "path": "anim_reacttoblock_lifteffortplacehigh_01.json"
+  },
+  {
+    "label": "Reacttoblock Lifteffortplacelow 01",
+    "path": "anim_reacttoblock_lifteffortplacelow_01.json"
+  },
+  {
+    "label": "Reacttoblock Lifteffortroll 01",
+    "path": "anim_reacttoblock_lifteffortroll_01.json"
+  },
+  {
+    "label": "Reacttoblock Placeblock 01",
+    "path": "anim_reacttoblock_placeblock_01.json"
+  },
+  {
+    "label": "Reacttoblock Putdown2nd 01",
+    "path": "anim_reacttoblock_putdown2nd_01.json"
+  },
+  {
+    "label": "Reacttoblock React 01",
+    "path": "anim_reacttoblock_react_01.json"
+  },
+  {
+    "label": "Reacttoblock React 01 Head Angle -20",
+    "path": "anim_reacttoblock_react_01_head_angle_-20.json"
+  },
+  {
+    "label": "Reacttoblock React 01 Head Angle 20",
+    "path": "anim_reacttoblock_react_01_head_angle_20.json"
+  },
+  {
+    "label": "Reacttoblock React 01 Head Angle 40",
+    "path": "anim_reacttoblock_react_01_head_angle_40.json"
+  },
+  {
+    "label": "Reacttoblock React Short 01",
+    "path": "anim_reacttoblock_react_short_01.json"
+  },
+  {
+    "label": "Reacttoblock React Short 02",
+    "path": "anim_reacttoblock_react_short_02.json"
+  },
+  {
+    "label": "Reacttoblock Reacttocharger 01",
+    "path": "anim_reacttoblock_reacttocharger_01.json"
+  },
+  {
+    "label": "Reacttoblock Stuckonblock 01",
+    "path": "anim_reacttoblock_stuckonblock_01.json"
+  },
+  {
+    "label": "Reacttoblock Success 01",
+    "path": "anim_reacttoblock_success_01.json"
+  },
+  {
+    "label": "Reacttocliff Edge 01",
+    "path": "anim_reacttocliff_edge_01.json"
+  },
+  {
+    "label": "Reacttocliff Edge 02",
+    "path": "anim_reacttocliff_edge_02.json"
+  },
+  {
+    "label": "Reacttocliff Edge 03",
+    "path": "anim_reacttocliff_edge_03.json"
+  },
+  {
+    "label": "Reacttocliff Edge 04",
+    "path": "anim_reacttocliff_edge_04.json"
+  },
+  {
+    "label": "Reacttocliff Edgeliftup 01",
+    "path": "anim_reacttocliff_edgeliftup_01.json"
+  },
+  {
+    "label": "Reacttocliff Faceplantroll 01",
+    "path": "anim_reacttocliff_faceplantroll_01.json"
+  },
+  {
+    "label": "Reacttocliff Faceplantroll 02",
+    "path": "anim_reacttocliff_faceplantroll_02.json"
+  },
+  {
+    "label": "Reacttocliff Faceplantroll Armup 01",
+    "path": "anim_reacttocliff_faceplantroll_armup_01.json"
+  },
+  {
+    "label": "Reacttocliff Faceplantroll Armup 02",
+    "path": "anim_reacttocliff_faceplantroll_armup_02.json"
+  },
+  {
+    "label": "Reacttocliff Huh 01",
+    "path": "anim_reacttocliff_huh_01.json"
+  },
+  {
+    "label": "Reacttocliff Pickup 01",
+    "path": "anim_reacttocliff_pickup_01.json"
+  },
+  {
+    "label": "Reacttocliff Pickup 02",
+    "path": "anim_reacttocliff_pickup_02.json"
+  },
+  {
+    "label": "Reacttocliff Pickup 03",
+    "path": "anim_reacttocliff_pickup_03.json"
+  },
+  {
+    "label": "Reacttocliff Pickup 04",
+    "path": "anim_reacttocliff_pickup_04.json"
+  },
+  {
+    "label": "Reacttocliff Pickup 05",
+    "path": "anim_reacttocliff_pickup_05.json"
+  },
+  {
+    "label": "Reacttocliff Pickup 06",
+    "path": "anim_reacttocliff_pickup_06.json"
+  },
+  {
+    "label": "Reacttocliff Reaction Back 01",
+    "path": "anim_reacttocliff_reaction_back_01.json"
+  },
+  {
+    "label": "Reacttocliff Reaction Front Left 01",
+    "path": "anim_reacttocliff_reaction_front_left_01.json"
+  },
+  {
+    "label": "Reacttocliff Reaction Front Right 01",
+    "path": "anim_reacttocliff_reaction_front_right_01.json"
+  },
+  {
+    "label": "Reacttocliff Reaction Rear Left 01",
+    "path": "anim_reacttocliff_reaction_rear_left_01.json"
+  },
+  {
+    "label": "Reacttocliff Reaction Rear Right 01",
+    "path": "anim_reacttocliff_reaction_rear_right_01.json"
+  },
+  {
+    "label": "Reacttocliff Sidestuck Effort 01",
+    "path": "anim_reacttocliff_sidestuck_effort_01.json"
+  },
+  {
+    "label": "Reacttocliff Sidestuck Effort 02",
+    "path": "anim_reacttocliff_sidestuck_effort_02.json"
+  },
+  {
+    "label": "Reacttocliff Sidestuck Getout 01",
+    "path": "anim_reacttocliff_sidestuck_getout_01.json"
+  },
+  {
+    "label": "Reacttocliff Stop 01",
+    "path": "anim_reacttocliff_stop_01.json"
+  },
+  {
+    "label": "Reacttocliff Stop 02",
+    "path": "anim_reacttocliff_stop_02.json"
+  },
+  {
+    "label": "Reacttocliff Stuckleftside 01",
+    "path": "anim_reacttocliff_stuckleftside_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckleftside 02",
+    "path": "anim_reacttocliff_stuckleftside_02.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge 01",
+    "path": "anim_reacttocliff_stuckonedge_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge 02",
+    "path": "anim_reacttocliff_stuckonedge_02.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Alert 01",
+    "path": "anim_reacttocliff_stuckonedge_alert_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Alert Left 01",
+    "path": "anim_reacttocliff_stuckonedge_alert_left_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Alert Right 01",
+    "path": "anim_reacttocliff_stuckonedge_alert_right_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Getin 01",
+    "path": "anim_reacttocliff_stuckonedge_getin_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Left 01",
+    "path": "anim_reacttocliff_stuckonedge_left_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Left 02",
+    "path": "anim_reacttocliff_stuckonedge_left_02.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Left Getin 01",
+    "path": "anim_reacttocliff_stuckonedge_left_getin_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Right 01",
+    "path": "anim_reacttocliff_stuckonedge_right_01.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Right 02",
+    "path": "anim_reacttocliff_stuckonedge_right_02.json"
+  },
+  {
+    "label": "Reacttocliff Stuckonedge Right Getin 01",
+    "path": "anim_reacttocliff_stuckonedge_right_getin_01.json"
+  },
+  {
+    "label": "Reacttocliff Turnleft 120 01",
+    "path": "anim_reacttocliff_turnleft_120_01.json"
+  },
+  {
+    "label": "Reacttocliff Turnleft 180 01",
+    "path": "anim_reacttocliff_turnleft_180_01.json"
+  },
+  {
+    "label": "Reacttocliff Turnleft 60 01",
+    "path": "anim_reacttocliff_turnleft_60_01.json"
+  },
+  {
+    "label": "Reacttocliff Turnright 120 01",
+    "path": "anim_reacttocliff_turnright_120_01.json"
+  },
+  {
+    "label": "Reacttocliff Turnright 180 01",
+    "path": "anim_reacttocliff_turnright_180_01.json"
+  },
+  {
+    "label": "Reacttocliff Turnright 60 01",
+    "path": "anim_reacttocliff_turnright_60_01.json"
+  },
+  {
+    "label": "Reacttocliff Turtleroll 01",
+    "path": "anim_reacttocliff_turtleroll_01.json"
+  },
+  {
+    "label": "Reacttocliff Turtleroll 02",
+    "path": "anim_reacttocliff_turtleroll_02.json"
+  },
+  {
+    "label": "Reacttocliff Turtleroll 03",
+    "path": "anim_reacttocliff_turtleroll_03.json"
+  },
+  {
+    "label": "Reacttocliff Turtleroll 04",
+    "path": "anim_reacttocliff_turtleroll_04.json"
+  },
+  {
+    "label": "Reacttocliff Turtleroll 05",
+    "path": "anim_reacttocliff_turtleroll_05.json"
+  },
+  {
+    "label": "Reacttocliff Turtleroll 06",
+    "path": "anim_reacttocliff_turtleroll_06.json"
+  },
+  {
+    "label": "Reacttocliff Turtlerollfail 01",
+    "path": "anim_reacttocliff_turtlerollfail_01.json"
+  },
+  {
+    "label": "Reacttocliff Turtlerollfail 02",
+    "path": "anim_reacttocliff_turtlerollfail_02.json"
+  },
+  {
+    "label": "Reacttocliff Turtlerollfail 03",
+    "path": "anim_reacttocliff_turtlerollfail_03.json"
+  },
+  {
+    "label": "Reacttocliff Wheely 01",
+    "path": "anim_reacttocliff_wheely_01.json"
+  },
+  {
+    "label": "Reacttocliff Wheely 02",
+    "path": "anim_reacttocliff_wheely_02.json"
+  },
+  {
+    "label": "Reacttocliff Wheely 03",
+    "path": "anim_reacttocliff_wheely_03.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 01",
+    "path": "anim_reacttoface_unidentified_01.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 01 Head Angle -20",
+    "path": "anim_reacttoface_unidentified_01_head_angle_-20.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 01 Head Angle 20",
+    "path": "anim_reacttoface_unidentified_01_head_angle_20.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 01 Head Angle 40",
+    "path": "anim_reacttoface_unidentified_01_head_angle_40.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 02",
+    "path": "anim_reacttoface_unidentified_02.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 02 Head Angle -20",
+    "path": "anim_reacttoface_unidentified_02_head_angle_-20.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 02 Head Angle 20",
+    "path": "anim_reacttoface_unidentified_02_head_angle_20.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 02 Head Angle 40",
+    "path": "anim_reacttoface_unidentified_02_head_angle_40.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 03",
+    "path": "anim_reacttoface_unidentified_03.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 03 Head Angle -20",
+    "path": "anim_reacttoface_unidentified_03_head_angle_-20.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 03 Head Angle 20",
+    "path": "anim_reacttoface_unidentified_03_head_angle_20.json"
+  },
+  {
+    "label": "Reacttoface Unidentified 03 Head Angle 40",
+    "path": "anim_reacttoface_unidentified_03_head_angle_40.json"
+  },
+  {
+    "label": "Reacttohabitat Subtle 01",
+    "path": "anim_reacttohabitat_subtle_01.json"
+  },
+  {
+    "label": "Referencing Curious 01",
+    "path": "anim_referencing_curious_01.json"
+  },
+  {
+    "label": "Referencing Curious 01 Head Angle -20",
+    "path": "anim_referencing_curious_01_head_angle_-20.json"
+  },
+  {
+    "label": "Referencing Curious 01 Head Angle 20",
+    "path": "anim_referencing_curious_01_head_angle_20.json"
+  },
+  {
+    "label": "Referencing Curious 01 Head Angle 40",
+    "path": "anim_referencing_curious_01_head_angle_40.json"
+  },
+  {
+    "label": "Referencing Giggle 01",
+    "path": "anim_referencing_giggle_01.json"
+  },
+  {
+    "label": "Referencing Giggle 01 Head Angle -20",
+    "path": "anim_referencing_giggle_01_head_angle_-20.json"
+  },
+  {
+    "label": "Referencing Giggle 01 Head Angle 20",
+    "path": "anim_referencing_giggle_01_head_angle_20.json"
+  },
+  {
+    "label": "Referencing Giggle 01 Head Angle 40",
+    "path": "anim_referencing_giggle_01_head_angle_40.json"
+  },
+  {
+    "label": "Referencing Smile 01",
+    "path": "anim_referencing_smile_01.json"
+  },
+  {
+    "label": "Referencing Smile 01 Head Angle -20",
+    "path": "anim_referencing_smile_01_head_angle_-20.json"
+  },
+  {
+    "label": "Referencing Smile 01 Head Angle 20",
+    "path": "anim_referencing_smile_01_head_angle_20.json"
+  },
+  {
+    "label": "Referencing Smile 01 Head Angle 40",
+    "path": "anim_referencing_smile_01_head_angle_40.json"
+  },
+  {
+    "label": "Referencing Squint 01",
+    "path": "anim_referencing_squint_01.json"
+  },
+  {
+    "label": "Referencing Squint 01 Head Angle -20",
+    "path": "anim_referencing_squint_01_head_angle_-20.json"
+  },
+  {
+    "label": "Referencing Squint 01 Head Angle 20",
+    "path": "anim_referencing_squint_01_head_angle_20.json"
+  },
+  {
+    "label": "Referencing Squint 01 Head Angle 40",
+    "path": "anim_referencing_squint_01_head_angle_40.json"
+  },
+  {
+    "label": "Referencing Squint 02",
+    "path": "anim_referencing_squint_02.json"
+  },
+  {
+    "label": "Referencing Squint 02 Head Angle -20",
+    "path": "anim_referencing_squint_02_head_angle_-20.json"
+  },
+  {
+    "label": "Referencing Squint 02 Head Angle 20",
+    "path": "anim_referencing_squint_02_head_angle_20.json"
+  },
+  {
+    "label": "Referencing Squint 02 Head Angle 40",
+    "path": "anim_referencing_squint_02_head_angle_40.json"
+  },
+  {
+    "label": "Rtillumination Lightonwakeup 01",
+    "path": "anim_rtillumination_lightonwakeup_01.json"
+  },
+  {
+    "label": "Rtillumination Lighttodark 01",
+    "path": "anim_rtillumination_lighttodark_01.json"
+  },
+  {
+    "label": "Rtmotion 45left 01",
+    "path": "anim_rtmotion_45left_01.json"
+  },
+  {
+    "label": "Rtmotion 45left Notreads 01",
+    "path": "anim_rtmotion_45left_notreads_01.json"
+  },
+  {
+    "label": "Rtmotion 45right 01",
+    "path": "anim_rtmotion_45right_01.json"
+  },
+  {
+    "label": "Rtmotion 45right Notreads 01",
+    "path": "anim_rtmotion_45right_notreads_01.json"
+  },
+  {
+    "label": "Rtmotion Forwardup 01",
+    "path": "anim_rtmotion_forwardup_01.json"
+  },
+  {
+    "label": "Rtmotion Left Getout 01",
+    "path": "anim_rtmotion_left_getout_01.json"
+  },
+  {
+    "label": "Rtmotion Lookleft 01",
+    "path": "anim_rtmotion_lookleft_01.json"
+  },
+  {
+    "label": "Rtmotion Lookright 01",
+    "path": "anim_rtmotion_lookright_01.json"
+  },
+  {
+    "label": "Rtmotion Lookup 01",
+    "path": "anim_rtmotion_lookup_01.json"
+  },
+  {
+    "label": "Rtmotion Right Getout 01",
+    "path": "anim_rtmotion_right_getout_01.json"
+  },
+  {
+    "label": "Rtmotion Turn45left 01",
+    "path": "anim_rtmotion_turn45left_01.json"
+  },
+  {
+    "label": "Rtmotion Turn45right 01",
+    "path": "anim_rtmotion_turn45right_01.json"
+  },
+  {
+    "label": "Rtmotion Up 01",
+    "path": "anim_rtmotion_up_01.json"
+  },
+  {
+    "label": "Rtmotion Up Getout 01",
+    "path": "anim_rtmotion_up_getout_01.json"
+  },
+  {
+    "label": "Rtmotion Up Notreads 01",
+    "path": "anim_rtmotion_up_notreads_01.json"
+  },
+  {
+    "label": "Rtp Blackjack Idle 01",
+    "path": "anim_rtp_blackjack_idle_01.json"
+  },
+  {
+    "label": "Rtp Blackjack Playerno 01",
+    "path": "anim_rtp_blackjack_playerno_01.json"
+  },
+  {
+    "label": "Rtp Blackjack Playeryes 01",
+    "path": "anim_rtp_blackjack_playeryes_01.json"
+  },
+  {
+    "label": "Rtp Blackjack Request 01",
+    "path": "anim_rtp_blackjack_request_01.json"
+  },
+  {
+    "label": "Rtp Blackjack Timeout 01",
+    "path": "anim_rtp_blackjack_timeout_01.json"
+  },
+  {
+    "label": "Rtpickup Loop 01",
+    "path": "anim_rtpickup_loop_01.json"
+  },
+  {
+    "label": "Rtpickup Loop 02",
+    "path": "anim_rtpickup_loop_02.json"
+  },
+  {
+    "label": "Rtpickup Loop 03",
+    "path": "anim_rtpickup_loop_03.json"
+  },
+  {
+    "label": "Rtpickup Loop 04",
+    "path": "anim_rtpickup_loop_04.json"
+  },
+  {
+    "label": "Rtpickup Loop 05",
+    "path": "anim_rtpickup_loop_05.json"
+  },
+  {
+    "label": "Rtpickup Loop 06",
+    "path": "anim_rtpickup_loop_06.json"
+  },
+  {
+    "label": "Rtpickup Loop 07",
+    "path": "anim_rtpickup_loop_07.json"
+  },
+  {
+    "label": "Rtpickup Loop 08",
+    "path": "anim_rtpickup_loop_08.json"
+  },
+  {
+    "label": "Rtpickup Loop 09",
+    "path": "anim_rtpickup_loop_09.json"
+  },
+  {
+    "label": "Rtpickup Loop 10",
+    "path": "anim_rtpickup_loop_10.json"
+  },
+  {
+    "label": "Rtpickup Putdown 01",
+    "path": "anim_rtpickup_putdown_01.json"
+  },
+  {
+    "label": "Rtpickup Putdown 02",
+    "path": "anim_rtpickup_putdown_02.json"
+  },
+  {
+    "label": "Rtpickup Putdown 03",
+    "path": "anim_rtpickup_putdown_03.json"
+  },
+  {
+    "label": "Rtpickup Putdown 04",
+    "path": "anim_rtpickup_putdown_04.json"
+  },
+  {
+    "label": "Rtpickup Reaction 01",
+    "path": "anim_rtpickup_reaction_01.json"
+  },
+  {
+    "label": "Rtpickup Reaction 02",
+    "path": "anim_rtpickup_reaction_02.json"
+  },
+  {
+    "label": "Rtpickup Reaction 03",
+    "path": "anim_rtpickup_reaction_03.json"
+  },
+  {
+    "label": "Rtpkeepaway Idle 01",
+    "path": "anim_rtpkeepaway_idle_01.json"
+  },
+  {
+    "label": "Rtpkeepaway Idle 02",
+    "path": "anim_rtpkeepaway_idle_02.json"
+  },
+  {
+    "label": "Rtpkeepaway Idle 03",
+    "path": "anim_rtpkeepaway_idle_03.json"
+  },
+  {
+    "label": "Rtpkeepaway Reacttocube 01",
+    "path": "anim_rtpkeepaway_reacttocube_01.json"
+  },
+  {
+    "label": "Rtpkeepaway Reacttocube 02",
+    "path": "anim_rtpkeepaway_reacttocube_02.json"
+  },
+  {
+    "label": "Rtpkeepaway Reacttocube 03",
+    "path": "anim_rtpkeepaway_reacttocube_03.json"
+  },
+  {
+    "label": "Rtpmemorymatch Request 01",
+    "path": "anim_rtpmemorymatch_request_01.json"
+  },
+  {
+    "label": "Rtpmemorymatch Request 02",
+    "path": "anim_rtpmemorymatch_request_02.json"
+  },
+  {
+    "label": "Rtpmemorymatch Request 03",
+    "path": "anim_rtpmemorymatch_request_03.json"
+  },
+  {
+    "label": "Rtshake Drive Getin 01",
+    "path": "anim_rtshake_drive_getin_01.json"
+  },
+  {
+    "label": "Rtshake Drive Getout 01",
+    "path": "anim_rtshake_drive_getout_01.json"
+  },
+  {
+    "label": "Rtshake Drive Loop 01",
+    "path": "anim_rtshake_drive_loop_01.json"
+  },
+  {
+    "label": "Rtshake Drive Loop 02",
+    "path": "anim_rtshake_drive_loop_02.json"
+  },
+  {
+    "label": "Rtshake Drive Loop 03",
+    "path": "anim_rtshake_drive_loop_03.json"
+  },
+  {
+    "label": "Rtshake Getin 01",
+    "path": "anim_rtshake_getin_01.json"
+  },
+  {
+    "label": "Rtshake Lv1loop 01",
+    "path": "anim_rtshake_lv1loop_01.json"
+  },
+  {
+    "label": "Rtshake Lv1onground Loosepixel 01",
+    "path": "anim_rtshake_lv1onground_loosepixel_01.json"
+  },
+  {
+    "label": "Rtshake Lv1onhand Loosepixel 01",
+    "path": "anim_rtshake_lv1onhand_loosepixel_01.json"
+  },
+  {
+    "label": "Rtshake Lv1pregetout 01",
+    "path": "anim_rtshake_lv1pregetout_01.json"
+  },
+  {
+    "label": "Rtshake Lv1rtonground 01",
+    "path": "anim_rtshake_lv1rtonground_01.json"
+  },
+  {
+    "label": "Rtshake Lv1rtonhand 01",
+    "path": "anim_rtshake_lv1rtonhand_01.json"
+  },
+  {
+    "label": "Rtshake Lv2loop 01",
+    "path": "anim_rtshake_lv2loop_01.json"
+  },
+  {
+    "label": "Rtshake Lv2pregetout 01",
+    "path": "anim_rtshake_lv2pregetout_01.json"
+  },
+  {
+    "label": "Rtshake Lv2rtonground 01",
+    "path": "anim_rtshake_lv2rtonground_01.json"
+  },
+  {
+    "label": "Rtshake Lv2rtonground Iconmess 01",
+    "path": "anim_rtshake_lv2rtonground_iconmess_01.json"
+  },
+  {
+    "label": "Rtshake Lv2rtonground Looseeye 01",
+    "path": "anim_rtshake_lv2rtonground_looseeye_01.json"
+  },
+  {
+    "label": "Rtshake Lv2rtonhand 01",
+    "path": "anim_rtshake_lv2rtonhand_01.json"
+  },
+  {
+    "label": "Rtshake Lv2rtonhand Looseeye 01",
+    "path": "anim_rtshake_lv2rtonhand_looseeye_01.json"
+  },
+  {
+    "label": "Rtshake Lv3loop 01",
+    "path": "anim_rtshake_lv3loop_01.json"
+  },
+  {
+    "label": "Rtshake Lv3pregetout 01",
+    "path": "anim_rtshake_lv3pregetout_01.json"
+  },
+  {
+    "label": "Rtshake Lv3rtonground 01",
+    "path": "anim_rtshake_lv3rtonground_01.json"
+  },
+  {
+    "label": "Rtshake Lv3rtonhand 01",
+    "path": "anim_rtshake_lv3rtonhand_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 120left 01",
+    "path": "anim_rtsound_offcharger_asleep_120left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 120right 01",
+    "path": "anim_rtsound_offcharger_asleep_120right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 150left 01",
+    "path": "anim_rtsound_offcharger_asleep_150left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 150right 01",
+    "path": "anim_rtsound_offcharger_asleep_150right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 30left 01",
+    "path": "anim_rtsound_offcharger_asleep_30left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 30right 01",
+    "path": "anim_rtsound_offcharger_asleep_30right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 60left 01",
+    "path": "anim_rtsound_offcharger_asleep_60left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep 60right 01",
+    "path": "anim_rtsound_offcharger_asleep_60right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep Ambient 01",
+    "path": "anim_rtsound_offcharger_asleep_ambient_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep Behind Left 01",
+    "path": "anim_rtsound_offcharger_asleep_behind_left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep Behind Right 01",
+    "path": "anim_rtsound_offcharger_asleep_behind_right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep Front 01",
+    "path": "anim_rtsound_offcharger_asleep_front_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep Left 01",
+    "path": "anim_rtsound_offcharger_asleep_left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Asleep Right 01",
+    "path": "anim_rtsound_offcharger_asleep_right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 120left 01",
+    "path": "anim_rtsound_offcharger_observe_120left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 120right 01",
+    "path": "anim_rtsound_offcharger_observe_120right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 150left 01",
+    "path": "anim_rtsound_offcharger_observe_150left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 150right 01",
+    "path": "anim_rtsound_offcharger_observe_150right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 30left 01",
+    "path": "anim_rtsound_offcharger_observe_30left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 30right 01",
+    "path": "anim_rtsound_offcharger_observe_30right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 60left 01",
+    "path": "anim_rtsound_offcharger_observe_60left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe 60right 01",
+    "path": "anim_rtsound_offcharger_observe_60right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe Ambient 01",
+    "path": "anim_rtsound_offcharger_observe_ambient_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe Behind Left 01",
+    "path": "anim_rtsound_offcharger_observe_behind_left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe Behind Right 01",
+    "path": "anim_rtsound_offcharger_observe_behind_right_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe Front 01",
+    "path": "anim_rtsound_offcharger_observe_front_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe Left 01",
+    "path": "anim_rtsound_offcharger_observe_left_01.json"
+  },
+  {
+    "label": "Rtsound Offcharger Observe Right 01",
+    "path": "anim_rtsound_offcharger_observe_right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 120left 01",
+    "path": "anim_rtsound_oncharger_asleep_120left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 120right 01",
+    "path": "anim_rtsound_oncharger_asleep_120right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 150left 01",
+    "path": "anim_rtsound_oncharger_asleep_150left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 150right 01",
+    "path": "anim_rtsound_oncharger_asleep_150right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 30left 01",
+    "path": "anim_rtsound_oncharger_asleep_30left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 30right 01",
+    "path": "anim_rtsound_oncharger_asleep_30right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 60left 01",
+    "path": "anim_rtsound_oncharger_asleep_60left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep 60right 01",
+    "path": "anim_rtsound_oncharger_asleep_60right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep Ambient 01",
+    "path": "anim_rtsound_oncharger_asleep_ambient_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep Behind Left 01",
+    "path": "anim_rtsound_oncharger_asleep_behind_left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep Behind Right 01",
+    "path": "anim_rtsound_oncharger_asleep_behind_right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep Front 01",
+    "path": "anim_rtsound_oncharger_asleep_front_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep Left 01",
+    "path": "anim_rtsound_oncharger_asleep_left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Asleep Right 01",
+    "path": "anim_rtsound_oncharger_asleep_right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 120left 01",
+    "path": "anim_rtsound_oncharger_observe_120left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 120right 01",
+    "path": "anim_rtsound_oncharger_observe_120right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 150left 01",
+    "path": "anim_rtsound_oncharger_observe_150left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 150right 01",
+    "path": "anim_rtsound_oncharger_observe_150right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 30left 01",
+    "path": "anim_rtsound_oncharger_observe_30left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 30right 01",
+    "path": "anim_rtsound_oncharger_observe_30right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 60left 01",
+    "path": "anim_rtsound_oncharger_observe_60left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe 60right 01",
+    "path": "anim_rtsound_oncharger_observe_60right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe Ambient 01",
+    "path": "anim_rtsound_oncharger_observe_ambient_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe Behind Left 01",
+    "path": "anim_rtsound_oncharger_observe_behind_left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe Behind Right 01",
+    "path": "anim_rtsound_oncharger_observe_behind_right_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe Front 01",
+    "path": "anim_rtsound_oncharger_observe_front_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe Left 01",
+    "path": "anim_rtsound_oncharger_observe_left_01.json"
+  },
+  {
+    "label": "Rtsound Oncharger Observe Right 01",
+    "path": "anim_rtsound_oncharger_observe_right_01.json"
+  },
+  {
+    "label": "Sdk Speak 01",
+    "path": "anim_sdk_speak_01.json"
+  },
+  {
+    "label": "Slowbump Getin 01",
+    "path": "anim_slowbump_getin_01.json"
+  },
+  {
+    "label": "Slowbump Getinbackward 01",
+    "path": "anim_slowbump_getinbackward_01.json"
+  },
+  {
+    "label": "Slowbump Getinforward 01",
+    "path": "anim_slowbump_getinforward_01.json"
+  },
+  {
+    "label": "Slowbump Getout 01",
+    "path": "anim_slowbump_getout_01.json"
+  },
+  {
+    "label": "Slowbump Loop 01",
+    "path": "anim_slowbump_loop_01.json"
+  },
+  {
+    "label": "Slowpoke Getin 01",
+    "path": "anim_slowpoke_getin_01.json"
+  },
+  {
+    "label": "Slowpoke Getin 02",
+    "path": "anim_slowpoke_getin_02.json"
+  },
+  {
+    "label": "Slowpoke Getin 03",
+    "path": "anim_slowpoke_getin_03.json"
+  },
+  {
+    "label": "Slowpoke Getin 04",
+    "path": "anim_slowpoke_getin_04.json"
+  },
+  {
+    "label": "Slowpoke Getinbackward 01",
+    "path": "anim_slowpoke_getinbackward_01.json"
+  },
+  {
+    "label": "Slowpoke Getinforward 01",
+    "path": "anim_slowpoke_getinforward_01.json"
+  },
+  {
+    "label": "Slowpoke Getout 01",
+    "path": "anim_slowpoke_getout_01.json"
+  },
+  {
+    "label": "Slowpoke Getout 02",
+    "path": "anim_slowpoke_getout_02.json"
+  },
+  {
+    "label": "Slowpoke Getout 03",
+    "path": "anim_slowpoke_getout_03.json"
+  },
+  {
+    "label": "Slowpoke Getout 04",
+    "path": "anim_slowpoke_getout_04.json"
+  },
+  {
+    "label": "Slowpoke Loop 01",
+    "path": "anim_slowpoke_loop_01.json"
+  },
+  {
+    "label": "Slowpoke Loop 02",
+    "path": "anim_slowpoke_loop_02.json"
+  },
+  {
+    "label": "Slowpoke Loop 03",
+    "path": "anim_slowpoke_loop_03.json"
+  },
+  {
+    "label": "Slowpoke Loop 04",
+    "path": "anim_slowpoke_loop_04.json"
+  },
+  {
+    "label": "Snowglobe Getin 01",
+    "path": "anim_snowglobe_getin_01.json"
+  },
+  {
+    "label": "Snowglobe Rtonground 01",
+    "path": "anim_snowglobe_rtonground_01.json"
+  },
+  {
+    "label": "Snowglobe Rtonhand 01",
+    "path": "anim_snowglobe_rtonhand_01.json"
+  },
+  {
+    "label": "Spinner Tap 01",
+    "path": "anim_spinner_tap_01.json"
+  },
+  {
+    "label": "Sudden Obstacle React 01",
+    "path": "anim_sudden_obstacle_react_01.json"
+  },
+  {
+    "label": "Sudden Obstacle React 02",
+    "path": "anim_sudden_obstacle_react_02.json"
+  },
+  {
+    "label": "Timer Beep 01",
+    "path": "anim_timer_beep_01.json"
+  },
+  {
+    "label": "Timer Beep 02",
+    "path": "anim_timer_beep_02.json"
+  },
+  {
+    "label": "Timer Emote 01",
+    "path": "anim_timer_emote_01.json"
+  },
+  {
+    "label": "Timerleft Getin 01",
+    "path": "anim_timerleft_getin_01.json"
+  },
+  {
+    "label": "Timerleft Getout 01",
+    "path": "anim_timerleft_getout_01.json"
+  },
+  {
+    "label": "Timersup Beep 01",
+    "path": "anim_timersup_beep_01.json"
+  },
+  {
+    "label": "Timersup Getin 01",
+    "path": "anim_timersup_getin_01.json"
+  },
+  {
+    "label": "Timersup Getin 02",
+    "path": "anim_timersup_getin_02.json"
+  },
+  {
+    "label": "Timersup Getout 01",
+    "path": "anim_timersup_getout_01.json"
+  },
+  {
+    "label": "Tts Loop 01",
+    "path": "anim_tts_loop_01.json"
+  },
+  {
+    "label": "Tts Loop 02",
+    "path": "anim_tts_loop_02.json"
+  },
+  {
+    "label": "Tts Loop 03",
+    "path": "anim_tts_loop_03.json"
+  },
+  {
+    "label": "Turn Left 01",
+    "path": "anim_turn_left_01.json"
+  },
+  {
+    "label": "Turn Right 01",
+    "path": "anim_turn_right_01.json"
+  },
+  {
+    "label": "Turn To Motion Pounce Left 01",
+    "path": "anim_turn_to_motion_pounce_left_01.json"
+  },
+  {
+    "label": "Turn To Motion Pounce Right 01",
+    "path": "anim_turn_to_motion_pounce_right_01.json"
+  },
+  {
+    "label": "Uperformance Binaryeyes 01",
+    "path": "anim_uperformance_binaryeyes_01.json"
+  },
+  {
+    "label": "Uperformance Loosepixel 01",
+    "path": "anim_uperformance_loosepixel_01.json"
+  },
+  {
+    "label": "Vc Alrighty 01",
+    "path": "anim_vc_alrighty_01.json"
+  },
+  {
+    "label": "Vc Laser Lookdown 01",
+    "path": "anim_vc_laser_lookdown_01.json"
+  },
+  {
+    "label": "Vc Listening 01",
+    "path": "anim_vc_listening_01.json"
+  },
+  {
+    "label": "Vc Listening Getout 01",
+    "path": "anim_vc_listening_getout_01.json"
+  },
+  {
+    "label": "Vc Listening Loop 02",
+    "path": "anim_vc_listening_loop_02.json"
+  },
+  {
+    "label": "Vc Reaction Nofaceheardyou 01",
+    "path": "anim_vc_reaction_nofaceheardyou_01.json"
+  },
+  {
+    "label": "Vc Reaction Nofaceheardyou Getout 01",
+    "path": "anim_vc_reaction_nofaceheardyou_getout_01.json"
+  },
+  {
+    "label": "Volume Stage 01",
+    "path": "anim_volume_stage_01.json"
+  },
+  {
+    "label": "Volume Stage 02",
+    "path": "anim_volume_stage_02.json"
+  },
+  {
+    "label": "Volume Stage 03",
+    "path": "anim_volume_stage_03.json"
+  },
+  {
+    "label": "Volume Stage 04",
+    "path": "anim_volume_stage_04.json"
+  },
+  {
+    "label": "Volume Stage 05",
+    "path": "anim_volume_stage_05.json"
+  },
+  {
+    "label": "Volume Stage Max",
+    "path": "anim_volume_stage_max.json"
+  },
+  {
+    "label": "Volume Stage Min",
+    "path": "anim_volume_stage_min.json"
+  },
+  {
+    "label": "Wakeword Getin 01",
+    "path": "anim_wakeword_getin_01.json"
+  },
+  {
+    "label": "Wakeword Getout 01",
+    "path": "anim_wakeword_getout_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnleft 135degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnleft_135degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnleft 180degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnleft_180degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnleft 45degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnleft_45degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnleft 90degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnleft_90degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnright 135degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnright_135degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnright 45degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnright_45degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Groggyeyes Turnright 90degrees 01",
+    "path": "anim_wakeword_getout_groggyeyes_turnright_90degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnleft 135degrees 01",
+    "path": "anim_wakeword_getout_turnleft_135degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnleft 180degrees 01",
+    "path": "anim_wakeword_getout_turnleft_180degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnleft 45degrees 01",
+    "path": "anim_wakeword_getout_turnleft_45degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnleft 90degrees 01",
+    "path": "anim_wakeword_getout_turnleft_90degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnright 135degrees 01",
+    "path": "anim_wakeword_getout_turnright_135degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnright 45degrees 01",
+    "path": "anim_wakeword_getout_turnright_45degrees_01.json"
+  },
+  {
+    "label": "Wakeword Getout Turnright 90degrees 01",
+    "path": "anim_wakeword_getout_turnright_90degrees_01.json"
+  },
+  {
+    "label": "Wakeword Groggyeyes Getin 01",
+    "path": "anim_wakeword_groggyeyes_getin_01.json"
+  },
+  {
+    "label": "Wakeword Groggyeyes Getout 01",
+    "path": "anim_wakeword_groggyeyes_getout_01.json"
+  },
+  {
+    "label": "Wakeword Groggyeyes Listenloop 01",
+    "path": "anim_wakeword_groggyeyes_listenloop_01.json"
+  },
+  {
+    "label": "Wakeword Idk 01",
+    "path": "anim_wakeword_idk_01.json"
+  },
+  {
+    "label": "Wakeword Idk 02",
+    "path": "anim_wakeword_idk_02.json"
+  },
+  {
+    "label": "Wakeword Idk 03",
+    "path": "anim_wakeword_idk_03.json"
+  },
+  {
+    "label": "Wakeword Idk 04",
+    "path": "anim_wakeword_idk_04.json"
+  },
+  {
+    "label": "Wakeword Loop 01",
+    "path": "anim_wakeword_loop_01.json"
+  },
+  {
+    "label": "Wakeword Loop 02",
+    "path": "anim_wakeword_loop_02.json"
+  },
+  {
+    "label": "Wakeword Turn Behind Left 01",
+    "path": "anim_wakeword_turn_behind_left_01.json"
+  },
+  {
+    "label": "Wakeword Turn Behind Right 01",
+    "path": "anim_wakeword_turn_behind_right_01.json"
+  },
+  {
+    "label": "Wakeword Turn Left 01",
+    "path": "anim_wakeword_turn_left_01.json"
+  },
+  {
+    "label": "Wakeword Turn Left 135degrees 01",
+    "path": "anim_wakeword_turn_left_135degrees_01.json"
+  },
+  {
+    "label": "Wakeword Turn Left 45degrees 01",
+    "path": "anim_wakeword_turn_left_45degrees_01.json"
+  },
+  {
+    "label": "Wakeword Turn Right 01",
+    "path": "anim_wakeword_turn_right_01.json"
+  },
+  {
+    "label": "Wakeword Turn Right 135degrees 01",
+    "path": "anim_wakeword_turn_right_135degrees_01.json"
+  },
+  {
+    "label": "Wakeword Turn Right 45degrees 01",
+    "path": "anim_wakeword_turn_right_45degrees_01.json"
+  },
+  {
+    "label": "Weather Cloud 01",
+    "path": "anim_weather_cloud_01.json"
+  },
+  {
+    "label": "Weather Cold 01",
+    "path": "anim_weather_cold_01.json"
+  },
+  {
+    "label": "Weather Rain 01",
+    "path": "anim_weather_rain_01.json"
+  },
+  {
+    "label": "Weather Snow 01",
+    "path": "anim_weather_snow_01.json"
+  },
+  {
+    "label": "Weather Stars 01",
+    "path": "anim_weather_stars_01.json"
+  },
+  {
+    "label": "Weather Sunny 01",
+    "path": "anim_weather_sunny_01.json"
+  },
+  {
+    "label": "Weather Thunderstorm 01",
+    "path": "anim_weather_thunderstorm_01.json"
+  },
+  {
+    "label": "Weather Windy 01",
+    "path": "anim_weather_windy_01.json"
+  }
+]
