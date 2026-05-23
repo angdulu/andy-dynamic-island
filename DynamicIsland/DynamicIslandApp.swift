@@ -914,6 +914,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let timerWidgetManager = LockScreenTimerWidgetManager.shared
         timerWidgetManager.handleLockStateChange(isLocked: LockScreenManager.shared.currentLockStatus)
 
+        if Defaults[.dictationOnlyMode] && !coordinator.firstLaunch {
+            DispatchQueue.main.async {
+                SettingsWindowController.shared.showWindow()
+            }
+        }
     }
 
     private func installTopMenuItemsIfNeeded() {
@@ -1362,6 +1367,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 setupAudioTapMusicObservers()
             }
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        SettingsWindowController.shared.showWindow()
+        return true
     }
 }
 
