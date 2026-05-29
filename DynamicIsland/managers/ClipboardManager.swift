@@ -191,15 +191,19 @@ class ClipboardManager: ObservableObject {
     }
     
     // Directory for storing clipboard data files
-    static let clipboardDataDirectory: URL = {
+    static var clipboardDataDirectory: URL {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let clipboardDir = documentsPath.appendingPathComponent("ClipboardData")
         
-        // Create directory if it doesn't exist
-        try? FileManager.default.createDirectory(at: clipboardDir, withIntermediateDirectories: true)
+        // Create directory only if clipboard manager is enabled and it doesn't exist yet
+        var isDir: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: clipboardDir.path, isDirectory: &isDir)
+        if (!exists || !isDir.boolValue) && Defaults[.enableClipboardManager] {
+            try? FileManager.default.createDirectory(at: clipboardDir, withIntermediateDirectories: true)
+        }
         
         return clipboardDir
-    }()
+    }
     
     private init() {
         lastChangeCount = NSPasteboard.general.changeCount

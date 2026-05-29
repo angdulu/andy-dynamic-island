@@ -368,55 +368,76 @@ enum DictationPasteMethod: String, CaseIterable, Codable, Defaults.Serializable 
 }
 
 enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
+    case tiny = "tiny"
+    case base = "base"
     case small = "small"
     case medium = "medium"
     case large = "large"
+    case turbo = "turbo"
 
     var displayName: String {
         switch self {
+        case .tiny: return String(localized: "Whisper Tiny")
+        case .base: return String(localized: "Whisper Base")
         case .small: return String(localized: "Whisper Small")
         case .medium: return String(localized: "Whisper Medium")
         case .large: return String(localized: "Whisper Large")
+        case .turbo: return String(localized: "Whisper Turbo")
         }
     }
 
     var description: String {
         switch self {
-        case .small: return String(localized: "Fastest, lighter accuracy")
-        case .medium: return String(localized: "Good accuracy, medium speed")
-        case .large: return String(localized: "Best accuracy, slower speed")
+        case .tiny: return String(localized: "Fastest, lowest quality")
+        case .base: return String(localized: "Good balance of speed and quality")
+        case .small: return String(localized: "Better quality, slower")
+        case .medium: return String(localized: "High quality")
+        case .large: return String(localized: "Best quality, slowest")
+        case .turbo: return String(localized: "Fast with good quality")
         }
     }
 
     var fileName: String {
         switch self {
+        case .tiny: return "ggml-tiny.bin"
+        case .base: return "ggml-base.bin"
         case .small: return "ggml-small.bin"
         case .medium: return "whisper-medium-q4_1.bin"
         case .large: return "ggml-large-v3-q5_0.bin"
+        case .turbo: return "ggml-large-v3-turbo.bin"
         }
     }
 
     var sizeDescription: String {
         switch self {
+        case .tiny: return "75 MB"
+        case .base: return "142 MB"
         case .small: return "465 MB"
         case .medium: return "469 MB"
         case .large: return "1.03 GB"
+        case .turbo: return "1.62 GB"
         }
     }
 
     var downloadURL: URL {
         switch self {
+        case .tiny: return URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin")!
+        case .base: return URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin")!
         case .small: return URL(string: "https://blob.handy.computer/ggml-small.bin")!
         case .medium: return URL(string: "https://blob.handy.computer/whisper-medium-q4_1.bin")!
         case .large: return URL(string: "https://blob.handy.computer/ggml-large-v3-q5_0.bin")!
+        case .turbo: return URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!
         }
     }
 
     var sha256: String {
         switch self {
+        case .tiny: return "be07e056abafa15a4cc4feafdd2fc674fbb1c7ec16a69345ad4e8be50db50920"
+        case .base: return "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"
         case .small: return "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"
         case .medium: return "79283fc1f9fe12ca3248543fbd54b73292164d8df5a16e095e2bceeaaabddf57"
         case .large: return "d75795ecff3f83b5faa89d1900604ad8c780abd5739fae406de19f23ecd98ad1"
+        case .turbo: return "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
         }
     }
 }
@@ -1180,7 +1201,7 @@ extension Defaults.Keys {
     static let screenAssistantDisplayMode = Key<ScreenAssistantDisplayMode>("screenAssistantDisplayMode", default: .panel)
     static let dictationPushToTalk = Key<Bool>("dictationPushToTalk", default: true)
     static let dictationPasteMethod = Key<DictationPasteMethod>("dictationPasteMethod", default: .direct)
-    static let dictationSelectedModel = Key<DictationModel>("dictationSelectedModel", default: .small)
+    static let dictationSelectedModel = Key<DictationModel>("dictationSelectedModel", default: .base)
     static let dictationSoundEffects = Key<Bool>("dictationSoundEffects", default: true)
     static let geminiApiKey = Key<String>("geminiApiKey", default: "")
     static let openaiApiKey = Key<String>("openaiApiKey", default: "")

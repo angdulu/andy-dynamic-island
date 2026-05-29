@@ -7483,27 +7483,119 @@ struct ScreenAssistantSettings: View {
                 }
 
                 Section {
-                    Picker("Model", selection: $dictationSelectedModel) {
+                    VStack(alignment: .leading, spacing: 10) {
                         ForEach(DictationModel.allCases, id: \.self) { model in
-                            Text(model.displayName).tag(model)
-                        }
-                    }
-                    .settingsHighlight(id: highlightID("Model"))
+                            let isSelected = dictationSelectedModel == model
+                            let isInstalled = DictationManager.isModelInstalled(model)
+                            let isDownloading = dictationManager.downloadingModel == model
+                            let storageRevision = dictationManager.modelStorageRevision
 
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(dictationSelectedModel.displayName)
-                            Text("\(dictationSelectedModel.description) · \(dictationSelectedModel.sizeDescription)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            HStack(spacing: 12) {
+                                // Radio button for selection
+                                Button {
+                                    dictationSelectedModel = model
+                                    if isInstalled {
+                                        Task {
+                                            try? await DictationManager.shared.stopServer()
+                                            try? await DictationManager.shared.ensureServerRunning()
+                                        }
+                                    }
+                                } label: {
+                                    Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                                        .foregroundColor(isSelected ? .accentColor : .secondary)
+                                        .font(.title3)
+                                }
+                                .buttonStyle(.plain)
+
+                                // Model details
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 6) {
+                                        Text(model.displayName)
+                                            .font(.body)
+                                            .fontWeight(isSelected ? .medium : .regular)
+
+                                        if model == .base {
+                                            Text("Recommended")
+                                                .font(.system(size: 9, weight: .semibold))
+                                                .padding(.horizontal, 5)
+                                                .padding(.vertical, 1.5)
+                                                .background(Color.blue.opacity(0.15))
+                                                .foregroundColor(.blue)
+                                                .cornerRadius(4)
+                                        }
+                                    }
+
+                                    Text("\(model.sizeDescription) · \(model.description)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+
+                                // Actions
+                                if isDownloading {
+                                    HStack(spacing: 8) {
+                                        ProgressView(value: dictationManager.downloadProgress ?? 0)
+                                            .frame(width: 80)
+                                        Text("\(Int(((dictationManager.downloadProgress ?? 0) * 100).rounded()))%")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Button("Cancel") {
+                                            dictationManager.cancelModelDownload()
+                                        }
+                                        .buttonStyle(.plain)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    }
+                                } else if isInstalled {
+                                    HStack(spacing: 8) {
+                                        Text(isSelected ? "Active" : "Installed")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+
+                                        if DictationManager.isModelDownloadedByAtoll(model) {
+                                            Button {
+                                                dictationManager.deleteDownloadedModel(model)
+                                            } label: {
+                                                Image(systemName: "trash")
+                                                    .foregroundColor(.red.opacity(0.8))
+                                            }
+                                            .buttonStyle(.plain)
+                                            .help("Delete model")
+                                        }
+                                    }
+                                } else {
+                                    Button {
+                                        dictationManager.download(model: model)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "arrow.down.to.line")
+                                            Text("Download")
+                                        }
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(Color.accentColor)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(6)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .id("\(model.rawValue)-\(storageRevision)")
+                            .padding(.vertical, 4)
+
+                            if model != DictationModel.allCases.last {
+                                Divider()
+                            }
                         }
-                        Spacer()
-                        modelStatusControl
                     }
+                    .padding(.vertical, 4)
                 } header: {
                     Text("Transcription Model")
                 } footer: {
-                    Text("Andy stores downloaded models locally and can also use installed Handy models.")
+                    Text("Andy stores downloaded models locally and can also use installed Handy models. Larger models are more accurate but take longer and use more memory. Base is recommended for general use.")
                 }
 
                 Section {
@@ -7535,45 +7627,7 @@ struct ScreenAssistantSettings: View {
         .navigationTitle("Dictation")
     }
 
-    @ViewBuilder
-    private var modelStatusControl: some View {
-        let selectedModel = dictationSelectedModel
-        let storageRevision = dictationManager.modelStorageRevision
-        let isInstalled = DictationManager.isModelInstalled(selectedModel)
-        let isDownloading = dictationManager.downloadingModel == selectedModel
 
-        Group {
-            if isInstalled {
-                HStack(spacing: 10) {
-                    Text("Installed")
-                        .foregroundColor(.secondary)
-                    if DictationManager.isModelDownloadedByAtoll(selectedModel) {
-                        Button("Delete", role: .destructive) {
-                            dictationManager.deleteDownloadedModel(selectedModel)
-                        }
-                    }
-                }
-            } else if isDownloading {
-                HStack(spacing: 10) {
-                    VStack(alignment: .trailing, spacing: 4) {
-                        ProgressView(value: dictationManager.downloadProgress ?? 0)
-                            .frame(width: 96)
-                        Text("Downloading \(Int(((dictationManager.downloadProgress ?? 0) * 100).rounded()))%")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Button("Cancel") {
-                        dictationManager.cancelModelDownload()
-                    }
-                }
-            } else {
-                Button("Download") {
-                    dictationManager.download(model: selectedModel)
-                }
-            }
-        }
-        .id(storageRevision)
-    }
 }
 
 struct ColorPickerSettings: View {

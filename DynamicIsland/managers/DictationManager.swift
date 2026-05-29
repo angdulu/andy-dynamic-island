@@ -33,6 +33,10 @@ final class DictationManager: NSObject, ObservableObject {
     private var activeDownloadTask: URLSessionDownloadTask?
     private var hudSuppressionTimer: Timer?
 
+    private var serverProcess: Process?
+    private var serverPort = 8178
+    private var currentLoadedModel: DictationModel?
+
     private override init() {
         super.init()
     }
@@ -192,6 +196,10 @@ final class DictationManager: NSObject, ObservableObject {
             isRecording = true
             lastError = nil
             print("Dictation: recording started")
+
+            Task {
+                try? await ensureServerRunning()
+            }
         } catch {
             lastError = error.localizedDescription
             print("Dictation: failed to start recording: \(error)")
@@ -214,40 +222,24 @@ final class DictationManager: NSObject, ObservableObject {
     }
 
     private func transcribe(audioURL: URL) {
-        guard let modelURL = Self.modelURL(for: Defaults[.dictationSelectedModel]) else {
-            lastError = "Selected Whisper model is not installed."
-            print("Dictation: selected model is not installed")
-            try? FileManager.default.removeItem(at: audioURL)
-            return
-        }
-
-        guard let whisperCLI = Self.whisperCLIURL else {
-            lastError = "whisper-cli was not found."
-            print("Dictation: whisper-cli was not found")
-            try? FileManager.default.removeItem(at: audioURL)
-            return
-        }
-
         isTranscribing = true
         lastError = nil
         startContinuousVolumeHUDSuppression()
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            let result = Self.runWhisper(whisperCLI: whisperCLI, modelURL: modelURL, audioURL: audioURL)
-
-            DispatchQueue.main.async {
+        Task {
+            do {
+                let transcript = try await transcribeViaHTTP(audioURL: audioURL)
                 self.isTranscribing = false
                 self.stopContinuousVolumeHUDSuppression()
                 try? FileManager.default.removeItem(at: audioURL)
-
-                switch result {
-                case .success(let transcript):
-                    self.lastError = nil
-                    self.apply(transcript: transcript)
-                case .failure(let error):
-                    self.lastError = error.localizedDescription
-                    print("Dictation: transcription failed: \(error.localizedDescription)")
-                }
+                self.lastError = nil
+                self.apply(transcript: transcript)
+            } catch {
+                self.isTranscribing = false
+                self.stopContinuousVolumeHUDSuppression()
+                try? FileManager.default.removeItem(at: audioURL)
+                self.lastError = error.localizedDescription
+                print("Dictation: transcription failed: \(error.localizedDescription)")
             }
         }
     }
@@ -493,17 +485,17 @@ final class DictationManager: NSObject, ObservableObject {
         ]
     }
 
-    private static var whisperCLIURL: URL? {
+    private static var whisperServerURL: URL? {
         if let bundled = Bundle.main.resourceURL?
             .appendingPathComponent("Whisper", isDirectory: true)
-            .appendingPathComponent("whisper-cli"),
+            .appendingPathComponent("whisper-server"),
            FileManager.default.isExecutableFile(atPath: bundled.path) {
             return bundled
         }
 
         let candidates = [
-            "/opt/homebrew/bin/whisper-cli",
-            "/usr/local/bin/whisper-cli"
+            "/opt/homebrew/bin/whisper-server",
+            "/usr/local/bin/whisper-server"
         ]
 
         return candidates
@@ -556,6 +548,136 @@ final class DictationManager: NSObject, ObservableObject {
 
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
+
+    // MARK: - Persistent whisper-server Management
+
+    func stopServer() {
+        if let process = serverProcess, process.isRunning {
+            process.terminate()
+            process.waitUntilExit()
+            print("Dictation: whisper-server terminated")
+        }
+        serverProcess = nil
+        currentLoadedModel = nil
+    }
+
+    private func startServer(for model: DictationModel) async throws {
+        stopServer()
+
+        guard let serverURL = Self.whisperServerURL else {
+            throw NSError(domain: "DictationManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "whisper-server was not found."])
+        }
+        guard let modelURL = Self.modelURL(for: model) else {
+            throw NSError(domain: "DictationManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Model \(model.displayName) is not installed."])
+        }
+
+        let port = 8178
+        let threadCount = max(4, min(ProcessInfo.processInfo.activeProcessorCount, 8))
+
+        let process = Process()
+        process.executableURL = serverURL
+        process.arguments = [
+            "--model", modelURL.path,
+            "--port", "\(port)",
+            "--host", "127.0.0.1",
+            "--threads", "\(threadCount)",
+            "--language", "auto"
+        ]
+
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+
+        try process.run()
+        self.serverProcess = process
+        self.serverPort = port
+        self.currentLoadedModel = model
+
+        print("Dictation: whisper-server started on port \(port) for model \(model.displayName)")
+    }
+
+    func ensureServerRunning() async throws {
+        let selectedModel = Defaults[.dictationSelectedModel]
+
+        if let process = serverProcess, process.isRunning, currentLoadedModel == selectedModel {
+            return
+        }
+
+        try await startServer(for: selectedModel)
+
+        var retries = 0
+        let client = URLSession.shared
+        let pingURL = URL(string: "http://127.0.0.1:\(serverPort)/")!
+
+        while retries < 50 {
+            do {
+                let (_, response) = try await client.data(from: pingURL)
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    print("Dictation: whisper-server is ready and healthy!")
+                    return
+                }
+            } catch {
+                try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            }
+            retries += 1
+        }
+
+        throw NSError(domain: "DictationManager", code: 504, userInfo: [NSLocalizedDescriptionKey: "whisper-server startup timed out."])
+    }
+
+    private func transcribeViaHTTP(audioURL: URL) async throws -> String {
+        try await ensureServerRunning()
+
+        let fileData = try Data(contentsOf: audioURL)
+        let boundary = "Boundary-\(UUID().uuidString)"
+
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:\(serverPort)/inference")!)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+
+        // File part
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.wav\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: audio/wav\r\n\r\n".data(using: .utf8)!)
+        body.append(fileData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        // Language part
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"language\"\r\n\r\n".data(using: .utf8)!)
+        body.append("auto\r\n".data(using: .utf8)!)
+
+        // Response format part
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"response_format\"\r\n\r\n".data(using: .utf8)!)
+        body.append("json\r\n".data(using: .utf8)!)
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NSError(domain: "DictationManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Invalid response from server."])
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            let errMsg = String(data: data, encoding: .utf8) ?? "HTTP status \(httpResponse.statusCode)"
+            throw NSError(domain: "DictationManager", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errMsg])
+        }
+
+        struct WhisperResponse: Codable {
+            let text: String?
+        }
+
+        let whisperResult = try JSONDecoder().decode(WhisperResponse.self, from: data)
+        guard let rawText = whisperResult.text else {
+            throw NSError(domain: "DictationManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "No transcription text returned."])
+        }
+
+        return Self.cleanTranscript(rawText)
+    }
 }
 
 private enum DictationSound {
@@ -565,14 +687,14 @@ private enum DictationSound {
     private var fileName: String {
         switch self {
         case .begin:
-            return "begin_record"
+            return "whisper_begin"
         case .end:
-            return "end_record"
+            return "whisper_end"
         }
     }
 
     func play() {
-        let url = URL(fileURLWithPath: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/\(fileName).caf")
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "wav") else { return }
         var soundID = SystemSoundID()
         guard AudioServicesCreateSystemSoundID(url as CFURL, &soundID) == kAudioServicesNoError else { return }
         AudioServicesPlaySystemSoundWithCompletion(soundID) {

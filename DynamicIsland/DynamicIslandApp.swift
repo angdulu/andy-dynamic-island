@@ -253,6 +253,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Stop AudioTap capture
         AudioTap.shared.stopCapture()
 
+        // Stop persistent whisper-server dictation server
+        DictationManager.shared.stopServer()
+
         // Restore Lunar's native OSD if integration was active
         LunarManager.shared.appWillTerminate()
     }
