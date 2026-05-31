@@ -199,6 +199,12 @@ final class DictationManager: NSObject, ObservableObject {
 
             Task {
                 try? await ensureServerRunning()
+                if Defaults[.dictationEnableAICleanup] {
+                    let cleanupModel = Defaults[.dictationSelectedCleanupModel]
+                    if LlamaManager.isModelInstalled(cleanupModel) {
+                        try? await LlamaManager.shared.ensureServerRunning(for: cleanupModel)
+                    }
+                }
             }
         } catch {
             lastError = error.localizedDescription
@@ -228,7 +234,20 @@ final class DictationManager: NSObject, ObservableObject {
 
         Task {
             do {
-                let transcript = try await transcribeViaHTTP(audioURL: audioURL)
+                var transcript = try await transcribeViaHTTP(audioURL: audioURL)
+                
+                if Defaults[.dictationEnableAICleanup] {
+                    let cleanupModel = Defaults[.dictationSelectedCleanupModel]
+                    if LlamaManager.isModelInstalled(cleanupModel) {
+                        do {
+                            print("Dictation: running local AI cleanup using \(cleanupModel.displayName)...")
+                            transcript = try await LlamaManager.shared.cleanText(transcript)
+                        } catch {
+                            print("Dictation: local AI cleanup failed, using raw transcript: \(error.localizedDescription)")
+                        }
+                    }
+                }
+                
                 self.isTranscribing = false
                 self.stopContinuousVolumeHUDSuppression()
                 try? FileManager.default.removeItem(at: audioURL)

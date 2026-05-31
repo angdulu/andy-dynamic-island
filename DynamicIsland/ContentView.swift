@@ -55,6 +55,7 @@ struct ContentView: View {
     @ObservedObject var localSendService = LocalSendService.shared
     @State private var downloadManager = DownloadManager.shared
     @ObservedObject var shelfState = ShelfStateViewModel.shared
+    @ObservedObject var dictationManager = DictationManager.shared
     
     @Default(.enableStatsFeature) var enableStatsFeature
     @Default(.showCpuGraph) var showCpuGraph
@@ -450,6 +451,7 @@ struct ContentView: View {
 
     private var closedAndyCanOccupyIdleSlot: Bool {
         enableAndyFeature
+            && !Defaults[.dictationOnlyMode]
             && vm.notchState == .closed
             && !vm.hideOnClosed
             && !lockScreenManager.isLocked
@@ -919,7 +921,12 @@ struct ContentView: View {
                           || currentScreenExpansionType == .music
                           || expansionMatchesSecondary
 
-                      if currentScreenExpansionType == .battery
+                       let isDictationActive = dictationManager.isRecording || dictationManager.isTranscribing
+                       if isDictationActive {
+                           DictationLiveActivity()
+                               .id("dictation-live-activity")
+                               .transition(closedLiveActivitySwapTransition)
+                       } else if currentScreenExpansionType == .battery
                             && isBatteryHUDVisibleOnCurrentScreen
                             && vm.notchState == .closed
                             && Defaults[.showPowerStatusNotifications]
@@ -2964,7 +2971,7 @@ private struct NotchAndyView: View {
     }
 }
 
-private struct ClosedAndyWing: View {
+struct ClosedAndyWing: View {
     let size: CGFloat
     @StateObject private var stateManager = AndySystemStateManager()
 

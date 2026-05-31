@@ -901,6 +901,7 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .screenAssistant, title: "Enable Dictation", keywords: ["dictation", "transcription", "voice", "whisper"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Enable Dictation")),
             SettingsSearchEntry(tab: .screenAssistant, title: "Dictation-Only Mode", keywords: ["dictation", "transcription", "only", "disable dynamic island", "notchless", "air"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Dictation-Only Mode")),
             SettingsSearchEntry(tab: .screenAssistant, title: "Paste Method", keywords: ["dictation", "transcription", "paste", "clipboard"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Paste Method")),
+            SettingsSearchEntry(tab: .screenAssistant, title: "AI Text Cleanup", keywords: ["dictation", "transcription", "cleanup", "llama", "ai", "stutter"], highlightID: SettingsTab.screenAssistant.highlightID(for: "AI Text Cleanup")),
 
             // Color Picker
             SettingsSearchEntry(tab: .colorPicker, title: "Enable Color Picker", keywords: ["color picker", "eyedropper"], highlightID: SettingsTab.colorPicker.highlightID(for: "Enable Color Picker")),
@@ -7403,11 +7404,14 @@ struct ClipboardSettings: View {
 
 struct ScreenAssistantSettings: View {
     @ObservedObject private var dictationManager = DictationManager.shared
+    @ObservedObject private var llamaManager = LlamaManager.shared
     @Default(.enableScreenAssistant) var enableScreenAssistant
     @Default(.dictationOnlyMode) var dictationOnlyMode
     @Default(.dictationPushToTalk) var dictationPushToTalk
     @Default(.dictationPasteMethod) var dictationPasteMethod
     @Default(.dictationSelectedModel) var dictationSelectedModel
+    @Default(.dictationEnableAICleanup) var dictationEnableAICleanup
+    @Default(.dictationSelectedCleanupModel) var dictationSelectedCleanupModel
 
     private func highlightID(_ title: String) -> String {
         SettingsTab.screenAssistant.highlightID(for: title)
@@ -7596,6 +7600,139 @@ struct ScreenAssistantSettings: View {
                     Text("Transcription Model")
                 } footer: {
                     Text("Andy stores downloaded models locally and can also use installed Handy models. Larger models are more accurate but take longer and use more memory. Base is recommended for general use.")
+                }
+
+                Section {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("AI Text Cleanup")
+                            Text("Use a local AI model to clean up transcriptions (remove stutters, filler words, fix grammar).")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: $dictationEnableAICleanup)
+                            .toggleStyle(.switch)
+                    }
+                    .settingsHighlight(id: highlightID("AI Text Cleanup"))
+                } header: {
+                    Text("AI Post-Processing")
+                }
+
+                if dictationEnableAICleanup {
+                    Section {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(CleanupModel.allCases, id: \.self) { model in
+                                let isSelected = dictationSelectedCleanupModel == model
+                                let isInstalled = LlamaManager.isModelInstalled(model)
+                                let isDownloading = llamaManager.downloadingModel == model
+                                let storageRevision = llamaManager.modelStorageRevision
+
+                                HStack(spacing: 12) {
+                                    // Radio button for selection
+                                    Button {
+                                        dictationSelectedCleanupModel = model
+                                        if isInstalled {
+                                            Task {
+                                                llamaManager.stopServer()
+                                                try? await llamaManager.startServer(for: model)
+                                            }
+                                        }
+                                    } label: {
+                                        Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                                            .foregroundColor(isSelected ? .accentColor : .secondary)
+                                            .font(.title3)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    // Model details
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack(spacing: 6) {
+                                            Text(model.displayName)
+                                                .font(.body)
+                                                .fontWeight(isSelected ? .medium : .regular)
+
+                                            if model == .llama1b {
+                                                Text("Recommended")
+                                                    .font(.system(size: 9, weight: .semibold))
+                                                    .padding(.horizontal, 5)
+                                                    .padding(.vertical, 1.5)
+                                                    .background(Color.blue.opacity(0.15))
+                                                    .foregroundColor(.blue)
+                                                    .cornerRadius(4)
+                                            }
+                                        }
+
+                                        Text("\(model.sizeDescription) · \(model.description)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    // Actions
+                                    if isDownloading {
+                                        HStack(spacing: 8) {
+                                            ProgressView(value: llamaManager.downloadProgress ?? 0)
+                                                .frame(width: 80)
+                                            Text("\(Int(((llamaManager.downloadProgress ?? 0) * 100).rounded()))%")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            Button("Cancel") {
+                                                llamaManager.cancelModelDownload()
+                                            }
+                                            .buttonStyle(.plain)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        }
+                                    } else if isInstalled {
+                                        HStack(spacing: 8) {
+                                            Text(isSelected ? "Active" : "Installed")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+
+                                            Button {
+                                                llamaManager.deleteDownloadedModel(model)
+                                            } label: {
+                                                Image(systemName: "trash")
+                                                    .foregroundColor(.red.opacity(0.8))
+                                            }
+                                            .buttonStyle(.plain)
+                                            .help("Delete model")
+                                        }
+                                    } else {
+                                        Button {
+                                            llamaManager.download(model: model)
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "arrow.down.to.line")
+                                                Text("Download")
+                                            }
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 5)
+                                            .background(Color.accentColor)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(6)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .id("\(model.rawValue)-\(storageRevision)")
+                                .padding(.vertical, 4)
+
+                                if model != CleanupModel.allCases.last {
+                                    Divider()
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    } header: {
+                        Text("Cleanup AI Model")
+                    } footer: {
+                        Text("Models are run entirely offline on your Mac's Apple Silicon GPU using llama.cpp. A smaller model has a lower memory footprint and processes text faster.")
+                    }
                 }
 
                 Section {

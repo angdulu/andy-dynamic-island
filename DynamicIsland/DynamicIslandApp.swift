@@ -255,6 +255,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Stop persistent whisper-server dictation server
         DictationManager.shared.stopServer()
+        LlamaManager.shared.stopServer()
 
         // Restore Lunar's native OSD if integration was active
         LunarManager.shared.appWillTerminate()
@@ -331,6 +332,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NotchSpaceManager.shared.notchSpace.windows.remove(window)
             self.window = nil
         }
+    }
+
+    private func cleanAllDynamicIslandWindowsWithFade() {
+        let activeWindows = Array(windows.values) + (window != nil ? [window!] : [])
+        if activeWindows.isEmpty {
+            self.cleanAllDynamicIslandWindows()
+            return
+        }
+        
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.4
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            for w in activeWindows {
+                w.animator().alphaValue = 0
+            }
+        }, completionHandler: { [weak self] in
+            guard let self = self else { return }
+            let isDictationActive = DictationManager.shared.isRecording || DictationManager.shared.isTranscribing
+            if Defaults[.dictationOnlyMode] && !isDictationActive {
+                self.cleanAllDynamicIslandWindows()
+            }
+        })
     }
 
     private func createDynamicIslandWindow(for screen: NSScreen, with viewModel: DynamicIslandViewModel)
@@ -781,6 +804,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
+        DictationManager.shared.$isRecording
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.adjustWindowPosition()
+            }
+            .store(in: &cancellables)
+
+        DictationManager.shared.$isTranscribing
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.adjustWindowPosition()
+            }
+            .store(in: &cancellables)
+
         // Note: Polling setting removed - now uses event-driven private API detection only
 
         NotificationCenter.default.addObserver(
@@ -1227,8 +1264,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func adjustWindowPosition(changeAlpha: Bool = false) {
-        guard !Defaults[.dictationOnlyMode] else {
-            cleanAllDynamicIslandWindows()
+        let isDictationActive = DictationManager.shared.isRecording || DictationManager.shared.isTranscribing
+        guard !Defaults[.dictationOnlyMode] || isDictationActive else {
+            cleanAllDynamicIslandWindowsWithFade()
             return
         }
         if Defaults[.showOnAllDisplays] {
@@ -1250,6 +1288,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     
                     windows[screen] = window
                     viewModels[screen] = viewModel
+                } else if isDictationActive {
+                    windows[screen]?.animator().alphaValue = 1
                 }
                 
                 if let window = windows[screen], let viewModel = viewModels[screen] {
@@ -1283,6 +1323,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             if window == nil {
                 window = createDynamicIslandWindow(for: selectedScreen, with: vm)
+            } else if isDictationActive {
+                window?.animator().alphaValue = 1
             }
             
             if let window = window {

@@ -442,6 +442,60 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
     }
 }
 
+enum CleanupModel: String, CaseIterable, Codable, Defaults.Serializable {
+    case llama1b = "llama1b"
+    case qwen05b = "qwen05b"
+    case qwen15b = "qwen15b"
+
+    var displayName: String {
+        switch self {
+        case .llama1b: return String(localized: "Llama 3.2 1B Instruct")
+        case .qwen05b: return String(localized: "Qwen 2.5 0.5B Instruct")
+        case .qwen15b: return String(localized: "Qwen 2.5 1.5B Instruct")
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .llama1b: return String(localized: "Meta's highly optimized 1B model. Recommended.")
+        case .qwen05b: return String(localized: "Alibaba's ultra-lightweight 0.5B model. Lowest RAM usage.")
+        case .qwen15b: return String(localized: "Alibaba's capable 1.5B model. Slightly higher RAM usage.")
+        }
+    }
+
+    var fileName: String {
+        switch self {
+        case .llama1b: return "Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+        case .qwen05b: return "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+        case .qwen15b: return "qwen2.5-1.5b-instruct-q4_k_m.gguf"
+        }
+    }
+
+    var sizeDescription: String {
+        switch self {
+        case .llama1b: return "807 MB"
+        case .qwen05b: return "491 MB"
+        case .qwen15b: return "1.12 GB"
+        }
+    }
+
+    var downloadURL: URL {
+        switch self {
+        case .llama1b: return URL(string: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf")!
+        case .qwen05b: return URL(string: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf")!
+        case .qwen15b: return URL(string: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf")!
+        }
+    }
+
+    var sha256: String {
+        switch self {
+        case .llama1b: return "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83"
+        case .qwen05b: return "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+        case .qwen15b: return "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e"
+        }
+    }
+}
+
 enum ColorPickerDisplayMode: String, CaseIterable, Codable, Defaults.Serializable {
     case popover = "popover"     // Traditional popover attached to button
     case panel = "panel"         // Floating panel near notch
@@ -1203,6 +1257,8 @@ extension Defaults.Keys {
     static let dictationPasteMethod = Key<DictationPasteMethod>("dictationPasteMethod", default: .direct)
     static let dictationSelectedModel = Key<DictationModel>("dictationSelectedModel", default: .base)
     static let dictationSoundEffects = Key<Bool>("dictationSoundEffects", default: true)
+    static let dictationEnableAICleanup = Key<Bool>("dictationEnableAICleanup", default: false)
+    static let dictationSelectedCleanupModel = Key<CleanupModel>("dictationSelectedCleanupModel", default: .llama1b)
     static let geminiApiKey = Key<String>("geminiApiKey", default: "")
     static let openaiApiKey = Key<String>("openaiApiKey", default: "")
     static let claudeApiKey = Key<String>("claudeApiKey", default: "")
