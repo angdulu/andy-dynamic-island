@@ -168,6 +168,9 @@ class LlamaManager: ObservableObject {
     }
     
     func cleanText(_ text: String) async throws -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        
         let activeModel = Defaults[.dictationSelectedCleanupModel]
         try await ensureServerRunning(for: activeModel)
         

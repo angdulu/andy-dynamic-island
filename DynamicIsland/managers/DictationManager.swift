@@ -236,7 +236,7 @@ final class DictationManager: NSObject, ObservableObject {
             do {
                 var transcript = try await transcribeViaHTTP(audioURL: audioURL)
                 
-                if Defaults[.dictationEnableAICleanup] {
+                if !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && Defaults[.dictationEnableAICleanup] {
                     let cleanupModel = Defaults[.dictationSelectedCleanupModel]
                     if LlamaManager.isModelInstalled(cleanupModel) {
                         do {
