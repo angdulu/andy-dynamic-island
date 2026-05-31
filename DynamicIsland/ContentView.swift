@@ -286,7 +286,7 @@ struct ContentView: View {
     }
 
     private var interactionsEnabled: Bool {
-        !lockScreenManager.isLocked
+        !lockScreenManager.isLocked && !Defaults[.dictationOnlyMode]
     }
 
     private var isIslandMode: Bool {
@@ -1880,6 +1880,7 @@ struct ContentView: View {
 
     // MARK: - Private Methods
     private func openNotch() {
+        guard !Defaults[.dictationOnlyMode] else { return }
         withAnimation(.bouncy.speed(1.2)) {
             vm.open()
         }
