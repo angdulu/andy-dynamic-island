@@ -56,6 +56,7 @@ struct ContentView: View {
     @State private var downloadManager = DownloadManager.shared
     @ObservedObject var shelfState = ShelfStateViewModel.shared
     @ObservedObject var dictationManager = DictationManager.shared
+    @State private var isDictationActiveAnimated = false
     
     @Default(.enableStatsFeature) var enableStatsFeature
     @Default(.showCpuGraph) var showCpuGraph
@@ -861,6 +862,19 @@ struct ContentView: View {
                     enqueueMusicControlWindowSync(forceRefresh: true)
                 }
             }
+            .onChange(of: dictationManager.isRecording) { _, newValue in
+                withAnimation(.smooth(duration: 0.4)) {
+                    isDictationActiveAnimated = newValue || dictationManager.isTranscribing
+                }
+            }
+            .onChange(of: dictationManager.isTranscribing) { _, newValue in
+                withAnimation(.smooth(duration: 0.4)) {
+                    isDictationActiveAnimated = dictationManager.isRecording || newValue
+                }
+            }
+            .onAppear {
+                isDictationActiveAnimated = dictationManager.isRecording || dictationManager.isTranscribing
+            }
             .onDisappear {
                 hoverTask?.cancel()
                 stopHoverClickMonitor()
@@ -921,8 +935,7 @@ struct ContentView: View {
                           || currentScreenExpansionType == .music
                           || expansionMatchesSecondary
 
-                       let isDictationActive = dictationManager.isRecording || dictationManager.isTranscribing
-                       if isDictationActive {
+                       if isDictationActiveAnimated {
                            DictationLiveActivity()
                                .id("dictation-live-activity")
                                .transition(closedLiveActivitySwapTransition)
