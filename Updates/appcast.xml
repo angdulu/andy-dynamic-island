@@ -3,6 +3,14 @@
     <channel>
         <title>Atoll</title>
         <item>
+            <title>2.2.0</title>
+            <pubDate>Tue, 02 Jun 2026 12:45:00 +0900</pubDate>
+            <sparkle:version>12</sparkle:version>
+            <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/angdulu/andy-dynamic-island/releases/download/v2.2.0/Andy-2.2.0.zip" length="61088636" type="application/octet-stream" sparkle:edSignature="4iDkTuwjp9RH7dFk1AVe8M0w7h97wwruqNw3pfDz0RRBwwWQ0WuU5hHl5hiIkCrth1VQQONQM9UkkTfn1mddAw=="/>
+        </item>
+        <item>
             <title>2.1.0</title>
             <pubDate>Sat, 21 Mar 2026 23:51:32 +0530</pubDate>
             <sparkle:version>11</sparkle:version>
