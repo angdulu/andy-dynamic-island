@@ -24,12 +24,12 @@ This fork introduces a **Dictation-Only Mode** and custom local daemon bindings 
 
 ```mermaid
 graph TD
-    User([User Voice]) -->|HotKey/Dictation Mode| DM[Dictation Manager]
-    DM -->|Record Audio (.wav)| WS[Local whisper-server Subprocess]
-    WS -->|Raw Transcript| LM[Llama Manager]
-    LM -->|Start Process /n-gpu-layers 99| LS[Local llama-server Subprocess]
-    LS -->|GPU Metal-Accelerated Inference| Llama[Llama GGUF Model]
-    Llama -->|Formatted & Cleaned Text| Clipboard[macOS System Clipboard]
+    User(["User Voice"]) -->|"HotKey / Dictation Mode"| DM[Dictation Manager]
+    DM -->|"Record Audio (.wav)"| WS[Local whisper-server Subprocess]
+    WS -->|"Raw Transcript"| LM[Llama Manager]
+    LM -->|"Start Process (--n-gpu-layers 99)"| LS[Local llama-server Subprocess]
+    LS -->|"GPU Metal-Accelerated Inference"| Llama[Llama GGUF Model]
+    Llama -->|"Formatted & Cleaned Text"| Clipboard[macOS System Clipboard]
 ```
 
 ### 1. The Speech-to-Text Daemon (`DictationManager.swift`)
