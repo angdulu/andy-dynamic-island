@@ -749,6 +749,9 @@ struct ContentView: View {
                 }
                 enqueueMusicControlWindowSync(forceRefresh: true)
                 startHiddenEdgeHoverPolling()
+                // Deterministic teardown for borderless panels (`.onDisappear` is
+                // unreliable); the window-cleanup path calls this before closing.
+                vm.onViewTeardown = { performViewTeardown() }
             }
             .onChange(of: terminalStickyMode) { _, _ in
                 syncStickyTerminalOutsideClickMonitor()
@@ -866,16 +869,7 @@ struct ContentView: View {
                 isDictationActiveAnimated = dictationManager.isRecording || dictationManager.isTranscribing
             }
             .onDisappear {
-                hoverTask?.cancel()
-                stopHoverClickMonitor()
-                removeStickyTerminalClickMonitor()
-                stopHiddenEdgeHoverPolling()
-                cancelMusicControlWindowSync()
-                hideMusicControlWindow()
-                cancelMusicControlVisibilityTimer()
-                clearMusicControlVisibilityDeadline()
-                musicControlSuppressionTask?.cancel()
-                isHoveringClosedMusicWaveformControl = false
+                performViewTeardown()
             }
     }
 
@@ -1932,6 +1926,21 @@ struct ContentView: View {
         )
 
         return activationRect.contains(location)
+    }
+
+    /// Cancels every long-lived task / event monitor this view owns. Called from
+    /// `.onDisappear` and from `vm.onViewTeardown` on window close. Idempotent.
+    private func performViewTeardown() {
+        hoverTask?.cancel()
+        stopHoverClickMonitor()
+        removeStickyTerminalClickMonitor()
+        stopHiddenEdgeHoverPolling()
+        cancelMusicControlWindowSync()
+        hideMusicControlWindow()
+        cancelMusicControlVisibilityTimer()
+        clearMusicControlVisibilityDeadline()
+        musicControlSuppressionTask?.cancel()
+        isHoveringClosedMusicWaveformControl = false
     }
 
     private func startHiddenEdgeHoverPolling() {
