@@ -1,7 +1,7 @@
 <p align="center">
-  <img src=".github/assets/atoll-logo.png" alt="Atoll logo" width="120">
+  <img src=".github/assets/atoll-logo.png" alt="Andy logo" width="120">
 </p>
-<h1 align="center">Atoll (Andrew's Fork) — AI Dictation & DynamicIsland Workspace</h1>
+<h1 align="center">Andy — AI Dictation Companion & DynamicIsland Workspace 🐶🤖</h1>
 
 <p align="center">
   <a href="https://github.com/angdulu/andy-dynamic-island/stargazers">
@@ -12,9 +12,9 @@
   </a>
 </p>
 
-An advanced, customized fork of **Atoll for macOS** that transforms the MacBook notch utility into a privacy-first, local AI-driven dictation and post-processing workspace. 
+**Andy** (formerly Atoll-Andy) is an advanced, customized macOS desktop pet and productivity assistant that lives directly in your MacBook notch or Dynamic Island. 
 
-While preserving the core system insights and media widgets, this fork integrates an **on-device Speech-to-Text (STT) transcriber** and a **Metal-GPU accelerated Local LLM cleanup pipeline**.
+While preserving native system insight telemetry and media widgets, this fork integrates an **on-device Speech-to-Text (STT) Whisper transcriber** and a **Metal-GPU accelerated local Llama-3/Qwen cleanup pipeline** to turn voice dictations into copy-ready text with zero cloud dependency.
 
 ---
 
@@ -48,7 +48,9 @@ graph TD
 
 ## 🌟 Highlights & Original Features
 
+- **Local AI Transcription Cleanup:** Bundles a local `llama-server` process manager and HTTP completion client. Supports runtime model selections (Llama-3.2-1B, Qwen-2.5-0.5B/1.5B) to fix grammar, remove filler words, and clean transcription stutters completely offline.
 - **Dictation-Only Mode:** A toggle that disables lock screen widgets, Dynamic Island panel hover behaviors, and sound effects, converting the app into a focused, background dictation daemon.
+- **Notch Pet Emotions ("Grumpy Return"):** Features an opinionated, state-aware notch pet (`^._.^`) that reacts dynamically to macOS system events. When displaced from the notch by macOS media or microphone notifications, Andy returns with an annoyed/grumpy reaction animation.
 - **Media Controls:** Dynamic widgets for Apple Music, Spotify, and system volume with inline previews.
 - **System Insight:** Real-time displays for CPU, GPU, memory, network, and disk health metrics.
 - **Productivity Panel:** Built-in timers, calendar widgets, clipboard history managers, and color pickers.
