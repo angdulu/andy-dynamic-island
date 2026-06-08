@@ -603,8 +603,8 @@ final class DictationManager: NSObject, ObservableObject {
             "--language", "auto"
         ]
 
-        process.standardOutput = Pipe()
-        process.standardError = Pipe()
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
 
         try process.run()
         self.serverProcess = process

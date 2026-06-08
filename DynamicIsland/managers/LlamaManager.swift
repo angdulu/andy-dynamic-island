@@ -95,8 +95,8 @@ class LlamaManager: ObservableObject {
         process.environment = env
         
         // Suppress stdout/stderr logs to keep output clean, but can pipe if debugging is needed
-        process.standardOutput = Pipe()
-        process.standardError = Pipe()
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
         
         do {
             try process.run()
