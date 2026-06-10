@@ -59,25 +59,7 @@ class SystemDisplayManager {
     }
     
     private static func getM1DisplayBrightness() throws -> Float {
-        let task = Process()
-        task.launchPath = "/usr/libexec/corebrightnessdiag"
-        task.arguments = ["status-info"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        try task.run()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        task.waitUntilExit()
-
-        if let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? NSDictionary,
-           let displays = plist["CBDisplays"] as? [String: [String: Any]] {
-            for display in displays.values {
-                if let displayInfo = display["Display"] as? [String: Any],
-                    displayInfo["DisplayServicesIsBuiltInDisplay"] as? Bool == true,
-                    let brightness = displayInfo["DisplayServicesBrightness"] as? Float {
-                        return brightness
-                }
-            }
-        }
+        // Disabled corebrightnessdiag helper to prevent Developer Tools Access prompts on Apple Silicon Macs
         throw SensorError.Display.notSilicon
     }
 }

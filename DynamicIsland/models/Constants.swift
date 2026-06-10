@@ -1415,6 +1415,17 @@ extension Defaults.Keys {
             Defaults[.progressBarStyle] = .gradient
         }
     }
+    
+    // Migration helper to avoid taskgated developer tools prompts on macOS 15.4+
+    static func migrateMediaController() {
+        if #available(macOS 15.4, *) {
+            if Defaults[.mediaController] == .nowPlaying {
+                // Now Playing is deprecated on macOS 15.4+ and requires developer tools / taskport debug permissions.
+                // Migrate to Apple Music by default.
+                Defaults[.mediaController] = .appleMusic
+            }
+        }
+    }
 
     static func migrateMusicAuxControls() {
         if Defaults[.didMigrateMusicAuxControls] == false {

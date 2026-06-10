@@ -109,26 +109,7 @@ final class KeyboardBrightnessSensor {
     }
 
     private static func readM1RawLevel() throws -> Float {
-        let task = Process()
-        task.launchPath = "/usr/libexec/corebrightnessdiag"
-        task.arguments = ["status-info"]
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        try task.run()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        task.waitUntilExit()
-
-        if let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? NSDictionary,
-           let keyboards = plist["CBKeyboards"] as? [String: [String: Any]] {
-            for keyboard in keyboards.values {
-                if let backlightInfo = keyboard["CBKeyboardBacklightContainer"] as? [String: Any],
-                   backlightInfo["KeyboardBacklightBuiltIn"] as? Bool == true,
-                   let brightness = backlightInfo["KeyboardBacklightBrightness"] as? Float {
-                    return brightness
-                }
-            }
-        }
-
+        // Disabled corebrightnessdiag helper to prevent Developer Tools Access prompts on Apple Silicon Macs
         throw SensorError.Keyboard.notSilicon
     }
 

@@ -535,33 +535,60 @@ class MusicManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        Defaults.publisher(.dictationOnlyMode)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] change in
+                self?.handleDictationOnlyModeChange(isEnabled: change.newValue)
+            }
+            .store(in: &cancellables)
+
         // Observe Pear Desktop launch/terminate for auto-detection
         setupPearDesktopAutoDetection()
 
-        // Initialize deprecation check asynchronously
-        Task { @MainActor in
-            do {
-                self.isNowPlayingDeprecated = try await self.mediaChecker.checkDeprecationStatus()
-                print("Deprecation check completed: \(self.isNowPlayingDeprecated)")
-            } catch {
-                print("Failed to check deprecation status: \(error). Defaulting to false.")
-                self.isNowPlayingDeprecated = false
-            }
-            
-            // Check if Pear Desktop is already running at startup
-            let pearDesktopRunning = NSWorkspace.shared.runningApplications.contains {
-                $0.bundleIdentifier == Self.pearDesktopBundleID
-            }
-            
-            if pearDesktopRunning {
-                print("[MusicManager] Pear Desktop detected at startup, auto-switching to YouTubeMusicController")
-                self.isPearDesktopAutoSwitched = true
-                if let controller = self.createController(for: .youtubeMusic) {
-                    self.setActiveController(controller)
+        // Initialize deprecation check asynchronously if not in dictation-only mode and preferred controller is nowPlaying
+        if !Defaults[.dictationOnlyMode] && Defaults[.mediaController] == .nowPlaying {
+            Task { @MainActor in
+                do {
+                    self.isNowPlayingDeprecated = try await self.mediaChecker.checkDeprecationStatus()
+                    print("Deprecation check completed: \(self.isNowPlayingDeprecated)")
+                } catch {
+                    print("Failed to check deprecation status: \(error). Defaulting to false.")
+                    self.isNowPlayingDeprecated = false
                 }
-            } else {
-                // Initialize the active controller after deprecation check
-                self.setActiveControllerBasedOnPreference()
+                
+                // Check if Pear Desktop is already running at startup
+                let pearDesktopRunning = NSWorkspace.shared.runningApplications.contains {
+                    $0.bundleIdentifier == Self.pearDesktopBundleID
+                }
+                
+                if pearDesktopRunning {
+                    print("[MusicManager] Pear Desktop detected at startup, auto-switching to YouTubeMusicController")
+                    self.isPearDesktopAutoSwitched = true
+                    if let controller = self.createController(for: .youtubeMusic) {
+                        self.setActiveController(controller)
+                    }
+                } else {
+                    // Initialize the active controller after deprecation check
+                    self.setActiveControllerBasedOnPreference()
+                }
+            }
+        } else {
+            // No need to check deprecation status, just initialize preferred controller immediately if not in dictation-only
+            Task { @MainActor in
+                // Check if Pear Desktop is already running at startup
+                let pearDesktopRunning = NSWorkspace.shared.runningApplications.contains {
+                    $0.bundleIdentifier == Self.pearDesktopBundleID
+                }
+                
+                if pearDesktopRunning {
+                    print("[MusicManager] Pear Desktop detected at startup, auto-switching to YouTubeMusicController")
+                    self.isPearDesktopAutoSwitched = true
+                    if let controller = self.createController(for: .youtubeMusic) {
+                        self.setActiveController(controller)
+                    }
+                } else {
+                    self.setActiveControllerBasedOnPreference()
+                }
             }
         }
     }
@@ -614,8 +641,36 @@ class MusicManager: ObservableObject {
         activeController = nil
     }
 
+    private func deactivateController() {
+        controllerCancellables.removeAll()
+        activeController = nil
+        
+        // Reset properties to default placeholder state
+        songTitle = "I'm Handsome"
+        artistName = "Me"
+        albumArt = defaultImage
+        isPlaying = false
+        album = "Self Love"
+        isPlayerIdle = true
+        isCurrentTrackExplicit = false
+        artworkData = nil
+        videoArtworkURL = nil
+    }
+
+    private func handleDictationOnlyModeChange(isEnabled: Bool) {
+        if isEnabled {
+            deactivateController()
+        } else {
+            setActiveControllerBasedOnPreference()
+        }
+    }
+
     // MARK: - Setup Methods
     private func createController(for type: MediaControllerType) -> (any MediaControllerProtocol)? {
+        if Defaults[.dictationOnlyMode] {
+            return nil
+        }
+
         // Cleanup previous controller
         if activeController != nil {
             controllerCancellables.removeAll()
@@ -658,6 +713,11 @@ class MusicManager: ObservableObject {
     }
 
     private func setActiveControllerBasedOnPreference() {
+        if Defaults[.dictationOnlyMode] {
+            print("[MusicManager] Dictation Only Mode is active, skipping controller creation.")
+            return
+        }
+
         let preferredType = Defaults[.mediaController]
         print("Preferred Media Controller: \(preferredType)")
 
@@ -675,6 +735,10 @@ class MusicManager: ObservableObject {
     }
 
     private func setActiveController(_ controller: any MediaControllerProtocol) {
+        if Defaults[.dictationOnlyMode] {
+            return
+        }
+
         // Set new active controller
         activeController = controller
 
