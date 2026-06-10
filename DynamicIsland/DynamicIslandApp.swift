@@ -793,12 +793,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     LockScreenTimerWidgetManager.shared.handleLockStateChange(isLocked: false)
                     Task { @MainActor in
                         await SystemHUDManager.shared.updateObserverStateForDictationMode()
+                        self.updateFeatureShortcutAvailability()
                     }
                 } else {
                     self.updateBackgroundMonitoringStates()
                     self.adjustWindowPosition(changeAlpha: true)
                     Task { @MainActor in
                         await SystemHUDManager.shared.updateObserverStateForDictationMode()
+                        self.updateFeatureShortcutAvailability()
                     }
                 }
             }
@@ -876,6 +878,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         KeyboardShortcuts.onKeyDown(for: .toggleSneakPeek) { [weak self] in
             guard let self = self else { return }
             guard Defaults[.enableShortcuts] else { return }
+            guard !Defaults[.dictationOnlyMode] else { return }
 
             self.coordinator.toggleSneakPeek(
                 status: !self.coordinator.sneakPeek.show,
@@ -887,6 +890,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         KeyboardShortcuts.onKeyDown(for: .toggleNotchOpen) { [weak self] in
             guard let self = self else { return }
             guard Defaults[.enableShortcuts] else { return }
+            guard !Defaults[.dictationOnlyMode] else { return }
 
             let mouseLocation = NSEvent.mouseLocation
 
@@ -1127,12 +1131,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         KeyboardShortcuts.onKeyDown(for: .startDemoTimer) {
             guard Defaults[.enableShortcuts], Defaults[.enableTimerFeature] else { return }
+            guard !Defaults[.dictationOnlyMode] else { return }
             TimerManager.shared.startDemoTimer(duration: 300)
         }
 
         KeyboardShortcuts.onKeyDown(for: .clipboardHistoryPanel) { [weak self] in
             guard let self else { return }
             guard Defaults[.enableShortcuts], Defaults[.enableClipboardManager] else { return }
+            guard !Defaults[.dictationOnlyMode] else { return }
 
             if !ClipboardManager.shared.isMonitoring {
                 ClipboardManager.shared.startMonitoring()
@@ -1166,12 +1172,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         KeyboardShortcuts.onKeyDown(for: .colorPickerPanel) {
             guard Defaults[.enableShortcuts], Defaults[.enableColorPickerFeature] else { return }
+            guard !Defaults[.dictationOnlyMode] else { return }
             ColorPickerPanelManager.shared.toggleColorPickerPanel()
         }
 
         KeyboardShortcuts.onKeyDown(for: .toggleTerminalTab) { [weak self] in
             guard let self else { return }
             guard Defaults[.enableShortcuts], Defaults[.enableTerminalFeature] else { return }
+            guard !Defaults[.dictationOnlyMode] else { return }
 
             if vm.notchState == .closed {
                 closeNotchWorkItem?.cancel()
@@ -1212,11 +1220,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func updateFeatureShortcutAvailability() {
-        updateShortcut(.startDemoTimer, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableTimerFeature])
-        updateShortcut(.clipboardHistoryPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableClipboardManager])
-        updateShortcut(.colorPickerPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableColorPickerFeature])
+        let isDictationOnly = Defaults[.dictationOnlyMode]
+        updateShortcut(.startDemoTimer, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableTimerFeature])
+        updateShortcut(.clipboardHistoryPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableClipboardManager])
+        updateShortcut(.colorPickerPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableColorPickerFeature])
         updateShortcut(.screenAssistantPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableScreenAssistant])
-        updateShortcut(.toggleTerminalTab, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableTerminalFeature])
+        updateShortcut(.toggleTerminalTab, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableTerminalFeature])
     }
 
     @MainActor
@@ -1401,6 +1410,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             dndManager.stopMonitoring()
             PrivacyIndicatorManager.shared.stopMonitoring()
             AudioTap.shared.stopCapture()
+            ClipboardManager.shared.stopMonitoring()
+            StatsManager.shared.stopMonitoring()
         } else {
             if Defaults[.enableScreenRecordingDetection] {
                 ScreenRecordingManager.shared.startMonitoring()

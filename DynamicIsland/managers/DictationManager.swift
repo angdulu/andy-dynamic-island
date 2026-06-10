@@ -188,6 +188,11 @@ final class DictationManager: NSObject, ObservableObject {
                 return
             }
 
+            // Silence any active timer alarm if it is currently finished/overtime
+            if TimerManager.shared.isFinished || TimerManager.shared.isOvertime {
+                TimerManager.shared.stopTimer()
+            }
+
             startContinuousVolumeHUDSuppression()
             playDictationSound(.begin)
 

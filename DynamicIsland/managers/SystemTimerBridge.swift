@@ -93,24 +93,44 @@ final class SystemTimerBridge {
     private var fileDescriptor: CInt = -1
     private var fileMonitor: DispatchSourceFileSystemObject?
     private var ticker: DispatchSourceTimer?
-    private var defaultsCancellable: AnyCancellable?
+    private var defaultsCancellables = Set<AnyCancellable>()
 
     private var didWarnAboutAccessibility = false
 
     private init() {
         logDebug("Initializing SystemTimerBridge (mirror enabled: \(Defaults[.mirrorSystemTimer]))")
-        defaultsCancellable = Defaults.publisher(.mirrorSystemTimer, options: [])
+        
+        Defaults.publisher(.mirrorSystemTimer, options: [])
             .sink { [weak self] change in
+                guard let self = self else { return }
                 if change.newValue {
-                    self?.logDebug("mirrorSystemTimer enabled via Defaults change")
-                    self?.startIfNeeded()
+                    if !Defaults[.dictationOnlyMode] {
+                        self.logDebug("mirrorSystemTimer enabled via Defaults change")
+                        self.startIfNeeded()
+                    } else {
+                        self.logDebug("mirrorSystemTimer enabled but dictationOnlyMode active; not starting monitor")
+                    }
                 } else {
-                    self?.logDebug("mirrorSystemTimer disabled via Defaults change; stopping monitor")
-                    self?.stopMonitoring(clearTimer: true)
+                    self.logDebug("mirrorSystemTimer disabled via Defaults change; stopping monitor")
+                    self.stopMonitoring(clearTimer: true)
                 }
             }
+            .store(in: &defaultsCancellables)
 
-        if Defaults[.mirrorSystemTimer] {
+        Defaults.publisher(.dictationOnlyMode, options: [])
+            .sink { [weak self] change in
+                guard let self = self else { return }
+                if change.newValue {
+                    self.logDebug("dictationOnlyMode enabled; stopping monitor")
+                    self.stopMonitoring(clearTimer: true)
+                } else if Defaults[.mirrorSystemTimer] {
+                    self.logDebug("dictationOnlyMode disabled; starting monitor since mirror is enabled")
+                    self.startIfNeeded()
+                }
+            }
+            .store(in: &defaultsCancellables)
+
+        if Defaults[.mirrorSystemTimer] && !Defaults[.dictationOnlyMode] {
             startIfNeeded()
         }
     }
@@ -388,6 +408,7 @@ final class SystemTimerBridge {
 
     private func pollMenuExtra() {
         guard Defaults[.mirrorSystemTimer] else { return }
+        guard !Defaults[.dictationOnlyMode] else { return }
         guard !TimerManager.shared.hasManualTimerRunning else {
             logDebug("Skipping AX poll: manual timer running")
             return
@@ -427,6 +448,7 @@ final class SystemTimerBridge {
 
     private func applyTimerUpdate(remaining: TimeInterval, paused: Bool) {
         guard Defaults[.mirrorSystemTimer] else { return }
+        guard !Defaults[.dictationOnlyMode] else { return }
         guard !TimerManager.shared.hasManualTimerRunning else {
             logDebug("Ignoring timer update while manual timer active")
             return
@@ -507,6 +529,7 @@ final class SystemTimerBridge {
 
     private func handleLogEvent(_ payload: [String: Any]) {
         guard Defaults[.mirrorSystemTimer] else { return }
+        guard !Defaults[.dictationOnlyMode] else { return }
         guard !TimerManager.shared.hasManualTimerRunning else {
             logDebug("Ignoring log event while manual timer active")
             return

@@ -176,7 +176,9 @@ class TimerManager: ObservableObject {
                         // Timer just finished - play sound and start overtime
                         self.isFinished = true
                         self.isOvertime = true
-                        self.playTimerSound()
+                        if !DictationManager.shared.isRecording {
+                            self.playTimerSound()
+                        }
                         self.remainingTime = -1
                         self.lastUpdated = Date()
                     } else {
@@ -256,7 +258,9 @@ class TimerManager: ObservableObject {
                         // Timer just finished - play sound and start overtime
                         self.isFinished = true
                         self.isOvertime = true
-                        self.playTimerSound()
+                        if !DictationManager.shared.isRecording {
+                            self.playTimerSound()
+                        }
                         self.remainingTime = -1
                         self.lastUpdated = Date()
                     } else {
