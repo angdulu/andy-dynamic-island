@@ -560,7 +560,7 @@ struct ContentView: View {
     private var configuredMainLayout: some View {
         mainLayoutBase
             .conditionalModifier(!useModernCloseAnimation) { view in
-                let hoverAnimation = Animation.bouncy.speed(1.2)
+                let hoverAnimation = Animation.spring(response: 0.28, dampingFraction: 1.0, blendDuration: 0)
                 let notchStateAnimation = Animation.spring.speed(1.2)
                 return view
                     .animation(hoverAnimation, value: isHovering)
@@ -569,7 +569,7 @@ struct ContentView: View {
                     .transition(.blurReplace.animation(.interactiveSpring(dampingFraction: 1.2)))
             }
             .conditionalModifier(useModernCloseAnimation) { view in
-                let hoverAnimation = Animation.bouncy.speed(1.2)
+                let hoverAnimation = Animation.spring(response: 0.28, dampingFraction: 1.0, blendDuration: 0)
                 let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
                 let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
                 let notchAnimation = vm.notchState == .open ? openAnimation : closeAnimation
@@ -652,11 +652,6 @@ struct ContentView: View {
                 if newState == .closed {
                     removeStickyTerminalClickMonitor()
                 }
-                #if os(macOS)
-                if newState == .open {
-                    TimerControlWindowManager.shared.hide()
-                }
-                #endif
             }
             .onChange(of: vm.isBatteryPopoverActive) { _, newPopoverState in
                 runAfter(0.1) {
