@@ -89,7 +89,9 @@ private final class AndyURLSchemeHandler: NSObject, WKURLSchemeHandler {
 
 private final class AndyStateRequestHandler: NSObject, WKScriptMessageHandler {
     let stateManager: AndySystemStateManager
-    weak var webView: WKWebView?
+    weak var webView: WKWebView? {
+        didSet { stateManager.register(webView: webView) }
+    }
 
     init(stateManager: AndySystemStateManager) {
         self.stateManager = stateManager
@@ -97,46 +99,46 @@ private final class AndyStateRequestHandler: NSObject, WKScriptMessageHandler {
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "andyRequestSystemState" else { return }
-        sendState()
-    }
-
-    func sendState() {
-        let typing = stateManager.isTyping ? "true" : "false"
-        let hot = stateManager.isHot ? "true" : "false"
-        let idle = stateManager.isIdle ? "true" : "false"
-        let transcribing = stateManager.isTranscribing ? "true" : "false"
-        let js = """
-            if (window.AndyNotch && window.AndyNotch.setSystemState) {
-              window.AndyNotch.setSystemState({
-                typing: \(typing),
-                hot: \(hot),
-                idle: \(idle),
-                playing: false,
-                transcribing: \(transcribing),
-                mouseX: \(stateManager.mouseX),
-                mouseY: \(stateManager.mouseY)
-              });
-            }
-        """
-        webView?.evaluateJavaScript(js, completionHandler: nil)
+        stateManager.flush(force: true)
     }
 }
 
+/// Owns every system signal Andy reacts to. Shared, because both the expanded
+/// panel and the closed notch wing render him — one set of event monitors and
+/// one bridge flush feeds however many web views are mounted.
 @MainActor
 final class AndySystemStateManager: ObservableObject {
-    @Published private(set) var isTyping = false
-    @Published private(set) var isIdle = false
-    @Published private(set) var mouseX: CGFloat = 0.5
-    @Published private(set) var mouseY: CGFloat = 0.5
-    @Published private(set) var isHot = false
-    @Published private(set) var isTranscribing = false
+    static let shared = AndySystemStateManager()
+
+    // Deliberately not @Published: these change at input-event rates, and
+    // republishing them invalidated the SwiftUI view (and re-evaluated JS) on
+    // every single mouse move. The bridge is pushed by `flushTimer` instead.
+    private var isTyping = false
+    private var isIdle = false
+    private var mouseX: CGFloat = 0.5
+    private var mouseY: CGFloat = 0.5
+    private var isHot = false
+    private var isRecording = false
+    private var isTranscribing = false
+    private var voiceFailed = false
+    private var voiceLevel: Double = 0
 
     private var typingResetTask: DispatchWorkItem?
     private var lastActivityDate = Date()
     private var monitors: [Any] = []
     private var cancellables = Set<AnyCancellable>()
+    private var idleTimer: Timer?
+    private var flushTimer: Timer?
+    private var webViews: [WeakWebView] = []
+    private var isDirty = true
 
-    init() {
+    private struct WeakWebView {
+        weak var value: WKWebView?
+    }
+
+    private static let flushInterval = 1.0 / 30.0
+
+    private init() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(updateThermalState),
@@ -161,16 +163,58 @@ final class AndySystemStateManager: ObservableObject {
             monitors.append(mouseMonitor)
         }
 
-        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+        let idle = Timer(timeInterval: 3.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.checkIdleState()
             }
         }
+        idleTimer = idle
+        RunLoop.main.add(idle, forMode: .common)
 
-        DictationManager.shared.$isTranscribing
+        let flush = Timer(timeInterval: Self.flushInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.flush()
+            }
+        }
+        flushTimer = flush
+        RunLoop.main.add(flush, forMode: .common)
+
+        let dictation = DictationManager.shared
+        dictation.$isTranscribing
             .receive(on: RunLoop.main)
-            .sink { [weak self] isTranscribing in
-                self?.isTranscribing = isTranscribing
+            .sink { [weak self] value in
+                guard let self else { return }
+                self.isTranscribing = value
+                self.isDirty = true
+            }
+            .store(in: &cancellables)
+
+        dictation.$isRecording
+            .receive(on: RunLoop.main)
+            .sink { [weak self] value in
+                guard let self else { return }
+                self.isRecording = value
+                if value { self.voiceFailed = false }
+                self.isDirty = true
+            }
+            .store(in: &cancellables)
+
+        dictation.$inputLevel
+            .receive(on: RunLoop.main)
+            .sink { [weak self] value in
+                guard let self else { return }
+                self.voiceLevel = value
+                self.isDirty = true
+            }
+            .store(in: &cancellables)
+
+        // A transcription error is what separates the "error" resolve from the
+        // "success" resolve on the JS side.
+        dictation.$lastError
+            .receive(on: RunLoop.main)
+            .sink { [weak self] error in
+                guard let self else { return }
+                if error != nil { self.voiceFailed = true; self.isDirty = true }
             }
             .store(in: &cancellables)
     }
@@ -178,11 +222,51 @@ final class AndySystemStateManager: ObservableObject {
     deinit {
         NotificationCenter.default.removeObserver(self)
         monitors.forEach { NSEvent.removeMonitor($0) }
+        idleTimer?.invalidate()
+        flushTimer?.invalidate()
+    }
+
+    fileprivate func register(webView: WKWebView?) {
+        webViews.removeAll { $0.value == nil || $0.value === webView }
+        if let webView {
+            webViews.append(WeakWebView(value: webView))
+        }
+        isDirty = true
+    }
+
+    /// Coalesces every signal change into at most one `evaluateJavaScript` per
+    /// flush interval, instead of one per input event.
+    fileprivate func flush(force: Bool = false) {
+        webViews.removeAll { $0.value == nil }
+        guard !webViews.isEmpty else { return }
+        guard force || isDirty else { return }
+        isDirty = false
+
+        let js = """
+            if (window.AndyNotch && window.AndyNotch.setSystemState) {
+              window.AndyNotch.setSystemState({
+                typing: \(isTyping),
+                hot: \(isHot),
+                idle: \(isIdle),
+                playing: false,
+                recording: \(isRecording),
+                transcribing: \(isTranscribing),
+                voiceFailed: \(voiceFailed),
+                voiceLevel: \(String(format: "%.4f", voiceLevel)),
+                mouseX: \(mouseX),
+                mouseY: \(mouseY)
+              });
+            }
+        """
+        for entry in webViews {
+            entry.value?.evaluateJavaScript(js, completionHandler: nil)
+        }
     }
 
     @objc private func updateThermalState() {
         let state = ProcessInfo.processInfo.thermalState
         isHot = state == .serious || state == .critical
+        isDirty = true
     }
 
     private func handleMouseMoved(_ event: NSEvent) {
@@ -197,27 +281,49 @@ final class AndySystemStateManager: ObservableObject {
             if abs(mouseX - relativeX) > 0.005 || abs(mouseY - relativeY) > 0.005 {
                 mouseX = relativeX
                 mouseY = relativeY
+                isDirty = true
             }
         } else if mouseX != 0.5 || mouseY != 0.5 {
             mouseX = 0.5
             mouseY = 0.5
+            isDirty = true
         }
     }
 
     private func handleTyping() {
         lastActivityDate = Date()
-        isTyping = true
+        if !isTyping {
+            isTyping = true
+            isDirty = true
+        }
 
         typingResetTask?.cancel()
         let task = DispatchWorkItem { [weak self] in
-            self?.isTyping = false
+            guard let self else { return }
+            self.isTyping = false
+            self.isDirty = true
         }
         typingResetTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: task)
     }
 
+    private static let idleEventTypes: [CGEventType] = [
+        .mouseMoved, .keyDown, .leftMouseDown, .rightMouseDown, .scrollWheel
+    ]
+
+    /// 60s, matching the original feel. The source is real system HID idle
+    /// rather than "this app saw no events", so it no longer counts you as idle
+    /// while you're active in another window.
     private func checkIdleState() {
-        isIdle = Date().timeIntervalSince(lastActivityDate) > 60.0
+        let systemIdle = Self.idleEventTypes
+            .map { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: $0) }
+            .min() ?? .greatestFiniteMagnitude
+        let appIdle = Date().timeIntervalSince(lastActivityDate)
+        let newValue = min(systemIdle, appIdle) > 60.0
+        if newValue != isIdle {
+            isIdle = newValue
+            isDirty = true
+        }
     }
 }
 
@@ -298,6 +404,11 @@ struct AndyNotchWebView: NSViewRepresentable {
 
         let webView = AndyNotchWKWebView(frame: .zero, configuration: configuration)
         webView.menuActions = menuActions
+        #if DEBUG
+        // Lets Safari's Web Inspector attach to Andy so his live mood, emotion
+        // axes and voice phase can be read directly. Debug builds only.
+        if #available(macOS 13.3, *) { webView.isInspectable = true }
+        #endif
         stateHandler.webView = webView
         webView.setValue(false, forKey: "drawsBackground")
         webView.allowsMagnification = false
@@ -309,7 +420,6 @@ struct AndyNotchWebView: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
         (nsView as? AndyNotchWKWebView)?.menuActions = menuActions
-        context.coordinator.stateHandler?.sendState()
     }
 
     final class Coordinator {

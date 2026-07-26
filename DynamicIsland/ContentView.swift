@@ -2939,7 +2939,7 @@ private func musicMeasureText(_ text: String, font: MusicSupplementFont) -> CGFl
 }
 
 private struct NotchAndyView: View {
-    @StateObject private var stateManager = AndySystemStateManager()
+    @ObservedObject private var stateManager = AndySystemStateManager.shared
     @Binding var isClosedAndyWingCollapsed: Bool
     let setClosedAndyWingCollapsed: (Bool) -> Void
     @State private var reloadToken = UUID()
@@ -2980,7 +2980,7 @@ private struct NotchAndyView: View {
 
 struct ClosedAndyWing: View {
     let size: CGFloat
-    @StateObject private var stateManager = AndySystemStateManager()
+    @ObservedObject private var stateManager = AndySystemStateManager.shared
 
     var body: some View {
         AndyNotchWebView(rootURL: AndyNotchResources.rootURL, stateManager: stateManager)

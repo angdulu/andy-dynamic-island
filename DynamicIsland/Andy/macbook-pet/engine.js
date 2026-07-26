@@ -46,18 +46,6 @@ const behaviorAnimations = {
   cliff_react: ["reacttocliff_edge","reacttocliff_stop","reacttocliff_turnleft","reacttocliff_turnright",
                 "reacttocliff_faceplant","reacttocliff_stuckonedge","reacttocliff_turtleroll",
                 "reacttocliff_sidestuck","reacttocliff_reaction"],
-  // Direction-specific cliff reactions
-  cliff_left: ["reacttocliff_stuckleftside","reacttocliff_stuckonedge_left","reacttocliff_reaction_front_left",
-               "reacttocliff_reaction_rear_left","reacttocliff_turnright","reacttocliff_stuckonedge_alert_left"],
-  cliff_right: ["reacttocliff_stuckonedge_right","reacttocliff_reaction_front_right",
-                "reacttocliff_reaction_rear_right","reacttocliff_turnleft","reacttocliff_stuckonedge_alert_right"],
-  cliff_top: ["reacttocliff_edgeliftup","reacttocliff_edge","reacttocliff_huh",
-              "reacttocliff_stuckonedge_alert","reacttocliff_stop","reacttocliff_pickup"],
-  cliff_bottom: ["reacttocliff_faceplantroll","reacttocliff_turtleroll","reacttocliff_turtlerollfail",
-                 "reacttocliff_wheely","reacttocliff_reaction_back"],
-  // Dizzy from being shaken/moved rapidly
-  dizzy: ["dizzy_reaction_medium","dizzy_reaction_hard","dizzy_pickup","rtshake_lv2",
-          "rtshake_lv3","reacttocliff_turtleroll","reacttocliff_faceplantroll"],
   pickup_react: ["rtpickup_loop","rtpickup_putdown","rtpickup_reaction"],
   heldonpalm: ["heldonpalm_edge_nervous","heldonpalm_edge_relaxed","heldonpalm_getin",
                "heldonpalm_idle","heldonpalm_jolt","heldonpalm_looking_nervous",
@@ -87,8 +75,6 @@ const behaviorAnimations = {
   // --- Tier 2: Interaction responses ---
   petting_response: ["petting_getin","petting_lvl1","petting_lvl2","petting_lvl3",
                      "petting_blissloop","petting_bliss_getout"],
-  greeting_morning: ["greeting_goodmorning","greeting_happy","onboarding_wakeup"],
-  greeting_night: ["greeting_goodnight","greeting_goodbye"],
   greeting_hello: ["greeting_hello","greeting_imhome","greeting_happy",
                    "onboarding_reacttoface_happy"],
   feedback_positive: ["feedback_goodrobot","feedback_iloveyou","petting_blissloop"],
@@ -110,30 +96,16 @@ const behaviorAnimations = {
                "reacttoface_unidentified","movement_reacttoface"],
   referencing: ["referencing_curious","referencing_happy","referencing_scared",
                 "referencing_unsure","referencing_neutral"],
-  petdetection: ["petdetection_reaction_cat","petdetection_reaction_dog"],
-  // --- Tier 3: Environment ---
-  weather_react: ["weather_cloud","weather_sunny","weather_rain","weather_snow",
-                  "weather_stars","weather_thunderstorm","weather_windy","weather_cold"],
-  holiday: ["holiday_hh_lights","holiday_hny_fireworks","holiday_hyn_confetti"],
-  sound_react: ["rtsound_offcharger","rtsound_oncharger","wakeword","vc_listening"],
   // --- Sleep/wake ---
   sleepy: ["eyepose_asleep","gotosleep_sleeping","gotosleep_getin","launch_sleeping",
            "rtsound_offcharger_asleep"],
   sleeping: ["gotosleep_sleeping","gotosleep_off","gotosleep_sleeploop","launch_sleeping"],
   waking: ["gotosleep_getout","gotosleep_wakeup","power_offon","onboarding_wakeup"],
-  // --- Movement/charger ---
-  movement: ["movement_comehere","movement_alreadyhere","movement_directioncommands",
-             "movement_lookinplaceforfaces"],
-  charger_react: ["chargerdocking_comeoff","chargerdocking_reaction","chargerdocking_settle",
-                  "chargerdocking_request","chargerdocking_searchforcharger"],
   // --- Misc ---
   hiking: ["hiking_driving","hiking_observe","hiking_lookaround"],
   block_react: ["reacttoblock_react","reacttoblock_success","reacttoblock_frustrated",
                 "reacttoblock_happydetermined","reacttoblock_lifteffort",
                 "reacttoblock_admire","reacttoblock_dropfail","reacttoblock_dropsuccess"],
-  onboarding: ["onboarding_wakeup","onboarding_eyecontact","onboarding_reacttoface",
-               "onboarding_lookaround","onboarding_lookdown"],
-  meetvictor: ["meetvictor_getin","meetvictor_alreadyknow","meetvictor_lookface"],
 };
 
 // Mood → weighted behavior map
@@ -347,16 +319,33 @@ function chooseBehavior(mood) {
   return weightedPick(moodBehaviors[mood] || moodBehaviors.idle);
 }
 
-function resolveBehaviorToAnimations(behavior, allAnimations) {
-  const tags = behaviorAnimations[behavior] || behaviorAnimations.idle_blink;
-  const indices = new Set();
-  for (const tag of tags) {
-    const lower = tag.toLowerCase();
-    allAnimations.forEach((anim, idx) => {
-      if (anim.path.toLowerCase().includes(lower)) indices.add(idx);
-    });
+// Resolving used to rescan every animation path on every pick (once per second
+// or so, forever). The clip list only changes on load, so index it once.
+let behaviorIndexCache = null;
+let behaviorIndexSource = null;
+
+function buildBehaviorIndex(allAnimations) {
+  const lowerPaths = allAnimations.map((anim) => anim.path.toLowerCase());
+  const index = {};
+  for (const [behavior, tags] of Object.entries(behaviorAnimations)) {
+    const indices = new Set();
+    for (const tag of tags) {
+      const lower = tag.toLowerCase();
+      for (let i = 0; i < lowerPaths.length; i++) {
+        if (lowerPaths[i].includes(lower)) indices.add(i);
+      }
+    }
+    index[behavior] = Array.from(indices);
   }
-  return Array.from(indices);
+  return index;
+}
+
+function resolveBehaviorToAnimations(behavior, allAnimations) {
+  if (behaviorIndexSource !== allAnimations) {
+    behaviorIndexSource = allAnimations;
+    behaviorIndexCache = buildBehaviorIndex(allAnimations);
+  }
+  return behaviorIndexCache[behavior] || behaviorIndexCache.idle_blink || [];
 }
 
 // --- Blink ---
@@ -398,13 +387,23 @@ function updateSaccade(now) {
 }
 
 // --- Cursor tracking ---
-const cursorTrack = { mouseX: 0.5, mouseY: 0.5, smoothX: 0.5, smoothY: 0.5, isNear: false };
+// hasCursor stays false until a real pointer position arrives. Without it the
+// default 0.5/0.5 sits dead-centre, so isNear was permanently true and
+// "mouse_near" fired every single frame — pinning stimulation and social at
+// 100 within a second and making bored/curious/sleeping unreachable.
+const cursorTrack = {
+  mouseX: 0.5, mouseY: 0.5, smoothX: 0.5, smoothY: 0.5,
+  isNear: false, wasNear: false, enteredNear: false, hasCursor: false,
+};
 
 function updateCursorTracking() {
   cursorTrack.smoothX += (cursorTrack.mouseX - cursorTrack.smoothX) * 0.04;
   cursorTrack.smoothY += (cursorTrack.mouseY - cursorTrack.smoothY) * 0.04;
   const dx = cursorTrack.mouseX - 0.5, dy = cursorTrack.mouseY - 0.5;
-  cursorTrack.isNear = Math.sqrt(dx * dx + dy * dy) < 0.3;
+  cursorTrack.wasNear = cursorTrack.isNear;
+  cursorTrack.isNear = cursorTrack.hasCursor && Math.sqrt(dx * dx + dy * dy) < 0.3;
+  // Approaching is an event, not a state to be re-fired 60 times a second.
+  cursorTrack.enteredNear = cursorTrack.isNear && !cursorTrack.wasNear;
 }
 
 function getBreathScale(now) {

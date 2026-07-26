@@ -47,14 +47,99 @@ const state = {
   wasAsleep: false,
   greetedToday: false,
   lastGreetingDay: -1,
+  moodCandidate: "idle",
+  moodCandidateSince: performance.now(),
+  daysKnown: 1,
+  firstSeenAt: 0,
+  lastSeenDay: null,
   transcription: {
-    mode: "idle",
-    visibleMode: "idle",
+    // idle → arming → listening → thinking → success | error → idle
+    phase: "idle",
+    visiblePhase: "idle",
+    phaseAmount: 0,          // eased presence of the active phase, 0..1
     startedAt: 0,
-    visualAmount: 0,
+    resolveAt: 0,            // when success/error falls back to idle
+    thinkMorph: 0,           // eased 0..1 blend into the three-dot loader
+    rawLevel: 0,             // newest mic level from Swift, 0..1
+    level: 0,                // smoothed level (fast attack, slow release)
+    history: [],             // rolling amplitude window for the bar strip
     lastVisualAt: performance.now(),
+    lastLevelAt: performance.now(),
   },
 };
+
+const VOICE_PHASES = ["arming", "listening", "thinking", "success", "error"];
+const VOICE_RESOLVE_MS = 900;
+const VOICE_HISTORY_LEN = 7;
+const MOOD_DWELL_MS = 1200;
+
+// ---- Thinking loader ----
+// Andy's two eyes slide into the outer slots and a third dot fades in between
+// them, so the loading state is still him rather than a spinner drawn nearby.
+const LOADER_SLOT_X = [-27, 0, 27];
+const LOADER_DOT_SIZE = 19;
+const LOADER_BOUNCE_H = 8.5;
+const LOADER_CYCLE_MS = 640;
+
+function loaderBounce(now, index) {
+  // Half-sine hop with a rest between, staggered left → right.
+  const phase = ((now / LOADER_CYCLE_MS) - index * 0.17) % 1;
+  const p = phase < 0 ? phase + 1 : phase;
+  return -Math.max(0, Math.sin(p * Math.PI * 2)) * LOADER_BOUNCE_H;
+}
+
+// ---- Persistence ----
+// Andy used to be reborn with default emotions on every launch and every
+// reload. Carrying the axes across sessions is what turns a mood simulation
+// into a pet you have a history with. localStorage matches how the rest of this
+// file already persists (lastWakeupDate, closedNotchUnmountedAt).
+const SAVE_KEY = "andyPetState_v1";
+const EMOTION_BASELINE = {
+  stimulation: 35, happiness: 45, confidence: 55,
+  social: 30, tiredness: 0, calmness: 65,
+};
+
+function savePetState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      emotions: VE.emotions,
+      savedAt: Date.now(),
+      firstSeenAt: state.firstSeenAt,
+      daysKnown: state.daysKnown,
+      lastSeenDay: state.lastSeenDay,
+    }));
+  } catch (e) { /* private mode / quota — carry on with defaults */ }
+}
+
+function loadPetState() {
+  const today = new Date().toDateString();
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) {}
+
+  if (!saved || typeof saved !== "object") {
+    state.firstSeenAt = Date.now();
+    state.daysKnown = 1;
+    state.lastSeenDay = today;
+    return;
+  }
+
+  // Settle the axes toward baseline for however long we were away, and let
+  // tiredness recover — he was resting, not sitting there getting tired.
+  const hoursAway = Math.max(0, (Date.now() - (saved.savedAt || Date.now())) / 3600000);
+  const settled = 1 - Math.exp(-hoursAway / 2);
+  for (const key of Object.keys(VE.emotions)) {
+    const from = typeof saved.emotions?.[key] === "number" ? saved.emotions[key] : VE.emotions[key];
+    VE.emotions[key] = clamp(lerp(from, EMOTION_BASELINE[key], settled), 0, 100);
+  }
+
+  state.firstSeenAt = saved.firstSeenAt || Date.now();
+  state.daysKnown = saved.daysKnown || 1;
+  state.lastSeenDay = saved.lastSeenDay || null;
+  if (state.lastSeenDay !== today) {
+    state.daysKnown += 1;
+    state.lastSeenDay = today;
+  }
+}
 
 // ---- Utilities ----
 function ease(t) { return t * t * (3 - 2 * t); }
@@ -211,7 +296,15 @@ function scheduleNextAnimation(now = performance.now()) {
   const baseDwell = isSlow ? 4000 : 800;
   const randDwell = isSlow ? 6000 : 2500;
   const animPart = Math.min(state.animation.duration, isSlow ? 10000 : 5000);
-  state.nextAnimationAt = now + animPart + baseDwell + Math.random() * randDwell;
+
+  // Animals hold still for long stretches and then move for a reason. Swapping
+  // a clip every few seconds is what makes him read as a screensaver, so in the
+  // calm moods he sometimes just settles instead.
+  const canSettle = !isSlow && state.animQueue.length === 0 &&
+    (state.mood === "idle" || state.mood === "content" || state.mood === "bored");
+  const settle = (canSettle && Math.random() < 0.35) ? 18000 + Math.random() * 40000 : 0;
+
+  state.nextAnimationAt = now + animPart + baseDwell + Math.random() * randDwell + settle;
 }
 
 // ---- Helper: pick random from array ----
@@ -219,7 +312,12 @@ function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 // ---- Play a behavior category as animation ----
 function playBehaviorCategory(category) {
-  const indices = VE.resolveBehaviorToAnimations(category, animations);
+  // Callers pass either a behaviour key (from behaviorAnimations) or a raw path
+  // substring — the petting levels are dispatched by tag. Without the second
+  // lookup those silently resolved to the idle_blink fallback.
+  const indices = VE.behaviorAnimations[category]
+    ? VE.resolveBehaviorToAnimations(category, animations)
+    : findAnimationIndices(category);
   if (indices.length > 0) {
     const idx = randFrom(indices);
     state.animQueue.push(idx);
@@ -229,24 +327,90 @@ function playBehaviorCategory(category) {
 // Expose globally for Electron IPC calls
 window.playBehaviorCategory = playBehaviorCategory;
 
-function setTranscriptionMode(mode) {
-  if (state.transcription.mode === mode) return;
+// The voice pipeline is rendered procedurally, so it never queues clips of its
+// own — that would fight the modulation in drawEye mid-sentence.
+function setVoicePhase(phase) {
+  const t = state.transcription;
+  if (t.phase === phase) return;
 
-  state.transcription.mode = mode;
-  if (mode !== "idle") {
-    state.transcription.visibleMode = mode;
-    state.transcription.startedAt = performance.now();
+  const now = performance.now();
+  t.phase = phase;
+  t.startedAt = now;
+  if (phase !== "idle") t.visiblePhase = phase;
+  t.resolveAt = (phase === "success" || phase === "error") ? now + VOICE_RESOLVE_MS : 0;
+
+  if (phase === "arming") {
+    t.history.length = 0;
+    t.rawLevel = 0;
+    t.level = 0;
   }
 
-  if (mode === "listening") {
+  if (phase === "listening") {
     VE.emotions.stimulation = Math.min(100, VE.emotions.stimulation + 18);
     VE.emotions.social = Math.min(100, VE.emotions.social + 8);
     VE.emotions.calmness = Math.max(0, VE.emotions.calmness - 8);
-    playBehaviorCategory("sound_react");
-  } else if (mode === "transcribing") {
+  } else if (phase === "thinking") {
     VE.emotions.stimulation = Math.min(100, VE.emotions.stimulation + 8);
-    playBehaviorCategory("curious_observe");
+  } else if (phase === "success") {
+    VE.emotions.happiness = Math.min(100, VE.emotions.happiness + 10);
+    VE.emotions.confidence = Math.min(100, VE.emotions.confidence + 8);
+  } else if (phase === "error") {
+    VE.emotions.confidence = Math.max(0, VE.emotions.confidence - 15);
+    VE.emotions.happiness = Math.max(0, VE.emotions.happiness - 8);
   }
+}
+
+function isVoiceActive() {
+  return VOICE_PHASES.includes(state.transcription.phase);
+}
+
+// Swift pushes raw mic amplitude; smoothing happens on the render tick so the
+// visual stays stable no matter how irregular the bridge cadence is.
+function setVoiceLevel(level) {
+  const t = state.transcription;
+  t.rawLevel = clamp(Number(level) || 0, 0, 1);
+  t.lastLevelAt = performance.now();
+}
+
+function updateVoice(now) {
+  const t = state.transcription;
+
+  if (t.resolveAt && now > t.resolveAt) setVoicePhase("idle");
+
+  // Fast attack / slow release, the way a meter needs to feel.
+  const target = t.phase === "listening" ? t.rawLevel : 0;
+  const rising = target > t.level;
+  const dt = clamp(now - t.lastVisualAt, 0, 80);
+  const tau = rising ? 45 : 190;
+  t.level += (target - t.level) * (1 - Math.exp(-dt / tau));
+
+  const active = isVoiceActive() ? 1 : 0;
+  t.phaseAmount += (active - t.phaseAmount) * (1 - Math.exp(-dt / (active ? 110 : 200)));
+  if (t.phaseAmount < 0.005) {
+    t.phaseAmount = 0;
+    if (t.phase === "idle") t.visiblePhase = "idle";
+  }
+
+  if (t.phase === "listening") {
+    t.history.push(t.level);
+    if (t.history.length > VOICE_HISTORY_LEN) t.history.shift();
+  }
+
+  // Eased separately from phaseAmount so leaving "thinking" unfolds back into
+  // the face instead of snapping the instant the phase flips.
+  const morphTarget = t.phase === "thinking" ? 1 : 0;
+  const morphTau = morphTarget > t.thinkMorph ? 150 : 260;
+  t.thinkMorph += (morphTarget - t.thinkMorph) * (1 - Math.exp(-dt / morphTau));
+  if (t.thinkMorph < 0.002) t.thinkMorph = 0;
+
+  t.lastVisualAt = now;
+}
+
+// Back-compat shim: earlier builds drove this with mode strings.
+function setTranscriptionMode(mode) {
+  if (mode === "listening") setVoicePhase("listening");
+  else if (mode === "transcribing") setVoicePhase("thinking");
+  else setVoicePhase("idle");
 }
 
 function setSystemState(newState) {
@@ -299,13 +463,34 @@ function setSystemState(newState) {
     }
   }
 
-  if (state.isTranscribing !== newState.transcribing) {
-    setTranscriptionMode(newState.transcribing ? "transcribing" : "idle");
+  // --- Voice pipeline phase, derived from the real dictation stages ---
+  if (typeof newState.voiceLevel === "number") setVoiceLevel(newState.voiceLevel);
+
+  const recording = !!newState.recording;
+  const transcribing = !!newState.transcribing;
+  if (recording !== state.isRecording || transcribing !== state.isTranscribing) {
+    if (recording) {
+      // Brief arming beat so the squint reads before the first syllable.
+      if (!state.isRecording) {
+        setVoicePhase("arming");
+        setTimeout(() => { if (state.isRecording) setVoicePhase("listening"); }, 220);
+      }
+    } else if (transcribing) {
+      setVoicePhase("thinking");
+    } else if (newState.voiceFailed) {
+      setVoicePhase("error");
+    } else if (state.isTranscribing || state.isRecording) {
+      // Came out of the pipeline cleanly.
+      setVoicePhase("success");
+    } else {
+      setVoicePhase("idle");
+    }
   }
 
   // Thermal state (Overheat)
   state.isHot = newState.hot;
-  state.isTranscribing = newState.transcribing;
+  state.isRecording = recording;
+  state.isTranscribing = transcribing;
   
   if (state.isIdle !== newState.idle) {
     if (newState.idle) {
@@ -327,6 +512,8 @@ function setSystemState(newState) {
 
 window.AndyNotch = {
   setTranscriptionMode,
+  setVoicePhase,
+  setVoiceLevel,
   setSystemState,
   interact,
 };
@@ -339,7 +526,7 @@ function updateNeeds(now) {
   
   VE.updateEmotions(dt, { idleSeconds, windowBlurred: state.windowBlurred });
   VE.updateCursorTracking();
-  if (VE.cursorTrack.isNear && !state.windowBlurred) VE.onInteraction("mouse_near");
+  if (VE.cursorTrack.enteredNear && !state.windowBlurred) VE.onInteraction("mouse_near");
   
   // --- Gaze & cliff detection ---
   const hitEdge = VE.updateGaze(now);
@@ -360,8 +547,15 @@ function updateNeeds(now) {
     setTimeout(() => VE.finishAmuse(), 8000);
   }
   
-  const newMood = VE.deriveMood();
-  
+  // A candidate mood has to hold before it commits, otherwise a single frame
+  // grazing a threshold flips him and he twitches between moods.
+  const rawMood = VE.deriveMood();
+  if (rawMood !== state.moodCandidate) {
+    state.moodCandidate = rawMood;
+    state.moodCandidateSince = now;
+  }
+  const newMood = (now - state.moodCandidateSince >= MOOD_DWELL_MS) ? rawMood : state.mood;
+
   // --- Sleep/wake transitions ---
   if (newMood === "sleeping" && state.mood !== "sleeping") {
     state.wasAsleep = true;
@@ -532,13 +726,20 @@ function drawRoundedRect(context, x, y, w, h, radius) {
   context.closePath();
 }
 
-function drawEyeShape(context, width, height, params) {
+// `roundness` lerps every corner toward a full circle, which is how the eyes
+// become loader dots without needing a second shape routine.
+function drawEyeShape(context, width, height, params, roundness = 0) {
   const liX = clamp(params[5] ?? 0.6, 0, 1), liY = clamp(params[6] ?? 0.6, 0, 1);
   const uiX = clamp(params[7] ?? 0.6, 0, 1), uiY = clamp(params[8] ?? 0.6, 0, 1);
   const uoX = clamp(params[9] ?? 0.6, 0, 1), uoY = clamp(params[10] ?? 0.6, 0, 1);
   const loX = clamp(params[11] ?? 0.6, 0, 1), loY = clamp(params[12] ?? 0.6, 0, 1);
-  const tl = 4 + Math.max(uiX, uiY) * 9, tr = 4 + Math.max(uoX, uoY) * 9;
-  const br = 4 + Math.max(loX, loY) * 9, bl = 4 + Math.max(liX, liY) * 9;
+  let tl = 4 + Math.max(uiX, uiY) * 9, tr = 4 + Math.max(uoX, uoY) * 9;
+  let br = 4 + Math.max(loX, loY) * 9, bl = 4 + Math.max(liX, liY) * 9;
+  if (roundness > 0) {
+    const full = Math.min(width, height) / 2;
+    tl = lerp(tl, full, roundness); tr = lerp(tr, full, roundness);
+    br = lerp(br, full, roundness); bl = lerp(bl, full, roundness);
+  }
   const x = -width / 2, y = -height / 2;
   context.beginPath();
   context.moveTo(x + tl, y);
@@ -567,76 +768,6 @@ function drawLid(context, width, height, amount, angle, side) {
   context.restore();
 }
 
-function drawEye(context, params, side, mood, pulse) {
-  const centerX = params[0] * 3.0 + VE.saccadeState.offsetX;
-  let centerY = params[1] * 2.25 + VE.saccadeState.offsetY;
-  
-  // Cursor tracking offset
-  const trackX = (VE.cursorTrack.smoothX - 0.5) * 6;
-  const trackY = (VE.cursorTrack.smoothY - 0.5) * 3;
-  
-  const scaleX = clamp(params[2] || 1, 0.28, 2.2);
-  const scaleY = clamp(params[3] || 1, 0.1, 1.8);
-  const rawScale = (scaleX + scaleY) / 2;
-  const eyeScale = clamp(1 + (rawScale - 1) * 0.42, 0.82, 1.36);
-  const angle = (clamp(params[4] || 0, -14, 14) * Math.PI) / 180;
-  let upperLid = clamp(params[13] || 0, 0, 1);
-  const upperLidAngle = ((params[14] || 0) * Math.PI) / 180;
-  let lowerLid = clamp(params[16] || 0, 0, 1);
-  const lowerLidAngle = ((params[17] || 0) * Math.PI) / 180;
-  const glow = clamp((params[21] || 0) + (params[24] || 0) + 0.35, 0.15, 1.2);
-  const hotspotX = clamp(params[22] || 0, -1, 1);
-  const hotspotY = clamp(params[23] || 0, -1, 1);
-
-  // Apply blink overlay
-  const blinkAmt = VE.blinkState.blinkProgress;
-  upperLid = Math.max(upperLid, blinkAmt * 0.95);
-
-  let width = 28 * eyeScale;
-  let height = 28 * eyeScale;
-
-  // Mood-based eye shape adjustments
-  if (mood === "happy" || mood === "content" || mood === "affectionate") {
-    height *= 0.84; width *= 1.05;
-  }
-  if (mood === "sleeping" || mood === "sleepy") {
-    height *= 0.38; centerY += 6;
-  }
-  if (mood === "excited") {
-    width *= 1.08; height *= 1.04;
-  }
-  if (mood === "sad") {
-    height *= 0.9;
-  }
-
-  context.save();
-  context.translate(centerX + trackX, centerY + trackY);
-  context.rotate(angle);
-  context.shadowColor = "rgba(18, 229, 229, 0.45)";
-  context.shadowBlur = 2 + glow * 2 + pulse;
-  
-  const eyeGrad = context.createRadialGradient(hotspotX * width * 0.25, hotspotY * height * 0.25, 2, 0, 0, width * 0.75);
-  eyeGrad.addColorStop(0, "#b9ffff");
-  eyeGrad.addColorStop(0.28, (mood === "sleeping" || mood === "sleepy") ? "#5ce0e0" : "#5ffafa");
-  eyeGrad.addColorStop(1, "#00cdd0");
-  context.fillStyle = eyeGrad;
-  drawEyeShape(context, width, height, params);
-  context.fill();
-
-  // Highlight
-  context.globalAlpha = 0.3;
-  context.fillStyle = "#e9ffff";
-  if (height > 18 && upperLid < 0.55) {
-    drawRoundedRect(context, -width * 0.18 + hotspotX * width * 0.1, -height * 0.24 + hotspotY * height * 0.1, width * 0.36, height * 0.13, 2);
-    context.fill();
-  }
-  context.globalAlpha = 1;
-  context.shadowBlur = 0;
-  drawLid(context, width, height, upperLid, upperLidAngle, "top");
-  drawLid(context, width, height, lowerLid, lowerLidAngle, "bottom");
-  context.restore();
-}
-
 function normalizeFaceForDisplay(face) {
   const safe = cloneFaceFrame(face);
   const minGap = 13.5;
@@ -653,26 +784,41 @@ function normalizeFaceForDisplay(face) {
   return safe;
 }
 
-function drawEye(context, params, side, mood, pulse, isListening) {
-  if (isListening) {
-    const now = performance.now();
-    context.save();
-    context.strokeStyle = "#5ffafa";
-    context.lineWidth = 3;
-    context.lineCap = "round";
-    context.shadowColor = "rgba(18, 229, 229, 0.8)";
-    context.shadowBlur = 6;
-    context.beginPath();
-    for (let i = -14; i <= 14; i += 4) {
-      const h = Math.sin(now * 0.015 + i * 0.4) * 10 * (0.4 + Math.random() * 0.6);
-      context.moveTo(i, -h);
-      context.lineTo(i, h);
-    }
-    context.stroke();
-    context.restore();
-    return;
-  }
+// The third dot has no eye to grow out of, so it scales up from nothing in the
+// gap between the other two and shrinks away again on exit.
+function drawLoaderMiddleDot(context, now, morph) {
+  if (morph < 0.01) return;
 
+  const size = LOADER_DOT_SIZE * morph;
+  const y = loaderBounce(now, 1) * morph;
+
+  context.save();
+  context.translate(LOADER_SLOT_X[1], y);
+  context.globalAlpha = morph;
+  context.shadowColor = "rgba(18, 229, 229, 0.45)";
+  context.shadowBlur = 2 + 2.2 * morph;
+
+  const grad = context.createRadialGradient(0, 0, 2, 0, 0, size * 0.75);
+  grad.addColorStop(0, "#b9ffff");
+  grad.addColorStop(0.28, "#5ffafa");
+  grad.addColorStop(0.75, "#32e5e5");
+  grad.addColorStop(1, "rgba(18, 229, 229, 0)");
+  context.fillStyle = grad;
+  context.beginPath();
+  context.arc(0, 0, size / 2, 0, Math.PI * 2);
+  context.fill();
+
+  // Match the eyes' edge treatment so it reads as the same material.
+  context.shadowBlur = 0;
+  context.strokeStyle = "#000000";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.arc(0, 0, size / 2, 0, Math.PI * 2);
+  context.stroke();
+  context.restore();
+}
+
+function drawEye(context, params, side, mood, pulse) {
   const centerX = params[0] * 3.0 + VE.saccadeState.offsetX;
   let centerY = params[1] * 2.25 + VE.saccadeState.offsetY;
   const scaleX = clamp(params[2] || 1, 0.28, 2.2);
@@ -699,22 +845,73 @@ function drawEye(context, params, side, mood, pulse, isListening) {
   if (mood === "excited") { width *= 1.08; height *= 1.04; }
   if (mood === "sad") { height *= 0.9; }
 
+  // --- Voice pipeline: procedural modulation driven by the live mic level.
+  // Andy listens with his eyes rather than handing them over to a meter.
+  const voice = state.transcription;
+  const vAmt = voice.phaseAmount;
+  let voiceGlow = 0;
+  if (voice.phase === "arming") {
+    // Narrow to a focused squint the moment capture opens.
+    height *= lerp(1, 0.62, vAmt);
+    lowerLid = Math.max(lowerLid, 0.18 * vAmt);
+    voiceGlow = 2.5 * vAmt;
+  } else if (voice.phase === "listening") {
+    // Attentive base shape; your voice opens the eyes back up. Kept modest on
+    // purpose — a big bloom reads as startled rather than listening.
+    const lvl = voice.level;
+    height *= lerp(1, 0.72 + lvl * 0.40, vAmt);
+    width *= lerp(1, 1.02 + lvl * 0.06, vAmt);
+    lowerLid = Math.max(lowerLid, (0.22 - lvl * 0.20) * vAmt);
+    voiceGlow = (1.5 + lvl * 5.5) * vAmt;
+  } else if (voice.phase === "success") {
+    height *= lerp(1, 0.80, vAmt);
+    width *= lerp(1, 1.08, vAmt);
+    voiceGlow = 5 * vAmt;
+  } else if (voice.phase === "error") {
+    height *= lerp(1, 0.55, vAmt);
+    upperLid = Math.max(upperLid, 0.42 * vAmt);
+    voiceGlow = 1.2 * vAmt;
+  }
+
+  // --- Loader morph: his eyes become the outer two dots of a three-dot
+  // loader, bounce, then grow back. Nothing is drawn beside him, so it still
+  // reads as Andy rather than a spinner parked next to him.
+  const morph = voice.thinkMorph;
+  let bounceY = 0;
+  let renderCenterX = centerX;
+  if (morph > 0) {
+    // normalizeFaceForDisplay gives leftEye the larger x, so the eye named
+    // "left" renders on the right. Mapping it to slot 0 sent the two eyes
+    // through each other on the way out.
+    const dotIndex = side === "left" ? 2 : 0;   // outer slots; middle fades in
+    const target = LOADER_SLOT_X[dotIndex];
+    renderCenterX = lerp(centerX, target, morph);
+    centerY = lerp(centerY, 0, morph);
+    width = lerp(width, LOADER_DOT_SIZE, morph);
+    height = lerp(height, LOADER_DOT_SIZE, morph);
+    // Lids would read as a shadow across a circle, so retract them.
+    upperLid *= (1 - morph);
+    lowerLid *= (1 - morph);
+    bounceY = loaderBounce(performance.now(), dotIndex) * morph;
+    voiceGlow = Math.max(voiceGlow, 2.2 * morph);
+  }
+
   context.save();
   const floatY = Math.sin(performance.now() / 1100 + (side === "left" ? 0.4 : 0.9)) * 0.28;
-  context.translate(centerX, centerY + floatY);
-  context.rotate(angle);
+  context.translate(renderCenterX, centerY + floatY * (1 - morph) + bounceY);
+  context.rotate(angle * (1 - morph));
   context.shadowColor = "rgba(18, 229, 229, 0.45)";
-  context.shadowBlur = 2 + glow * 2 + pulse;
+  context.shadowBlur = 2 + glow * 2 + pulse + voiceGlow;
   const eyeGrad = context.createRadialGradient(hotspotX * width * 0.25, hotspotY * height * 0.25, 2, 0, 0, width * 0.75);
   eyeGrad.addColorStop(0, "#b9ffff");
   eyeGrad.addColorStop(0.28, (mood === "sleeping" || mood === "sleepy") ? "#5ce0e0" : "#5ffafa");
   eyeGrad.addColorStop(0.75, (mood === "sleeping" || mood === "sleepy") ? "#298282" : "#32e5e5");
   eyeGrad.addColorStop(1, "rgba(18, 229, 229, 0)");
   context.fillStyle = eyeGrad;
-  drawEyeShape(context, width, height, params);
+  drawEyeShape(context, width, height, params, morph);
   context.fill();
   context.save();
-  drawEyeShape(context, width, height, params);
+  drawEyeShape(context, width, height, params, morph);
   context.clip();
   drawLid(context, width, height, upperLid, upperLidAngle, "top");
   drawLid(context, width, height, lowerLid, lowerLidAngle, "bottom");
@@ -723,7 +920,7 @@ function drawEye(context, params, side, mood, pulse, isListening) {
   // Final cleanup: Stroke the eye shape with black to cover any glowing "leaks" at the edges
   context.strokeStyle = "#000000";
   context.lineWidth = 1.5;
-  drawEyeShape(context, width, height, params);
+  drawEyeShape(context, width, height, params, morph);
   context.stroke();
   
   context.restore();
@@ -737,7 +934,7 @@ function drawFace(context, now, face, mood, pulse, scale) {
   let beatY = 0;
   let beatScale = 1.0;
   
-  if (state.isMusicPlaying && !state.isTranscribing) {
+  if (state.isMusicPlaying && !isVoiceActive()) {
     const bpm = state.isHot ? 160 : 124;
     const msPerBeat = 60000 / bpm;
     const phase = (now % msPerBeat) / msPerBeat;
@@ -747,13 +944,22 @@ function drawFace(context, now, face, mood, pulse, scale) {
   }
 
   const isPerforming = state.animQueue.length > 0 || (state.animation && state.animation.duration > 2000);
-  const targetLookX = isPerforming ? 0 : (state.lookOffset?.x || 0);
-  const targetLookY = isPerforming ? 0 : (state.lookOffset?.y || 0);
+  let targetLookX = isPerforming ? 0 : (state.lookOffset?.x || 0);
+  let targetLookY = isPerforming ? 0 : (state.lookOffset?.y || 0);
   const idleAmount = isPerforming ? 0.35 : 1.0;
   const targetSwayX = Math.sin(now / 2400) * 0.9 * idleAmount;
   const targetSwayY = Math.sin(now / 1700 + 0.8) * 0.7 * idleAmount;
-  const targetTilt = Math.sin(now / 3600 + 0.4) * 0.018 * idleAmount;
+  let targetTilt = Math.sin(now / 3600 + 0.4) * 0.018 * idleAmount;
   const targetSquash = 1 + Math.sin(now / 1900) * 0.012 * idleAmount;
+
+  // The loader wants to sit still and centred, so damp the idle drift as the
+  // morph takes over — otherwise the dots wander while they bounce.
+  const morph = state.transcription.thinkMorph;
+  if (morph > 0) {
+    targetLookX = lerp(targetLookX, 0, morph);
+    targetLookY = lerp(targetLookY, 0, morph);
+    targetTilt = lerp(targetTilt, 0, morph);
+  }
 
   const poseEase = isPerforming ? 0.08 : 0.12;
   state.renderPose.lookX += (targetLookX - state.renderPose.lookX) * poseEase;
@@ -765,21 +971,28 @@ function drawFace(context, now, face, mood, pulse, scale) {
 
   context.save();
   context.translate(
-    safe.faceCenterX * 1.1 + state.renderPose.swayX,
-    (safe.faceCenterY * 0.78) + beatY + state.renderPose.swayY
+    lerp(safe.faceCenterX * 1.1, 0, morph) + state.renderPose.swayX * (1 - morph),
+    lerp(safe.faceCenterY * 0.78, 0, morph) + beatY + state.renderPose.swayY * (1 - morph)
   );
-  context.rotate(clamp((safe.faceAngle || 0) + state.renderPose.tilt, -0.2, 0.2));
-  
+  context.rotate(clamp(lerp((safe.faceAngle || 0), 0, morph) + state.renderPose.tilt, -0.2, 0.2));
+
+  // The clip underneath keeps running during the loader, and its face scale
+  // would squash the dots into ellipses. Neutralise the keyframe transform as
+  // the morph takes hold so they stay round and centred.
   const finalScale = scale * 1.15 * breath * beatScale;
+  const faceSX = lerp(safe.faceScaleX || 1, 1, morph);
+  const faceSY = lerp(safe.faceScaleY || 1, 1, morph);
+  const squash = lerp(state.renderPose.squash, 1, morph);
   context.scale(
-    (safe.faceScaleX || 1) * finalScale * state.renderPose.squash,
-    (safe.faceScaleY || 1) * finalScale / Math.sqrt(state.renderPose.squash)
+    faceSX * finalScale * squash,
+    faceSY * finalScale / Math.sqrt(squash)
   );
 
   context.translate(state.renderPose.lookX, state.renderPose.lookY);
 
-  drawEye(context, safe.leftEye, "left", mood, pulse, state.isTranscribing);
-  drawEye(context, safe.rightEye, "right", mood, pulse, state.isTranscribing);
+  drawEye(context, safe.leftEye, "left", mood, pulse);
+  drawEye(context, safe.rightEye, "right", mood, pulse);
+  drawLoaderMiddleDot(context, now, morph);
   
   if (state.isHot) {
     context.fillStyle = "#5ffafa";
@@ -805,7 +1018,6 @@ function drawFaceScreen(context, width, height, face, mood, pulse) {
   context.translate(width / 2, height / 2);
   drawFace(context, performance.now(), face, mood, pulse, scale);
   context.restore();
-  drawTranscriptionOverlay(context, width, height);
 }
 
 function roundRect(context, x, y, width, height, radius) {
@@ -825,66 +1037,6 @@ function roundRect(context, x, y, width, height, radius) {
   context.closePath();
 }
 
-function drawTranscriptionOverlay(context, width, height) {
-  const now = performance.now();
-  const target = state.transcription.mode === "idle" ? 0 : 1;
-  const dt = Math.min(80, Math.max(0, now - state.transcription.lastVisualAt));
-  state.transcription.lastVisualAt = now;
-
-  const duration = target > state.transcription.visualAmount ? 140 : 220;
-  const amount = 1 - Math.exp(-dt / duration);
-  state.transcription.visualAmount += (target - state.transcription.visualAmount) * amount;
-
-  if (state.transcription.visualAmount < 0.01) {
-    state.transcription.visualAmount = 0;
-    if (state.transcription.mode === "idle") state.transcription.visibleMode = "idle";
-    return;
-  }
-
-  const mode = state.transcription.visibleMode;
-  const elapsed = now - state.transcription.startedAt;
-  const centerX = width / 2;
-  const visualAmount = ease(state.transcription.visualAmount);
-  const y = height * (0.72 + (1 - visualAmount) * 0.025);
-
-  context.save();
-  context.shadowColor = "rgba(18, 229, 229, 0.38)";
-  context.shadowBlur = 6 + 8 * visualAmount;
-  context.fillStyle = "rgba(82, 250, 250, 0.9)";
-  context.globalAlpha = visualAmount;
-
-  if (mode === "listening") {
-    const bars = 7;
-    const gap = Math.max(5, width * 0.012);
-    const barWidth = Math.max(3, width * 0.008);
-    const total = bars * barWidth + (bars - 1) * gap;
-    const startX = centerX - total / 2;
-
-    for (let i = 0; i < bars; i++) {
-      const wave = Math.sin(elapsed / 120 + i * 0.72);
-      const h = height * (0.035 + Math.abs(wave) * 0.055);
-      const x = startX + i * (barWidth + gap);
-      roundRect(context, x, y - (h * visualAmount) / 2, barWidth, h * visualAmount, barWidth / 2);
-      context.fill();
-    }
-  } else if (mode === "transcribing") {
-    const dots = 3;
-    const radius = Math.max(4.5, Math.min(width, height) * 0.062) * (0.75 + 0.25 * visualAmount);
-    const gap = radius * 3.05;
-
-    for (let i = 0; i < dots; i++) {
-      const phase = Math.max(0, Math.sin(elapsed / 230 + i * 0.92));
-      const breathe = 0.84 + 0.16 * phase;
-      context.globalAlpha = visualAmount * (0.36 + 0.52 * phase);
-      context.beginPath();
-      context.arc(centerX + (i - 1) * gap, y - phase * radius * 1.45, radius * breathe, 0, Math.PI * 2);
-      context.fill();
-    }
-  }
-
-  context.restore();
-}
-
 function drawPet(now) {
   const rect = canvas.getBoundingClientRect();
   const width = rect.width, height = rect.height;
@@ -898,20 +1050,44 @@ function drawPet(now) {
   const pulse = (Math.sin(now / 260) + 1) / 2;
   
   if (face) drawFaceScreen(ctx, width, height, face, state.mood, pulse);
-  drawTranscriptionOverlay(ctx, width, height);
 }
 
 // ---- Render loop ----
+// Andy lives in the notch permanently, so the frame budget scales with how much
+// he actually has to say. Full rate only for voice and music.
+function targetFrameInterval() {
+  // Full rate whenever he's awake and on screen. The idle motion is layered
+  // sine work — breath, sway, float, micro-saccades — and starving it of
+  // frames is exactly what makes a pet look like a cartoon. Only throttle in
+  // states nobody is watching closely.
+  if (state.mood === "sleeping") return 1000 / 12;
+  if (state.mood === "sleepy") return 1000 / 20;
+  if (state.windowBlurred) return 1000 / 24;
+  return 0;
+}
+
+let lastFrameAt = 0;
+
 function render(now) {
+  requestAnimationFrame(render);
+
+  const interval = targetFrameInterval();
+  if (interval > 0 && now - lastFrameAt < interval) return;
+  lastFrameAt = now;
+
   updateNeeds(now);
+  updateVoice(now);
   VE.updateBlink(now);
   VE.updateSaccade(now);
-  
-  if (state.autoPlay && state.animation && now > state.nextAnimationAt) {
+
+  // Keep the simulation advancing but stop painting when we're not on screen.
+  if (document.hidden) return;
+
+  // Don't swap clips mid-sentence; the procedural voice pass owns the face.
+  if (state.autoPlay && state.animation && !isVoiceActive() && now > state.nextAnimationAt) {
     playNextAnimation();
   }
   drawPet(now);
-  requestAnimationFrame(render);
 }
 
 // ---- Event listeners ----
@@ -948,17 +1124,33 @@ if (faceModeButton) faceModeButton.addEventListener("click", () => {
   faceModeButton.textContent = state.faceOnly ? "Show body" : "Face only";
 });
 
+// interact("drag") had its emotion response written but was never called from
+// anywhere — dragging across Andy now actually reaches it.
+let dragOrigin = null;
+
 canvas.addEventListener("pointerdown", (event) => {
   canvas.setPointerCapture(event.pointerId);
+  dragOrigin = { x: event.clientX, y: event.clientY, fired: false };
   interact("tap");
+});
+canvas.addEventListener("pointermove", (event) => {
+  if (!dragOrigin || dragOrigin.fired) return;
+  const dx = event.clientX - dragOrigin.x;
+  const dy = event.clientY - dragOrigin.y;
+  if (Math.sqrt(dx * dx + dy * dy) > 14) {
+    dragOrigin.fired = true;
+    interact("drag");
+  }
 });
 canvas.addEventListener("pointerup", (event) => {
   canvas.releasePointerCapture(event.pointerId);
+  dragOrigin = null;
 });
 
 // Track mouse position for eye following + shake detection
 window.addEventListener("mousemove", (event) => {
   const now = performance.now();
+  VE.cursorTrack.hasCursor = true;
   VE.cursorTrack.mouseX = event.clientX / window.innerWidth;
   VE.cursorTrack.mouseY = event.clientY / window.innerHeight;
   
@@ -1008,11 +1200,18 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("resize", resizeCanvas);
 
 window.addEventListener("unload", () => {
+  savePetState();
   if (window.innerWidth < 200) {
     localStorage.setItem("closedNotchUnmountedAt", Date.now());
   } else {
     localStorage.setItem("expandedTabUnmountedAt", Date.now());
   }
+});
+
+// unload is not guaranteed when the notch view is torn down, so checkpoint too.
+setInterval(savePetState, 30000);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) savePetState();
 });
 
 function showLoadError(error) {
@@ -1023,7 +1222,10 @@ function showLoadError(error) {
 // ---- Start ----
 async function start() {
   resizeCanvas();
-  
+
+  // Restore who he was before this launch, before anything overrides the axes.
+  loadPetState();
+
   // Request initial system state (music, typing, etc.)
   try { window.webkit.messageHandlers.andyRequestSystemState.postMessage(""); } catch(e) {}
 
@@ -1040,13 +1242,22 @@ async function start() {
   
   // If booting in closed notch, and he was unmounted previously (not first boot)
   // And it wasn't just because the user closed the expanded tab
-  if (isClosedNotch && closedUnmountedAt > 0 && (now - expandedUnmountedAt) > 2000) {
-    // He was displaced by music, mic, or hover!
-    VE.emotions.calmness = 15;
-    VE.emotions.social = 40;
-    VE.emotions.happiness = 20;
-    VE.emotions.stimulation = 70;
-    startAnims = findAnimationIndices("annoyed_react");
+  // A remount within a couple of seconds of the last one is SwiftUI swapping
+  // branches — dictation ending hands the wing from the live activity back to
+  // the idle slot. That is not the same thing as music stealing his spot, and
+  // reacting annoyed to it made every finished dictation end on a jolt.
+  const isViewSwap = (now - closedUnmountedAt) < 2500;
+
+  if (isClosedNotch && closedUnmountedAt > 0 && !isViewSwap && (now - expandedUnmountedAt) > 2000) {
+    // He was displaced by music, mic, or hover! Nudge the restored axes rather
+    // than hard-assigning them — this is the most common remount path, and
+    // overwriting here would make the saved state look like it never loaded.
+    VE.emotions.calmness = Math.max(0, VE.emotions.calmness - 45);
+    VE.emotions.happiness = Math.max(0, VE.emotions.happiness - 25);
+    VE.emotions.stimulation = Math.min(100, VE.emotions.stimulation + 30);
+    // "annoyed_react" is a behaviour key, not a path fragment — the old
+    // findAnimationIndices lookup matched nothing, so this never once played.
+    startAnims = VE.resolveBehaviorToAnimations("annoyed_react", animations);
   } else if (hour >= 6 && hour < 10) {
     const todayStr = new Date().toDateString();
     const lastWakeupDate = localStorage.getItem("lastWakeupDate");
