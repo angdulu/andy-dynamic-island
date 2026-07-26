@@ -1130,12 +1130,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !optionalShortcutHandlersRegistered else { return }
         optionalShortcutHandlersRegistered = true
 
-        KeyboardShortcuts.onKeyDown(for: .startDemoTimer) {
-            guard Defaults[.enableShortcuts], Defaults[.enableTimerFeature] else { return }
-            guard !Defaults[.dictationOnlyMode] else { return }
-            TimerManager.shared.startDemoTimer(duration: 300)
-        }
-
         KeyboardShortcuts.onKeyDown(for: .clipboardHistoryPanel) { [weak self] in
             guard let self else { return }
             guard Defaults[.enableShortcuts], Defaults[.enableClipboardManager] else { return }
@@ -1222,7 +1216,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func updateFeatureShortcutAvailability() {
         let isDictationOnly = Defaults[.dictationOnlyMode]
-        updateShortcut(.startDemoTimer, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableTimerFeature])
         updateShortcut(.clipboardHistoryPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableClipboardManager])
         updateShortcut(.colorPickerPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableColorPickerFeature])
         updateShortcut(.screenAssistantPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableScreenAssistant])

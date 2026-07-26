@@ -6177,29 +6177,6 @@ struct Shortcuts: View {
                 Section {
                     HStack {
                         VStack(alignment: .leading) {
-                            KeyboardShortcuts.Recorder("Start Demo Timer:", name: .startDemoTimer)
-                                .disabled(!enableShortcuts || !enableTimerFeature)
-                            if !enableTimerFeature {
-                                Text("Timer feature is disabled")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 2)
-                            }
-                        }
-                        Spacer()
-                    }
-                } header: {
-                    Text("Timer")
-                } footer: {
-                    Text("Starts a 5-minute demo timer to test the timer live activity feature. Only works when timer feature is enabled.")
-                        .multilineTextAlignment(.trailing)
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                }
-
-                Section {
-                    HStack {
-                        VStack(alignment: .leading) {
                             KeyboardShortcuts.Recorder("Clipboard History:", name: .clipboardHistoryPanel)
                                 .disabled(!enableShortcuts || !enableClipboardManager)
                             if !enableClipboardManager {
@@ -6377,7 +6354,6 @@ struct TimerSettings: View {
     @Default(.timerProgressStyle) private var progressStyle
     @Default(.showTimerPresetsInNotchTab) private var showTimerPresetsInNotchTab
     @Default(.mirrorSystemTimer) private var mirrorSystemTimer
-    @Default(.timerDisplayMode) private var timerDisplayMode
     @Default(.enableLockScreenTimerWidget) private var enableLockScreenTimerWidget
     @Default(.lockScreenTimerWidgetUsesBlur) private var timerGlassModeIsGlass
     @Default(.lockScreenTimerGlassStyle) private var lockScreenTimerGlassStyle
@@ -6447,14 +6423,6 @@ struct TimerSettings: View {
                 .help("Shows the system Clock timer in the notch when available. Requires Accessibility permission to read the status item.")
                 .settingsHighlight(id: highlightID("Mirror macOS Clock timers"))
 
-                Picker("Timer controls appear as", selection: $timerDisplayMode) {
-                    ForEach(TimerDisplayMode.allCases) { mode in
-                        Text(mode.displayName).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help(timerDisplayMode.description)
-                .settingsHighlight(id: highlightID("Timer controls appear as"))
             }
         } header: {
             Text("Timer Feature")

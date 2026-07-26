@@ -66,7 +66,6 @@ struct ContentView: View {
     @Default(.showDiskGraph) var showDiskGraph
     @Default(.enableReminderLiveActivity) var enableReminderLiveActivity
     @Default(.enableTimerFeature) var enableTimerFeature
-    @Default(.timerDisplayMode) var timerDisplayMode
     @Default(.enableHorizontalMusicGestures) var enableHorizontalMusicGestures
     @Default(.reminderPresentationStyle) var reminderPresentationStyle
     @Default(.timerShowsCountdown) var timerShowsCountdown
@@ -2071,7 +2070,7 @@ struct ContentView: View {
                 triggerHapticIfAllowed()
             }
 
-            let shouldFocusTimerTab = enableTimerFeature && timerDisplayMode == .tab && timerManager.isTimerActive && !enableMinimalisticUI
+            let shouldFocusTimerTab = enableTimerFeature && timerManager.isTimerActive && !enableMinimalisticUI
 
             guard vm.notchState == .closed,
                 !isSneakPeekVisibleOnCurrentScreen,
@@ -2138,7 +2137,6 @@ struct ContentView: View {
          vm.isClipboardPopoverActive || 
          vm.isColorPickerPopoverActive || 
          vm.isStatsPopoverActive ||
-         vm.isTimerPopoverActive ||
          vm.isMediaOutputPopoverActive ||
          vm.isReminderPopoverActive
     }

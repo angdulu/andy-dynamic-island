@@ -52,7 +52,6 @@ struct TabSelectionView: View {
     @Default(.enableTimerFeature) var enableTimerFeature
     @Default(.enableStatsFeature) var enableStatsFeature
     @Default(.enableColorPickerFeature) var enableColorPickerFeature
-    @Default(.timerDisplayMode) var timerDisplayMode
     @Default(.enableThirdPartyExtensions) private var enableThirdPartyExtensions
     @Default(.enableExtensionNotchExperiences) private var enableExtensionNotchExperiences
     @Default(.enableExtensionNotchTabs) private var enableExtensionNotchTabs
@@ -74,7 +73,7 @@ struct TabSelectionView: View {
             tabsArray.append(TabModel(label: "Shelf", icon: "tray.fill", view: .shelf))
         }
         
-        if enableTimerFeature && timerDisplayMode == .tab {
+        if enableTimerFeature {
             tabsArray.append(TabModel(label: "Timer", icon: "timer", view: .timer))
         }
 

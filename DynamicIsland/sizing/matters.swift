@@ -72,8 +72,8 @@ func enabledStandardTabCount() -> Int {
         count += 1
     }
 
-    // Timer tab (only in .tab display mode)
-    if Defaults[.enableTimerFeature] && Defaults[.timerDisplayMode] == .tab {
+    // Timer tab
+    if Defaults[.enableTimerFeature] {
         count += 1
     }
 

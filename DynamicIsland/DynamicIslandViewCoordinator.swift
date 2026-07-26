@@ -135,8 +135,7 @@ class DynamicIslandViewCoordinator: ObservableObject {
     @AppStorage("timerLiveActivityEnabled") var timerLiveActivityEnabled: Bool = true
 
     @Default(.enableTimerFeature) private var enableTimerFeature
-    @Default(.timerDisplayMode) private var timerDisplayMode
-    
+
     @AppStorage("alwaysShowTabs") var alwaysShowTabs: Bool = true {
         didSet {
             if !alwaysShowTabs {
@@ -172,13 +171,6 @@ class DynamicIslandViewCoordinator: ObservableObject {
     
     private init() {
         selectedScreen = preferredScreen
-        Defaults.publisher(.timerDisplayMode)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] change in
-                self?.handleTimerDisplayModeChange(change.newValue)
-            }
-            .store(in: &cancellables)
-
         Defaults.publisher(.enableTimerFeature)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] change in
@@ -237,7 +229,6 @@ class DynamicIslandViewCoordinator: ObservableObject {
             Defaults.publisher(.showMirror).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.dynamicShelf).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.enableTimerFeature).map { _ in () }.eraseToAnyPublisher(),
-            Defaults.publisher(.timerDisplayMode).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.enableStatsFeature).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.enableNotes).map { _ in () }.eraseToAnyPublisher(),
             Defaults.publisher(.enableClipboardManager).map { _ in () }.eraseToAnyPublisher(),
@@ -271,12 +262,6 @@ class DynamicIslandViewCoordinator: ObservableObject {
         }
     }
 
-    private func handleTimerDisplayModeChange(_ mode: TimerDisplayMode) {
-        guard mode == .popover, currentView == .timer else { return }
-        withAnimation(.smooth) {
-            currentView = .home
-        }
-    }
 
     private func handleTimerFeatureToggle(_ isEnabled: Bool) {
         guard !isEnabled, currentView == .timer else { return }
