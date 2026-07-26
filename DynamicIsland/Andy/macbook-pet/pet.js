@@ -1208,10 +1208,21 @@ window.addEventListener("unload", () => {
   }
 });
 
-// unload is not guaranteed when the notch view is torn down, so checkpoint too.
-setInterval(savePetState, 30000);
+// Two Andy web views are alive at once — the closed wing and the expanded tab —
+// but only ever one is visible. Letting the hidden one keep checkpointing meant
+// both wrote the same key and their moods forked. Save only while visible, and
+// adopt whatever the other left behind on the way back in, so opening and
+// closing the notch is a handoff instead of a fight.
+setInterval(() => {
+  if (!document.hidden) savePetState();
+}, 30000);
+
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) savePetState();
+  if (document.hidden) {
+    savePetState();   // hand off on the way out
+  } else {
+    loadPetState();   // pick up where the other one left off
+  }
 });
 
 function showLoadError(error) {
