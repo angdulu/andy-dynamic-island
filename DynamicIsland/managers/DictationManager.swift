@@ -24,6 +24,9 @@ final class DictationManager: NSObject, ObservableObject {
     @Published private(set) var downloadProgress: Double?
     @Published private(set) var modelStorageRevision = 0
     @Published private(set) var lastError: String?
+    /// Normalized live microphone level (0...1) while recording. Drives Andy's
+    /// listening animation; 0 whenever we are not capturing.
+    @Published private(set) var inputLevel: Double = 0
 
     private var audioRecorder: AVAudioRecorder?
     private var currentAudioURL: URL?
@@ -32,6 +35,7 @@ final class DictationManager: NSObject, ObservableObject {
     private var activeDownloadSession: URLSession?
     private var activeDownloadTask: URLSessionDownloadTask?
     private var hudSuppressionTimer: Timer?
+    private var meteringTimer: Timer?
 
     private var serverProcess: Process?
     private var serverPort = 8178
@@ -180,7 +184,7 @@ final class DictationManager: NSObject, ObservableObject {
 
             let recorder = try AVAudioRecorder(url: audioURL, settings: settings)
             recorder.delegate = self
-            recorder.isMeteringEnabled = false
+            recorder.isMeteringEnabled = true
             recorder.prepareToRecord()
 
             guard recorder.record() else {
@@ -200,6 +204,7 @@ final class DictationManager: NSObject, ObservableObject {
             audioRecorder = recorder
             isRecording = true
             lastError = nil
+            startMetering()
             print("Dictation: recording started")
 
             Task {
@@ -217,12 +222,37 @@ final class DictationManager: NSObject, ObservableObject {
         }
     }
 
+    /// Polls the recorder's meter and normalizes dBFS into a 0...1 curve that
+    /// tracks speech rather than the full silence-to-clipping range.
+    private func startMetering() {
+        meteringTimer?.invalidate()
+        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, let recorder = self.audioRecorder, self.isRecording else { return }
+                recorder.updateMeters()
+                let power = Double(recorder.averagePower(forChannel: 0))
+                // -55 dB (room noise) → 0, -8 dB (talking close) → 1
+                let normalized = (power + 55.0) / 47.0
+                self.inputLevel = min(1, max(0, normalized))
+            }
+        }
+        meteringTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopMetering() {
+        meteringTimer?.invalidate()
+        meteringTimer = nil
+        inputLevel = 0
+    }
+
     private func stopRecordingAndTranscribe() {
         guard isRecording else { return }
-        
+
         suppressVolumeHUD(for: 3.5)
         playDictationSound(.end)
-        
+
+        stopMetering()
         audioRecorder?.stop()
         audioRecorder = nil
         isRecording = false
@@ -730,6 +760,7 @@ private enum DictationSound {
 extension DictationManager: AVAudioRecorderDelegate {
     nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         Task { @MainActor in
+            self.stopMetering()
             self.isRecording = false
             self.lastError = error?.localizedDescription
         }

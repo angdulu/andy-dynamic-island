@@ -94,7 +94,44 @@ class PrivacyIndicatorManager: ObservableObject {
     
     // MARK: - Cancellables
     private var cancellables = Set<AnyCancellable>()
-    
+
+    // MARK: - Dictation Ownership
+    /// This indicator exists to surface *other* software using the mic. Our own
+    /// dictation already has its own UI, and the audio device keeps reporting
+    /// itself as running for a second or two after the recorder stops — which
+    /// showed up as an orange mic flashing in right after Andy's animation.
+    private var dictationOwnsMic = false
+    private var dictationReleaseWorkItem: DispatchWorkItem?
+    /// Covers the CoreAudio teardown tail measured on real hardware (>1.5s).
+    private static let dictationReleaseGrace: TimeInterval = 3.0
+
+    private func setDictationOwnsMic(_ owns: Bool) {
+        dictationReleaseWorkItem?.cancel()
+
+        if owns {
+            dictationOwnsMic = true
+            if microphoneActive {
+                withAnimation(.smooth) { microphoneActive = false }
+                logLayoutChange()
+            }
+            return
+        }
+
+        // Hold suppression through teardown, then fall back to whatever the
+        // monitor actually reports, so a genuine second app still shows up.
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.dictationOwnsMic = false
+            let live = self.microphoneMonitor.isMicActive
+            if self.microphoneActive != live {
+                withAnimation(.smooth) { self.microphoneActive = live }
+                self.logLayoutChange()
+            }
+        }
+        dictationReleaseWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.dictationReleaseGrace, execute: item)
+    }
+
     // MARK: - Computed Properties
     
     /// Current indicator layout based on active states
@@ -162,6 +199,8 @@ class PrivacyIndicatorManager: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isActive in
                 guard let self = self else { return }
+                // Our own dictation is not a privacy event to report back.
+                guard !self.dictationOwnsMic else { return }
                 if self.microphoneActive != isActive {
                     print("PrivacyIndicatorManager: 🎤 Microphone state: \(isActive)")
                     withAnimation(.smooth) {
@@ -171,6 +210,19 @@ class PrivacyIndicatorManager: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        // Track whether the mic currently belongs to our own dictation.
+        Publishers.CombineLatest(
+            DictationManager.shared.$isRecording,
+            DictationManager.shared.$isTranscribing
+        )
+        .map { $0 || $1 }
+        .removeDuplicates()
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] active in
+            self?.setDictationOwnsMic(active)
+        }
+        .store(in: &cancellables)
         
         // Bind screen recording manager
         let screenRecManager = ScreenRecordingManager.shared
