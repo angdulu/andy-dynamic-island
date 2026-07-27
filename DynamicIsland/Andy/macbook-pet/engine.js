@@ -17,9 +17,13 @@ function deriveMood() {
   if (e.calmness < 32 && e.social > 35) return "annoyed";
   if (e.social > 68 && e.happiness > 52) return "affectionate";
   if (e.happiness > 62 && e.social > 38) return "happy";
-  if (e.happiness > 38 && e.calmness > 55) return "content";
+  // bored and curious are narrow, arousal-specific states; content is the broad
+  // "pleasant and unremarkable" fallback. Content was tested first, and since
+  // the resting baselines (happiness 45, calmness 65) satisfy it permanently,
+  // it swallowed both — neither could ever be reached. Order by specificity.
   if (e.stimulation < 22 && e.tiredness < 50) return "bored";
   if (e.stimulation > 38 && e.stimulation < 72 && e.confidence > 30) return "curious";
+  if (e.happiness > 38 && e.calmness > 55) return "content";
   if (e.tiredness > 68) return "sleepy";
   return "idle";
 }
