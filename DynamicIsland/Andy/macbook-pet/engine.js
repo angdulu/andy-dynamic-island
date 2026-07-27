@@ -46,12 +46,6 @@ const behaviorAnimations = {
   cliff_react: ["reacttocliff_edge","reacttocliff_stop","reacttocliff_turnleft","reacttocliff_turnright",
                 "reacttocliff_faceplant","reacttocliff_stuckonedge","reacttocliff_turtleroll",
                 "reacttocliff_sidestuck","reacttocliff_reaction"],
-  pickup_react: ["rtpickup_loop","rtpickup_putdown","rtpickup_reaction"],
-  heldonpalm: ["heldonpalm_edge_nervous","heldonpalm_edge_relaxed","heldonpalm_getin",
-               "heldonpalm_idle","heldonpalm_jolt","heldonpalm_looking_nervous",
-               "heldonpalm_nestling","heldonpalm_putdown","heldonpalm_rolloff",
-               "heldonpalm_transition2relaxed"],
-  shake_react: ["rtshake_lv1","rtshake_lv2","rtshake_lv3","rtshake_getin","rtshake_drive"],
   startled_react: ["rtmotion","sudden_obstacle","dizzy_reaction_medium","dizzy_reaction_hard"],
   // --- Tier 2: Emotions & social ---
   happy_react: ["eyepose_happy","eyepose_joy","eyepose_bliss","eyecontact_smile","greeting_happy",
@@ -158,46 +152,6 @@ function updateGaze(now) {
   return !wasAtEdge && gazeState.atEdge; // returns true on NEW edge hit
 }
 
-// --- Shake detection ---
-const shakeState = {
-  positions: [], // {x, y, t}
-  intensity: 0,  // 0=none, 1=gentle, 2=medium, 3=hard
-  lastShakeAt: 0,
-  isShaking: false,
-};
-
-function trackMouseForShake(x, y, now) {
-  shakeState.positions.push({ x, y, t: now });
-  // Keep last 500ms of positions
-  while (shakeState.positions.length > 0 && now - shakeState.positions[0].t > 500) {
-    shakeState.positions.shift();
-  }
-  if (shakeState.positions.length < 4) return;
-  
-  // Calculate velocity variance (shake = high variance in direction)
-  let totalDist = 0, dirChanges = 0, lastDx = 0;
-  for (let i = 1; i < shakeState.positions.length; i++) {
-    const dx = shakeState.positions[i].x - shakeState.positions[i-1].x;
-    const dy = shakeState.positions[i].y - shakeState.positions[i-1].y;
-    totalDist += Math.sqrt(dx*dx + dy*dy);
-    if (lastDx !== 0 && Math.sign(dx) !== Math.sign(lastDx)) dirChanges++;
-    lastDx = dx;
-  }
-  
-  const wasShaking = shakeState.isShaking;
-  if (dirChanges > 4 && totalDist > 200) {
-    shakeState.intensity = 3; shakeState.isShaking = true;
-  } else if (dirChanges > 3 && totalDist > 100) {
-    shakeState.intensity = 2; shakeState.isShaking = true;
-  } else if (dirChanges > 2 && totalDist > 50) {
-    shakeState.intensity = 1; shakeState.isShaking = true;
-  } else {
-    shakeState.intensity = 0; shakeState.isShaking = false;
-  }
-  if (shakeState.isShaking) shakeState.lastShakeAt = now;
-  return !wasShaking && shakeState.isShaking;
-}
-
 // --- Petting detection ---
 const petState = {
   gentleClickCount: 0, gentleClickWindow: [],
@@ -293,10 +247,6 @@ function onInteraction(type) {
     case "drag":
       e.stimulation = clamp(e.stimulation + 25); e.calmness = clamp(e.calmness - 25);
       e.happiness = clamp(e.happiness - 10); e.social = clamp(e.social - 8);
-      break;
-    case "shake":
-      e.stimulation = clamp(e.stimulation + 35); e.calmness = clamp(e.calmness - 40);
-      e.happiness = clamp(e.happiness - 15); e.confidence = clamp(e.confidence - 10);
       break;
     case "mouse_near":
       e.social = clamp(e.social + 4); e.stimulation = clamp(e.stimulation + 2); break;
@@ -417,7 +367,6 @@ window.VectorEngine = {
   blinkState, updateBlink, saccadeState, updateSaccade,
   cursorTrack, updateCursorTracking, getBreathScale,
   gazeState, updateGaze,
-  shakeState, trackMouseForShake,
   petState, trackPetting,
   amuseState, checkSelfAmuse, finishAmuse,
 };

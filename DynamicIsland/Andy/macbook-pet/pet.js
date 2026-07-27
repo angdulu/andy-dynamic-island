@@ -1159,22 +1159,14 @@ canvas.addEventListener("pointerup", (event) => {
   dragOrigin = null;
 });
 
-// Track mouse position for eye following + shake detection
+// Track mouse position for eye following. Note this never fires in the closed
+// wing — the notch window does not deliver mouseMoved — so cursorTrack only
+// carries real data in the expanded tab. Face-level cursor following comes
+// from the Swift bridge instead, which works in both.
 window.addEventListener("mousemove", (event) => {
-  const now = performance.now();
   VE.cursorTrack.hasCursor = true;
   VE.cursorTrack.mouseX = event.clientX / window.innerWidth;
   VE.cursorTrack.mouseY = event.clientY / window.innerHeight;
-  
-  // Shake detection
-  const shakeTriggered = VE.trackMouseForShake(event.clientX, event.clientY, now);
-  if (shakeTriggered && state.animQueue.length === 0) {
-    VE.onInteraction("shake");
-    const intensity = VE.shakeState.intensity;
-    if (intensity >= 3) playBehaviorCategory("shake_react");
-    else if (intensity >= 2) playBehaviorCategory("pickup_react");
-    else playBehaviorCategory("heldonpalm");
-  }
   wakePet();
 });
 
