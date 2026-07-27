@@ -1055,15 +1055,27 @@ function drawPet(now) {
 // ---- Render loop ----
 // Andy lives in the notch permanently, so the frame budget scales with how much
 // he actually has to say. Full rate only for voice and music.
+// Frame budget is set per view, because the two are wildly different sizes.
+// The closed wing draws 128x80 and is then scaleEffect'd to roughly 30%, so the
+// whole face lands in a ~37px circle. At that scale breathing (~0.08px), sway
+// (~0.33px), float (~0.1px) and micro-saccades (~0.5px) are all sub-pixel —
+// extra frames there composite a byte-identical image at full GPU cost. The
+// expanded tab is full size and gets everything.
 function targetFrameInterval() {
-  // Full rate whenever he's awake and on screen. The idle motion is layered
-  // sine work — breath, sway, float, micro-saccades — and starving it of
-  // frames is exactly what makes a pet look like a cartoon. Only throttle in
-  // states nobody is watching closely.
   if (state.mood === "sleeping") return 1000 / 12;
   if (state.mood === "sleepy") return 1000 / 20;
   if (state.windowBlurred) return 1000 / 24;
-  return 0;
+
+  // Real motion always runs uncapped, in either view.
+  if (isVoiceActive() || state.isMusicPlaying) return 0;
+
+  if (window.innerWidth >= 200) return 0;   // expanded tab
+
+  // Blinks are the one idle motion big enough to see in the wing (~10px over
+  // ~190ms), so don't step those down.
+  if (VE.blinkState.isBlinking) return 0;
+
+  return 1000 / 30;                          // closed wing
 }
 
 let lastFrameAt = 0;
