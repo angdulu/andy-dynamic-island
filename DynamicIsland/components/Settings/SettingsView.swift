@@ -3506,7 +3506,7 @@ struct About: View {
             }
             VStack(spacing: 0) {
                 Divider()
-                Text("Made with ❤️ by Ebullioscopic")
+                Text("Made with ❤️ by Andrew Kim")
                     .foregroundStyle(.secondary)
                     .padding(.top, 5)
                     .padding(.bottom, 7)

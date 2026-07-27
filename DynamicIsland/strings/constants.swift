@@ -18,7 +18,7 @@
 
 import Foundation
 
-let productPage = URL(string: "https://github.com/Ebullioscopic/DynamicIsland")!
-let sponsorPage = URL(string: "https://www.buymeacoffee.com/kryoscopic")!
+let productPage = URL(string: "https://github.com/angdulu/andy-dynamic-island")!
+let sponsorPage = URL(string: "https://github.com/angdulu/andy-dynamic-island")!
 
 
