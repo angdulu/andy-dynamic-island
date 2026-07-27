@@ -148,11 +148,7 @@ struct ContentView: View {
             return CGSize(width: baseSize.width, height: 250) // Extra height for timer presets
         }
         
-        if coordinator.currentView == .notes || coordinator.currentView == .clipboard {
-            let preferredHeight = coordinator.notesLayoutState.preferredHeight
-            let resolvedHeight = max(baseSize.height, preferredHeight)
-            return CGSize(width: baseSize.width, height: resolvedHeight)
-        }
+
 
         if coordinator.currentView == .terminal {
             // Dynamic height: up to terminalMaxHeightFraction of screen, min 300pt
@@ -1110,12 +1106,8 @@ struct ContentView: View {
                                   NotchTimerView()
                               case .stats:
                                   NotchStatsView()
-                              case .colorPicker:
-                                  NotchColorPickerView()
-                            case .notes:
-                                NotchNotesView()
                             case .clipboard:
-                                NotchNotesView()
+                                ClipboardPopover()
                             case .terminal:
                                 NotchTerminalView()
                             case .andy:
@@ -2135,7 +2127,6 @@ struct ContentView: View {
     private func hasAnyActivePopovers() -> Bool {
      return vm.isBatteryPopoverActive || 
          vm.isClipboardPopoverActive || 
-         vm.isColorPickerPopoverActive || 
          vm.isStatsPopoverActive ||
          vm.isMediaOutputPopoverActive ||
          vm.isReminderPopoverActive

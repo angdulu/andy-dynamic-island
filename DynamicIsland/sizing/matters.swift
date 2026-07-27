@@ -72,18 +72,15 @@ func enabledStandardTabCount() -> Int {
         count += 1
     }
 
-    // Timer tab
-    if Defaults[.enableTimerFeature] {
-        count += 1
-    }
+    // Timer tab removed when idle
 
     // Stats tab
     if Defaults[.enableStatsFeature] {
         count += 1
     }
 
-    // Notes / Clipboard tab
-    if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
+    // Clipboard separate tab
+    if Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab {
         count += 1
     }
 

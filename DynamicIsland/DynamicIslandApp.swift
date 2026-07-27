@@ -481,9 +481,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Use a consistent height for different view types
         if coordinator.currentView == .timer {
             baseSize.height = 250 // Extra space for timer presets
-        } else if coordinator.currentView == .notes || coordinator.currentView == .clipboard {
-            let preferredHeight = coordinator.notesLayoutState.preferredHeight
-            baseSize.height = max(baseSize.height, preferredHeight)
         } else if coordinator.currentView == .terminal {
             let screenHeight = NSScreen.main?.visibleFrame.height ?? 800
             let maxFraction = Defaults[.terminalMaxHeightFraction]
@@ -577,6 +574,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         extensionRPCServer.start()
         
         // Migrate legacy progress bar settings
+        Defaults[.enableTimerFeature] = false
         Defaults.Keys.migrateProgressBarStyle()
         Defaults.Keys.migrateMusicAuxControls()
         Defaults.Keys.migrateMusicControlSlots()
@@ -662,13 +660,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.updateWindowSizeForTabSwitch()
             }
         }.store(in: &cancellables)
-
-        coordinator.$notesLayoutState
-            .removeDuplicates()
-            .sink { [weak self] _ in
-                self?.updateWindowSizeIfNeeded()
-            }
-            .store(in: &cancellables)
         
         // Observe stats settings changes - use debounced updates
         Defaults.publisher(.enableStatsFeature, options: []).sink { [weak self] _ in
@@ -745,11 +736,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }.store(in: &cancellables)
 
-        Defaults.publisher(.enableColorPickerFeature, options: []).sink { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.updateFeatureShortcutAvailability()
-            }
-        }.store(in: &cancellables)
+
 
         Defaults.publisher(.enableScreenAssistant, options: []).sink { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -1154,22 +1141,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             case .separateTab:
                 if vm.notchState == .closed {
                     vm.open()
-                    coordinator.currentView = .notes
+                    coordinator.currentView = .clipboard
                 } else {
-                    if coordinator.currentView == .notes {
+                    if coordinator.currentView == .clipboard {
                         vm.close()
                     } else {
-                        coordinator.currentView = .notes
+                        coordinator.currentView = .clipboard
                     }
                 }
             }
         }
 
-        KeyboardShortcuts.onKeyDown(for: .colorPickerPanel) {
-            guard Defaults[.enableShortcuts], Defaults[.enableColorPickerFeature] else { return }
-            guard !Defaults[.dictationOnlyMode] else { return }
-            ColorPickerPanelManager.shared.toggleColorPickerPanel()
-        }
+
 
         KeyboardShortcuts.onKeyDown(for: .toggleTerminalTab) { [weak self] in
             guard let self else { return }
@@ -1217,7 +1200,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateFeatureShortcutAvailability() {
         let isDictationOnly = Defaults[.dictationOnlyMode]
         updateShortcut(.clipboardHistoryPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableClipboardManager])
-        updateShortcut(.colorPickerPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableColorPickerFeature])
         updateShortcut(.screenAssistantPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableScreenAssistant])
         updateShortcut(.toggleTerminalTab, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableTerminalFeature])
     }

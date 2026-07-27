@@ -29,9 +29,7 @@ struct DynamicIslandHeader: View {
     @ObservedObject var timerManager = TimerManager.shared
     @ObservedObject var doNotDisturbManager = DoNotDisturbManager.shared
     @State private var showClipboardPopover = false
-    @State private var showColorPickerPopover = false
     @Default(.showClipboardIcon) var showClipboardIcon
-    @Default(.showColorPickerIcon) var showColorPickerIcon
     @Default(.clipboardDisplayMode) var clipboardDisplayMode
     @Default(.showBatteryIndicator) var showBatteryIndicator
     @Default(.enableMinimalisticUI) var enableMinimalisticUI
@@ -95,7 +93,7 @@ struct DynamicIslandHeader: View {
                             case .popover:
                                 showClipboardPopover.toggle()
                             case .separateTab:
-                                coordinator.currentView = .notes
+                                coordinator.currentView = .clipboard
                             }
                         }) {
                             Capsule()
@@ -129,41 +127,7 @@ struct DynamicIslandHeader: View {
                         }
                     }
                     
-                    // ColorPicker button
-                    if Defaults[.enableColorPickerFeature] && showColorPickerIcon{
-                        Button(action: {
-                            switch Defaults[.colorPickerDisplayMode] {
-                            case .panel:
-                                ColorPickerPanelManager.shared.toggleColorPickerPanel()
-                            case .popover:
-                                showColorPickerPopover.toggle()
-                            }
-                        }) {
-                            Capsule()
-                                .fill(.black)
-                                .frame(width: 30, height: 30)
-                                .overlay {
-                                    Image(systemName: "eyedropper")
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .imageScale(.medium)
-                                }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .popover(isPresented: $showColorPickerPopover, arrowEdge: .bottom) {
-                            ColorPickerPopover()
-                        }
-                        .onChange(of: showColorPickerPopover) { isActive in
-                            vm.isColorPickerPopoverActive = isActive
-                            
-                            // If popover was closed, trigger a hover recheck
-                            if !isActive {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    vm.shouldRecheckHover.toggle()
-                                }
-                            }
-                        }
-                    }
+
                     
                     if Defaults[.settingsIconInNotch] {
                         Button(action: {
@@ -231,10 +195,10 @@ struct DynamicIslandHeader: View {
                 case .popover:
                     showClipboardPopover.toggle()
                 case .separateTab:
-                    if coordinator.currentView == .notes {
+                    if coordinator.currentView == .clipboard {
                         coordinator.currentView = .home
                     } else {
-                        coordinator.currentView = .notes
+                        coordinator.currentView = .clipboard
                     }
                 }
             }
@@ -253,7 +217,6 @@ private extension DynamicIslandHeader {
         Defaults[.settingsIconInNotch]
             && Defaults[.enableClipboardManager]
             && Defaults[.showClipboardIcon]
-            && Defaults[.showColorPickerIcon]
             && Defaults[.enableTimerFeature]
     }
 }

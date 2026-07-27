@@ -28,41 +28,30 @@ struct NotchTimerView: View {
     @ObservedObject var coordinator = DynamicIslandViewCoordinator.shared
     @Default(.enableTimerFeature) var enableTimerFeature
     @Default(.enableMinimalisticUI) private var enableMinimalisticUI
-    @Default(.timerPresets) private var timerPresets
     @Default(.timerIconColorMode) private var colorMode
     @Default(.timerSolidColor) private var solidColor
     @Default(.timerShowsProgress) private var showsProgress
     @Default(.timerProgressStyle) private var progressStyle
-    @Default(.showTimerPresetsInNotchTab) private var showTimerPresetsInNotchTab
 
-    @AppStorage("customTimerDuration") private var customTimerDuration: Double = 600
-    @State private var customHours: Int = 0
-    @State private var customMinutes: Int = 10
-    @State private var customSeconds: Int = 0
-    @State private var isSyncingCustomDuration = false
     @State private var lockedAccentColor: Color?
 
     var body: some View {
         Group {
             if enableTimerFeature {
-                HStack(alignment: .top, spacing: timerManager.isTimerActive ? 0 : 20) {
-                    leftColumn
-                    if shouldShowPresetColumn {
-                        Divider()
-                            .frame(height: max(0, maxTabContentHeight - 8))
-                            .opacity(0.2)
-                        presetColumn
+                VStack {
+                    if timerManager.isTimerActive {
+                        Spacer(minLength: 0)
+                        activeTimerCard
+                        Spacer(minLength: 0)
+                    } else {
+                        inactiveTimerView
                     }
                 }
-                .frame(maxHeight: maxTabContentHeight, alignment: .top)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(maxHeight: maxTabContentHeight, alignment: .center)
                 .padding(.horizontal, 16)
-                    .padding(.vertical, 6)
+                .padding(.vertical, 6)
                 .transition(.opacity.combined(with: .blurReplace))
-                .onAppear { syncCustomDuration(with: customTimerDuration) }
-                .onChange(of: customTimerDuration) { _, newValue in syncCustomDuration(with: newValue) }
-                .onChange(of: customHours) { _, _ in updateStoredCustomDuration() }
-                .onChange(of: customMinutes) { _, _ in updateStoredCustomDuration() }
-                .onChange(of: customSeconds) { _, _ in updateStoredCustomDuration() }
             } else {
                 disabledState
             }
@@ -77,78 +66,25 @@ struct NotchTimerView: View {
                 lockedAccentColor = nil
             }
         }
-        .onChange(of: timerManager.activePresetId) { _, _ in
-            if timerManager.isTimerActive && lockedAccentColor == nil {
-                lockAccentColorIfNeeded()
-            }
-        }
     }
 
-    private var leftColumn: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if timerManager.isTimerActive {
-                Spacer(minLength: 0)
-                activeTimerCard
-                Spacer(minLength: 0)
-            } else {
-                customTimerComposer
-                Spacer(minLength: 0)
-            }
+    private var inactiveTimerView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "timer")
+                .font(.system(size: 36, weight: .light))
+                .foregroundStyle(.secondary)
+
+            Text("No Active Timer")
+                .font(.headline)
+                .foregroundStyle(.white)
+
+            Text("Start a timer in the macOS Clock app or via Siri to view it here.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(maxHeight: maxTabContentHeight, alignment: .top)
-        .padding(.bottom, 2)
-    }
-
-    private var presetColumn: some View {
-        VStack(spacing: 6) {
-            if timerPresets.isEmpty {
-                Text("Configure presets in Settings to see them here.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(Color.white.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            } else {
-                let computedHeight = CGFloat(timerPresets.count) * 60 + 4
-                let listHeight = min(max(0, maxTabContentHeight - 16), computedHeight)
-                ZStack {
-                    List {
-                        ForEach(timerPresets) { preset in
-                            TimerPresetCard(preset: preset, isActive: timerManager.activePresetId == preset.id) {
-                                timerManager.startTimer(duration: preset.duration, name: preset.name, preset: preset)
-                                if !enableMinimalisticUI {
-                                    coordinator.currentView = .timer
-                                }
-                            }
-                            .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .scrollIndicators(.never)
-
-                    LinearGradient(colors: [Color.black.opacity(0.65), .clear], startPoint: .top, endPoint: .bottom)
-                        .frame(height: 16)
-                        .allowsHitTesting(false)
-                        .alignmentGuide(.top) { d in d[.top] }
-                        .frame(maxHeight: .infinity, alignment: .top)
-
-                    LinearGradient(colors: [.clear, Color.black.opacity(0.65)], startPoint: .top, endPoint: .bottom)
-                        .frame(height: 16)
-                        .allowsHitTesting(false)
-                        .alignmentGuide(.bottom) { d in d[.bottom] }
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-                }
-                .frame(height: listHeight)
-            }
-        }
-        .frame(width: 210, alignment: .leading)
-        .frame(maxHeight: maxTabContentHeight, alignment: .top)
-        .padding(.bottom, 2)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 16)
     }
 
     private var activeTimerCard: some View {
@@ -292,45 +228,6 @@ struct NotchTimerView: View {
         }
     }
 
-    private var customTimerComposer: some View {
-        Group {
-            if showTimerPresetsInNotchTab {
-                VStack(alignment: .leading, spacing: 12) {
-                    DurationInputRow(
-                        hours: $customHours,
-                        minutes: $customMinutes,
-                        seconds: $customSeconds,
-                        fieldWidth: durationFieldWidth
-                    )
-
-                    HStack(spacing: 10) {
-                        startButton
-                        resetButton
-                    }
-                }
-            } else {
-                HStack(alignment: .center, spacing: 16) {
-                    DurationInputRow(
-                        hours: $customHours,
-                        minutes: $customMinutes,
-                        seconds: $customSeconds,
-                        fieldWidth: durationFieldWidth
-                    )
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    VStack(spacing: 10) {
-                        startButton
-                        resetButton
-                    }
-                    .frame(width: buttonColumnWidth, alignment: .top)
-                }
-            }
-        }
-        .padding(12)
-        .background(Color.white.opacity(0.04))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
     private var inactiveTimerPlaceholder: some View {
         Color.clear
             .frame(height: 46)
@@ -352,10 +249,6 @@ struct NotchTimerView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var shouldShowPresetColumn: Bool {
-        !timerManager.isTimerActive && showTimerPresetsInNotchTab
     }
 
     private var resolvedNotchHeight: CGFloat {
@@ -443,98 +336,6 @@ struct NotchTimerView: View {
     private var pauseAccessibilityLabel: String {
         timerManager.isPaused ? "Resume" : "Pause"
     }
-
-    private var startButtonColor: Color {
-        Color(red: 0.142, green: 0.633, blue: 0.265)
-    }
-
-    private var isStartDisabled: Bool {
-        customDurationInSeconds == 0
-    }
-
-    private var durationFieldWidth: CGFloat {
-        showTimerPresetsInNotchTab ? 64 : 78
-    }
-
-    private var buttonColumnWidth: CGFloat { 210 }
-
-    private var startButton: some View {
-        Button {
-            withAnimation(.smooth) {
-                timerManager.startTimer(duration: customDurationInSeconds, name: String(localized: "Custom Timer"))
-                if !enableMinimalisticUI {
-                    coordinator.currentView = .timer
-                }
-            }
-        } label: {
-            Label("Start", systemImage: "play.fill")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Color.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(startButtonColor.opacity(isStartDisabled ? 0.5 : 1))
-                )
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-        )
-        .opacity(isStartDisabled ? 0.7 : 1)
-        .disabled(isStartDisabled)
-    }
-
-    private var resetButton: some View {
-        Button(action: resetCustomTimerInputs) {
-            Label("Reset", systemImage: "arrow.counterclockwise")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.9))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.white.opacity(0.16))
-                )
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
-    private var customDurationInSeconds: TimeInterval {
-        TimeInterval(customHours * 3600 + customMinutes * 60 + customSeconds)
-    }
-
-    private func resetCustomTimerInputs() {
-        withAnimation(.smooth(duration: 0.2)) {
-            customHours = 0
-            customMinutes = 0
-            customSeconds = 0
-        }
-        customTimerDuration = 0
-    }
-
-    private func syncCustomDuration(with value: Double) {
-        isSyncingCustomDuration = true
-        let components = TimerPreset.components(for: value)
-        customHours = components.hours
-        customMinutes = components.minutes
-        customSeconds = components.seconds
-        isSyncingCustomDuration = false
-    }
-
-    private func updateStoredCustomDuration() {
-        guard !isSyncingCustomDuration else { return }
-        customTimerDuration = customDurationInSeconds
-    }
 }
 
 private struct TimerControlButton: View {
@@ -592,135 +393,6 @@ private struct TimerProgressRing: View {
                 .animation(.smooth(duration: 0.25), value: remainingTime)
         }
         .frame(width: 110, height: 110)
-    }
-}
-
-private struct DurationInputRow: View {
-    @Binding var hours: Int
-    @Binding var minutes: Int
-    @Binding var seconds: Int
-    let fieldWidth: CGFloat
-
-    init(
-        hours: Binding<Int>,
-        minutes: Binding<Int>,
-        seconds: Binding<Int>,
-        fieldWidth: CGFloat = 64
-    ) {
-        _hours = hours
-        _minutes = minutes
-        _seconds = seconds
-        self.fieldWidth = fieldWidth
-    }
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            DurationField(label: String(localized: "HH"), value: $hours, range: 0...23, width: fieldWidth)
-            colon
-            DurationField(label: String(localized: "MM"), value: $minutes, range: 0...59, width: fieldWidth)
-            colon
-            DurationField(label: String(localized: "SS"), value: $seconds, range: 0...59, width: fieldWidth)
-        }
-    }
-
-    private var colon: some View {
-        Text(":")
-            .font(.system(size: 26, weight: .black, design: .monospaced))
-            .foregroundStyle(Color.white.opacity(0.65))
-    }
-}
-
-private struct DurationField: View {
-    let label: String
-    @Binding var value: Int
-    let range: ClosedRange<Int>
-    let width: CGFloat
-
-    init(
-        label: String,
-        value: Binding<Int>,
-        range: ClosedRange<Int>,
-        width: CGFloat = 64
-    ) {
-        self.label = label
-        _value = value
-        self.range = range
-        self.width = width
-    }
-
-    var body: some View {
-        VStack(spacing: 6) {
-            TextField("00", text: binding)
-                .font(.system(size: 28, weight: .semibold, design: .monospaced))
-                .multilineTextAlignment(.center)
-                .textFieldStyle(.plain)
-                .foregroundColor(.white)
-                .tint(.white)
-                .frame(width: width, height: 46)
-                .background(Color.white.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(Color.white.opacity(0.65))
-        }
-    }
-
-    private var binding: Binding<String> {
-        Binding<String>(
-            get: { String(format: "%02d", value) },
-            set: { newValue in
-                let digits = newValue.filter { $0.isNumber }
-                let number = min(max(range.lowerBound, Int(digits) ?? 0), range.upperBound)
-                value = number
-            }
-        )
-    }
-}
-
-private struct TimerPresetCard: View {
-    let preset: TimerPreset
-    let isActive: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Circle()
-                    .fill(preset.color.gradient)
-                    .frame(width: 30, height: 30)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                    )
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(preset.name)
-                        .font(.system(size: 14, weight: .semibold))
-                        .lineLimit(1)
-                    Text(preset.formattedDuration)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                }
-                .foregroundStyle(preset.color)
-
-                Spacer()
-
-                Image(systemName: isActive ? "checkmark" : "play.fill")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(isActive ? preset.color : Color.secondary)
-                    .padding(6)
-                    .background(isActive ? preset.color.opacity(0.2) : Color.white.opacity(0.08))
-                    .clipShape(Circle())
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isActive ? preset.color.opacity(0.12) : Color.white.opacity(0.04))
-            )
-        }
-        .buttonStyle(.plain)
     }
 }
 

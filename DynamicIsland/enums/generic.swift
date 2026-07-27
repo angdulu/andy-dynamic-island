@@ -75,29 +75,10 @@ public enum NotchViews {
     case shelf
     case timer
     case stats
-    case colorPicker
-    case notes
     case clipboard
     case terminal
     case andy
     case extensionExperience
-}
-
-enum NotesLayoutState: Equatable {
-    case list
-    case split
-    case editor
-
-    var preferredHeight: CGFloat {
-        switch self {
-        case .list:
-            return 240
-        case .split:
-            return 260
-        case .editor:
-            return 320
-        }
-    }
 }
 
 enum SettingsEnum {
