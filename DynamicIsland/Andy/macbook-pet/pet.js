@@ -801,20 +801,72 @@ const PORTHOLE_GRACE_MS = 1000;
 // the guard at all, so he has to actually hold a visible pose to earn the reset.
 const PORTHOLE_RELEASE_MS = 300;
 
+// How much of an eye may sit behind the porthole edge. Partial clipping is fine
+// and is most of the peeking charm, but past roughly a third the eye stops
+// reading as an eye and starts reading as a bright sliver stuck to the rim.
+// The gaze budget is held to this; the guard only steps in past GUARD_EYE_CLIP,
+// so the two never argue over the same boundary.
+const MAX_EYE_CLIP = 0.35;
+const GUARD_EYE_CLIP = 0.5;
+
 const portholeGuard = { outSince: 0, backSince: 0, amount: 0, offCentre: false };
 
 function isWingView() {
   return window.innerWidth < 200;
 }
 
-function eyeExtentPx(params, baseX, xFactor, lookX) {
+// Base width only: drawEye's mood and voice modifiers can widen an eye by up to
+// ~8% after this, so the budget runs a few percent generous rather than tight.
+function eyeHalfWidth(params) {
   const scaleX = clamp(params[2] || 1, 0.28, 2.2);
   const scaleY = clamp(params[3] || 1, 0.1, 1.8);
   const eyeScale = clamp(1 + ((scaleX + scaleY) / 2 - 1) * 0.42, 0.82, 1.36);
+  return 14 * eyeScale;
+}
+
+function eyeExtentPx(params, baseX, xFactor, lookX) {
   return {
     centre: baseX + (lookX + params[0] * 3.0 + VE.saccadeState.offsetX) * xFactor,
-    half: 14 * eyeScale * xFactor,
+    half: eyeHalfWidth(params) * xFactor,
   };
+}
+
+// Fraction of the eye's width that the porthole edge is covering, 0..1.
+function eyeHiddenFraction(centre, half) {
+  if (half <= 0) return 0;
+  return clamp((Math.abs(centre) + half - WING_VISIBLE_HALF_WIDTH) / (2 * half), 0, 1);
+}
+
+// The cursor-follow amplitude — (mouseX - 0.5) * 60, so ±33px on screen — was
+// tuned against the 300px panel. In an 86px porthole that same swing shoves the
+// outer eye onto the rim, and unlike a clip the cursor does not move on: it
+// parks wherever the mouse is left, so whichever eye is on your habitual cursor
+// side stays a sliver indefinitely. The time-based guard can't help, because the
+// eye never fully leaves the window and the correction only moves the pose.
+//
+// So rather than shrink the constant, spend exactly the gaze travel the porthole
+// can afford. Derived from the live eye geometry, so it keeps adapting when the
+// pose changes the spacing or the mood changes the eye size. Works out to about
+// ±15 face units against the default pose, roughly half the raw swing.
+function clampLookXToPorthole(safe, lookX, faceX, xFactor) {
+  if (!isWingView() || xFactor <= 0) return lookX;
+
+  let lo = -Infinity, hi = Infinity;
+  for (const params of [safe.leftEye, safe.rightEye]) {
+    const half = eyeHalfWidth(params) * xFactor;
+    const limit = WING_VISIBLE_HALF_WIDTH - half * (1 - 2 * MAX_EYE_CLIP);
+    const eyeX = params[0] * 3.0 + VE.saccadeState.offsetX;
+    lo = Math.max(lo, (-limit - faceX) / xFactor - eyeX);
+    hi = Math.min(hi, ( limit - faceX) / xFactor - eyeX);
+  }
+  // A pose spread wider than the porthole leaves no gaze that satisfies both
+  // eyes. Spending the remaining budget on re-centring the pair is tempting, but
+  // the guard already recentres the pose a moment later, and the two corrections
+  // stack into an overshoot that throws the pair clean off the opposite rim.
+  // This function owns the cursor's contribution and nothing else, so when there
+  // is no room for gaze it contributes none and leaves the pose to the guard.
+  if (lo > hi) return 0;
+  return clamp(lookX, lo, hi);
 }
 
 // A gaze swing carrying an eye out of the porthole is the charm — he peeks. It
@@ -844,7 +896,7 @@ function updatePortholeGuard(safe, now, baseX, xFactor, lookX) {
   let lost = false;
   for (const params of [safe.leftEye, safe.rightEye]) {
     const eye = eyeExtentPx(params, baseX, xFactor, lookX);
-    if (Math.abs(eye.centre) - eye.half > WING_VISIBLE_HALF_WIDTH) { lost = true; break; }
+    if (eyeHiddenFraction(eye.centre, eye.half) > GUARD_EYE_CLIP) { lost = true; break; }
   }
   if (lost) {
     portholeGuard.backSince = 0;
@@ -858,15 +910,18 @@ function updatePortholeGuard(safe, now, baseX, xFactor, lookX) {
   portholeGuard.offCentre = portholeGuard.outSince !== 0;
 
   const overdue = portholeGuard.outSince > 0 && now - portholeGuard.outSince > PORTHOLE_GRACE_MS;
-  // Slower on the way out than in, so the return reads as him deciding to look
-  // forward again and the release doesn't snap him back off-window.
-  const ease = overdue ? 0.055 : 0.035;
+  // The grace period is where the charm lives, so it gets the full second; the
+  // correction itself has nothing to gain from being slow, and dragging it out
+  // just extends the state we are trying to end (it cost ~1.5s of the ~3s worst
+  // case on its own). ~0.4s at 30fps reads as him deciding to look forward.
+  // The release stays gentle so letting go can't snap him back off-window.
+  const ease = overdue ? 0.15 : 0.035;
   portholeGuard.amount += ((overdue ? 1 : 0) - portholeGuard.amount) * ease;
   if (portholeGuard.amount < 0.001) portholeGuard.amount = 0;
   return portholeGuard.amount;
 }
 
-function applyPortholeGuard(safe, amount) {
+function applyPortholeGuard(safe, amount, xFactor) {
   if (amount <= 0) return;
   // Recentre the midpoint rather than pulling each eye toward 0 — that would
   // squeeze the pair together instead of moving it.
@@ -875,6 +930,23 @@ function applyPortholeGuard(safe, amount) {
   safe.leftEye[0] -= pull;
   safe.rightEye[0] -= pull;
   safe.faceCenterX = lerp(safe.faceCenterX || 0, 0, amount);
+
+  // A handful of poses (cantdothat, avs_fail) throw the eyes so far apart that a
+  // perfectly centred pair still leaves both of them as slivers on opposite
+  // rims — their faceCenterX is already ~0, so recentring is a no-op. Narrow the
+  // spread to what the porthole can show. Nothing expressive is lost: at that
+  // spread you were seeing two bright edges, not a wide-eyed face.
+  if (xFactor > 0) {
+    const gap = safe.leftEye[0] - safe.rightEye[0];   // leftEye holds the larger x
+    const half = Math.max(eyeHalfWidth(safe.leftEye), eyeHalfWidth(safe.rightEye)) * xFactor;
+    const maxGap = 2 * (WING_VISIBLE_HALF_WIDTH - half * (1 - 2 * MAX_EYE_CLIP)) / (3.0 * xFactor);
+    if (gap > maxGap) {
+      const target = lerp(gap, maxGap, amount);
+      const centre = (safe.leftEye[0] + safe.rightEye[0]) / 2;
+      safe.leftEye[0] = centre + target / 2;
+      safe.rightEye[0] = centre - target / 2;
+    }
+  }
 }
 
 // The third dot has no eye to grow out of, so it scales up from nothing in the
@@ -1054,9 +1126,9 @@ function drawFace(context, now, face, mood, pulse, scale) {
     targetTilt = lerp(targetTilt, 0, morph);
   }
 
+  // Sway, tilt and squash settle first: the gaze budget below is measured
+  // against where the eyes are actually about to land, which includes them.
   const poseEase = isPerforming ? 0.08 : 0.12;
-  state.renderPose.lookX += (targetLookX - state.renderPose.lookX) * poseEase;
-  state.renderPose.lookY += (targetLookY - state.renderPose.lookY) * poseEase;
   state.renderPose.swayX += (targetSwayX - state.renderPose.swayX) * 0.06;
   state.renderPose.swayY += (targetSwayY - state.renderPose.swayY) * 0.06;
   state.renderPose.tilt += (targetTilt - state.renderPose.tilt) * 0.05;
@@ -1065,17 +1137,25 @@ function drawFace(context, now, face, mood, pulse, scale) {
   // The clip underneath keeps running during the loader, and its face scale
   // would squash the dots into ellipses. Neutralise the keyframe transform as
   // the morph takes hold so they stay round and centred.
-  // Resolved before the transform is emitted, because the porthole guard needs
-  // the same factors to work out where the eyes actually land on screen.
+  // Resolved before the transform is emitted, because the gaze budget and the
+  // porthole guard both need these factors to work out where the eyes land.
   const finalScale = scale * 1.15 * breath * beatScale;
   const faceSX = lerp(safe.faceScaleX || 1, 1, morph);
   const faceSY = lerp(safe.faceScaleY || 1, 1, morph);
   const squash = lerp(state.renderPose.squash, 1, morph);
 
-  const guardBaseX = lerp(safe.faceCenterX * 1.1, 0, morph) + state.renderPose.swayX * (1 - morph);
+  // Raw, pre-correction face offset — what the clip is asking for. Both the
+  // budget and the guard judge against this, never against a corrected pose.
+  const rawFaceX = lerp(safe.faceCenterX * 1.1, 0, morph) + state.renderPose.swayX * (1 - morph);
+  const eyeXFactor = faceSX * finalScale * squash;
+
+  targetLookX = clampLookXToPorthole(safe, targetLookX, rawFaceX, eyeXFactor);
+  state.renderPose.lookX += (targetLookX - state.renderPose.lookX) * poseEase;
+  state.renderPose.lookY += (targetLookY - state.renderPose.lookY) * poseEase;
+
   applyPortholeGuard(safe, updatePortholeGuard(
-    safe, now, guardBaseX, faceSX * finalScale * squash, state.renderPose.lookX
-  ));
+    safe, now, rawFaceX, eyeXFactor, state.renderPose.lookX
+  ), eyeXFactor);
 
   context.save();
   context.translate(
