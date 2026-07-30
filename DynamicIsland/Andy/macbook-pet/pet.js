@@ -300,7 +300,11 @@ function scheduleNextAnimation(now = performance.now()) {
   // Animals hold still for long stretches and then move for a reason. Swapping
   // a clip every few seconds is what makes him read as a screensaver, so in the
   // calm moods he sometimes just settles instead.
-  const canSettle = !isSlow && state.animQueue.length === 0 &&
+  // Settling on a pose that has an eye outside the porthole is the one case
+  // where holding still reads as broken rather than alive, so it doesn't
+  // qualify — the guard would recentre him anyway, but not settling means the
+  // clip gets swapped out instead of held for another minute.
+  const canSettle = !isSlow && state.animQueue.length === 0 && !portholeGuard.offCentre &&
     (state.mood === "idle" || state.mood === "content" || state.mood === "bored");
   const settle = (canSettle && Math.random() < 0.35) ? 18000 + Math.random() * 40000 : 0;
 
@@ -784,6 +788,95 @@ function normalizeFaceForDisplay(face) {
   return safe;
 }
 
+// ---- Porthole guard (closed wing only) ----
+// ClosedAndyWing draws this page at 128x80, scaleEffects it by size/80*0.93 and
+// clips the result to a circle of diameter `size`. The scale and the clip cancel
+// out, so the slice that reaches the screen is always 80/0.93 ≈ 86 CSS px wide
+// however tall the notch is — the outer ~21px of each side never show.
+const WING_VISIBLE_HALF_WIDTH = (80 / 0.93) / 2;
+const PORTHOLE_GRACE_MS = 1000;
+// Clips loop, and a short one can dip back into frame for a frame or two on each
+// pass. Clearing the timer on that would let a 1.7s clip like
+// gazing_lookatfaces_getin_left restart the grace every loop and never trigger
+// the guard at all, so he has to actually hold a visible pose to earn the reset.
+const PORTHOLE_RELEASE_MS = 300;
+
+const portholeGuard = { outSince: 0, backSince: 0, amount: 0, offCentre: false };
+
+function isWingView() {
+  return window.innerWidth < 200;
+}
+
+function eyeExtentPx(params, baseX, xFactor, lookX) {
+  const scaleX = clamp(params[2] || 1, 0.28, 2.2);
+  const scaleY = clamp(params[3] || 1, 0.1, 1.8);
+  const eyeScale = clamp(1 + ((scaleX + scaleY) / 2 - 1) * 0.42, 0.82, 1.36);
+  return {
+    centre: baseX + (lookX + params[0] * 3.0 + VE.saccadeState.offsetX) * xFactor,
+    half: 14 * eyeScale * xFactor,
+  };
+}
+
+// A gaze swing carrying an eye out of the porthole is the charm — he peeks. It
+// *staying* out is the bug: clips loop for the whole dwell (up to ~58s once the
+// settle bonus lands), so a pose like reacttocliff_stuckonedge, which sits fully
+// off-window for its entire 5.3s, parks him one-eyed for a minute. Allow the
+// excursion, then pull him back if he hasn't come back on his own.
+//
+// Recentring the pair's midpoint is enough on the shipped clip set — no clip
+// needs its eye spacing clamped as well — so the pair keeps its full spread and
+// only its midpoint is disciplined. Simulated over all 581 clips, the longest
+// one-eyed stretch drops from indefinite (a whole dwell) to under 2s, and the
+// count of clips one-eyed for most of their length goes 14 -> 4. The four that
+// remain are gazing_lookatfaces_getin_left variants, which look away in ~1s
+// bursts and come back on their own; that is the peeking, not the bug.
+function updatePortholeGuard(safe, now, baseX, xFactor, lookX) {
+  if (!isWingView()) {
+    portholeGuard.outSince = 0;
+    portholeGuard.backSince = 0;
+    portholeGuard.amount = 0;
+    portholeGuard.offCentre = false;
+    return 0;
+  }
+
+  // Evaluated against the raw pose, never the corrected one. Testing the
+  // corrected pose would make the guard undo its own trigger and oscillate.
+  let lost = false;
+  for (const params of [safe.leftEye, safe.rightEye]) {
+    const eye = eyeExtentPx(params, baseX, xFactor, lookX);
+    if (Math.abs(eye.centre) - eye.half > WING_VISIBLE_HALF_WIDTH) { lost = true; break; }
+  }
+  if (lost) {
+    portholeGuard.backSince = 0;
+    if (portholeGuard.outSince === 0) portholeGuard.outSince = now;
+  } else {
+    if (portholeGuard.backSince === 0) portholeGuard.backSince = now;
+    if (now - portholeGuard.backSince > PORTHOLE_RELEASE_MS) portholeGuard.outSince = 0;
+  }
+  // Reported to scheduleNextAnimation, so a clip that is merely between dips
+  // still counts as off-centre and doesn't win the settle bonus.
+  portholeGuard.offCentre = portholeGuard.outSince !== 0;
+
+  const overdue = portholeGuard.outSince > 0 && now - portholeGuard.outSince > PORTHOLE_GRACE_MS;
+  // Slower on the way out than in, so the return reads as him deciding to look
+  // forward again and the release doesn't snap him back off-window.
+  const ease = overdue ? 0.055 : 0.035;
+  portholeGuard.amount += ((overdue ? 1 : 0) - portholeGuard.amount) * ease;
+  if (portholeGuard.amount < 0.001) portholeGuard.amount = 0;
+  return portholeGuard.amount;
+}
+
+function applyPortholeGuard(safe, amount) {
+  if (amount <= 0) return;
+  // Recentre the midpoint rather than pulling each eye toward 0 — that would
+  // squeeze the pair together instead of moving it.
+  const mid = (safe.leftEye[0] + safe.rightEye[0]) / 2;
+  const pull = mid * amount;
+  safe.leftEye[0] -= pull;
+  safe.rightEye[0] -= pull;
+  safe.faceCenterX = lerp(safe.faceCenterX || 0, 0, amount);
+}
+
 // The third dot has no eye to grow out of, so it scales up from nothing in the
 // gap between the other two and shrinks away again on exit.
 function drawLoaderMiddleDot(context, now, morph) {
@@ -969,6 +1062,21 @@ function drawFace(context, now, face, mood, pulse, scale) {
   state.renderPose.tilt += (targetTilt - state.renderPose.tilt) * 0.05;
   state.renderPose.squash += (targetSquash - state.renderPose.squash) * 0.08;
 
+  // The clip underneath keeps running during the loader, and its face scale
+  // would squash the dots into ellipses. Neutralise the keyframe transform as
+  // the morph takes hold so they stay round and centred.
+  // Resolved before the transform is emitted, because the porthole guard needs
+  // the same factors to work out where the eyes actually land on screen.
+  const finalScale = scale * 1.15 * breath * beatScale;
+  const faceSX = lerp(safe.faceScaleX || 1, 1, morph);
+  const faceSY = lerp(safe.faceScaleY || 1, 1, morph);
+  const squash = lerp(state.renderPose.squash, 1, morph);
+
+  const guardBaseX = lerp(safe.faceCenterX * 1.1, 0, morph) + state.renderPose.swayX * (1 - morph);
+  applyPortholeGuard(safe, updatePortholeGuard(
+    safe, now, guardBaseX, faceSX * finalScale * squash, state.renderPose.lookX
+  ));
+
   context.save();
   context.translate(
     lerp(safe.faceCenterX * 1.1, 0, morph) + state.renderPose.swayX * (1 - morph),
@@ -976,13 +1084,6 @@ function drawFace(context, now, face, mood, pulse, scale) {
   );
   context.rotate(clamp(lerp((safe.faceAngle || 0), 0, morph) + state.renderPose.tilt, -0.2, 0.2));
 
-  // The clip underneath keeps running during the loader, and its face scale
-  // would squash the dots into ellipses. Neutralise the keyframe transform as
-  // the morph takes hold so they stay round and centred.
-  const finalScale = scale * 1.15 * breath * beatScale;
-  const faceSX = lerp(safe.faceScaleX || 1, 1, morph);
-  const faceSY = lerp(safe.faceScaleY || 1, 1, morph);
-  const squash = lerp(state.renderPose.squash, 1, morph);
   context.scale(
     faceSX * finalScale * squash,
     faceSY * finalScale / Math.sqrt(squash)
