@@ -229,7 +229,7 @@ struct TimerLiveActivity: View {
             middleSectionView()
             rightWingView()
         }
-        .frame(height: adjustedNotchHeight, alignment: .center)
+        .frame(height: adjustedNotchHeight, alignment: .top)
         .contentShape(Rectangle())
     }
 
