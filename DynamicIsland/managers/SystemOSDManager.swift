@@ -163,11 +163,11 @@ class SystemOSDManager {
     /// helper after a short idle period (JETSAM_REASON_MEMORY_IDLE_EXIT) and
     /// launchd spins up a brand-new process on the next volume/brightness
     /// keypress — that fresh PID renders the native OSD before any one-shot
-    /// SIGSTOP can hit it. Polling every 150ms is cheap (a single pgrep per
-    /// tick when nothing changed) and shrinks the visible-OSD window enough
-    /// to feel instant.
+    /// SIGSTOP can hit it. Polls at 150ms while catching a new PID, then backs
+    /// off when the helper stays suspended.
     private static func startSuppressionWatcher() {
         let newTask = Task.detached(priority: .background) {
+            var stableChecks = 0
             while !Task.isCancelled {
                 let currentPID = osduiHelperPID()
                 let lastPID = suppressionState.withLock { $0.lastSuspendedPID }
@@ -175,8 +175,23 @@ class SystemOSDManager {
                 if let pid = currentPID, pid != lastPID {
                     suspendOSDUIHelper()
                     suppressionState.withLock { $0.lastSuspendedPID = pid }
+                    stableChecks = 0
+                    try? await Task.sleep(nanoseconds: 150_000_000) // 150ms
+                    continue
                 }
-                try? await Task.sleep(nanoseconds: 150_000_000) // 150ms
+
+                stableChecks += 1
+                let intervalNs: UInt64
+                if currentPID == nil {
+                    intervalNs = 1_000_000_000 // 1s — helper not running
+                } else if stableChecks < 5 {
+                    intervalNs = 150_000_000 // 150ms — confirm suspend stuck
+                } else if stableChecks < 20 {
+                    intervalNs = 500_000_000 // 500ms
+                } else {
+                    intervalNs = 1_000_000_000 // 1s — steady state
+                }
+                try? await Task.sleep(nanoseconds: intervalNs)
             }
         }
 
