@@ -100,7 +100,12 @@ class BluetoothAudioManager: ObservableObject {
             isBluetoothAudioConnected = false
         } else if pollingTimer == nil {
             setupBluetoothObservers()
-            checkInitialDevices()
+            // Deferred to the next main-queue turn: the device scan blocks on
+            // Process.waitUntilExit(), which spins the run loop and can re-enter
+            // `shared` while init is still running (libdispatch recursive-lock trap).
+            DispatchQueue.main.async { [weak self] in
+                self?.checkInitialDevices()
+            }
             startPollingForChanges()
         }
     }
