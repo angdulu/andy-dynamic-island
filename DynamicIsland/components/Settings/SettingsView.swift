@@ -6926,6 +6926,8 @@ struct ScreenAssistantSettings: View {
     @Default(.dictationSelectedModel) var dictationSelectedModel
     @Default(.dictationEnableAICleanup) var dictationEnableAICleanup
     @Default(.dictationSelectedCleanupModel) var dictationSelectedCleanupModel
+    @Default(.dictationModelIdleTimeout) var dictationModelIdleTimeout
+    @Default(.dictationLanguage) var dictationLanguage
 
     private func highlightID(_ title: String) -> String {
         SettingsTab.screenAssistant.highlightID(for: title)
@@ -6951,7 +6953,46 @@ struct ScreenAssistantSettings: View {
             }
 
             if enableScreenAssistant {
+                if let error = dictationManager.lastError {
+                    Section {
+                        Text(error).foregroundStyle(.red).textSelection(.enabled)
+                        if dictationManager.failedRecordingAvailable {
+                            HStack {
+                                Button("Retry Last Dictation", systemImage: "arrow.clockwise") {
+                                    dictationManager.retryFailedRecording()
+                                }
+                                Button("Discard Recording", systemImage: "trash", role: .destructive) {
+                                    dictationManager.discardFailedRecording()
+                                }
+                            }
+                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
+                        }
+                    } footer: {
+                        if dictationManager.failedRecordingAvailable {
+                            Text("The most recent failed recording is kept locally for up to 24 hours.")
+                        }
+                    }
+                }
+                if let transcript = dictationManager.lastTranscript, !transcript.isEmpty {
+                    Section("Last Transcript") {
+                        Text(transcript).textSelection(.enabled)
+                        Button("Copy Transcript", systemImage: "doc.on.doc") {
+                            dictationManager.copyLastTranscript()
+                        }
+                    }
+                }
                 Section {
+                    Picker("Transcription Language", selection: $dictationLanguage) {
+                        ForEach(DictationLanguage.allCases, id: \.self) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                    .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
+                    Picker("Unload Models After Inactivity", selection: $dictationModelIdleTimeout) {
+                        ForEach(DictationModelIdleTimeout.allCases, id: \.self) { timeout in
+                            Text(timeout.displayName).tag(timeout)
+                        }
+                    }
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Transcribe Shortcut")
@@ -7014,8 +7055,8 @@ struct ScreenAssistantSettings: View {
                                     dictationSelectedModel = model
                                     if isInstalled {
                                         Task {
-                                            try? await DictationManager.shared.stopServer()
-                                            try? await DictationManager.shared.ensureServerRunning()
+                                            DictationManager.shared.stopServer()
+                                            _ = try? await DictationManager.shared.ensureServerRunning()
                                         }
                                     }
                                 } label: {
@@ -7024,6 +7065,7 @@ struct ScreenAssistantSettings: View {
                                         .font(.title3)
                                 }
                                 .buttonStyle(.plain)
+                                .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
 
                                 // Model details
                                 VStack(alignment: .leading, spacing: 2) {
@@ -7032,7 +7074,7 @@ struct ScreenAssistantSettings: View {
                                             .font(.body)
                                             .fontWeight(isSelected ? .medium : .regular)
 
-                                        if model == .base {
+                                        if model == .turboQuantized {
                                             Text("Recommended")
                                                 .font(.system(size: 9, weight: .semibold))
                                                 .padding(.horizontal, 5)
@@ -7113,7 +7155,7 @@ struct ScreenAssistantSettings: View {
                 } header: {
                     Text("Transcription Model")
                 } footer: {
-                    Text("Andy stores downloaded models locally and can also use installed Handy models. Larger models are more accurate but take longer and use more memory. Base is recommended for general use.")
+                    Text("Models are stored locally. Turbo Q5 supports multilingual dictation with a smaller download. Accuracy and speed depend on the language and recording.")
                 }
 
                 Section {

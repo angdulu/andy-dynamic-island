@@ -28,6 +28,8 @@ import SkyLightWindow
 struct DynamicNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Default(.menubarIcon) var showMenuBarIcon
+    @ObservedObject private var dictationManager = DictationManager.shared
+    @Default(.dictationLanguage) var dictationLanguage
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
@@ -48,6 +50,23 @@ struct DynamicNotchApp: App {
                 SettingsWindowController.shared.showWindow()
             }
             CheckForUpdatesView(updater: updaterController.updater)
+            Menu("Transcription Language") {
+                Picker("Language", selection: $dictationLanguage) {
+                    ForEach(DictationLanguage.allCases, id: \.self) { language in
+                        Text(language.displayName).tag(language)
+                    }
+                }
+            }
+            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
+            if dictationManager.failedRecordingAvailable {
+                Button("Retry Last Dictation") { dictationManager.retryFailedRecording() }
+                    .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
+                Button("Discard Failed Recording", role: .destructive) { dictationManager.discardFailedRecording() }
+                    .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
+            }
+            if let transcript = dictationManager.lastTranscript, !transcript.isEmpty {
+                Button("Copy Last Transcript") { dictationManager.copyLastTranscript() }
+            }
             Divider()
             Button("Restart Andy") {
                 guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return }
@@ -570,8 +589,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         LockScreenLiveActivityWindowManager.shared.configure(viewModel: vm)
         LockScreenManager.shared.configure(viewModel: vm)
-        extensionXPCServiceHost.start()
-        extensionRPCServer.start()
+        if !Defaults[.dictationOnlyMode] {
+            extensionXPCServiceHost.start()
+            extensionRPCServer.start()
+        }
         
         // Migrate legacy progress bar settings
         Defaults[.enableTimerFeature] = false
@@ -699,7 +720,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.debouncedUpdateWindowSize()
         }.store(in: &cancellables)
 
-        MemoryUsageMonitor.shared.startMonitoring()
+        if !Defaults[.dictationOnlyMode] { MemoryUsageMonitor.shared.startMonitoring() }
 
         ReminderLiveActivityManager.shared.$activeWindowReminders
             .receive(on: RunLoop.main)
@@ -938,7 +959,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         previousScreens = NSScreen.screens
 
-        if Defaults[.enableLockScreenWeatherWidget] {
+        if Defaults[.enableLockScreenWeatherWidget] && !Defaults[.dictationOnlyMode] {
             LockScreenWeatherManager.shared.prepareLocationAccess()
             Task { @MainActor in
                 await LockScreenWeatherManager.shared.refresh(force: true)
@@ -950,11 +971,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let timerWidgetManager = LockScreenTimerWidgetManager.shared
         timerWidgetManager.handleLockStateChange(isLocked: LockScreenManager.shared.currentLockStatus)
 
-        if Defaults[.dictationOnlyMode] && !coordinator.firstLaunch {
-            DispatchQueue.main.async {
-                SettingsWindowController.shared.showWindow()
-            }
-        }
     }
 
     private func installTopMenuItemsIfNeeded() {
@@ -1382,6 +1398,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let dictationOnly = Defaults[.dictationOnlyMode]
         
         if dictationOnly {
+            extensionXPCServiceHost.stop()
+            extensionRPCServer.stop()
+            MemoryUsageMonitor.shared.stopMonitoring()
             ScreenRecordingManager.shared.stopMonitoring()
             dndManager.stopMonitoring()
             PrivacyIndicatorManager.shared.stopMonitoring()
@@ -1389,6 +1408,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             ClipboardManager.shared.stopMonitoring()
             StatsManager.shared.stopMonitoring()
         } else {
+            extensionXPCServiceHost.start()
+            extensionRPCServer.start()
+            MemoryUsageMonitor.shared.startMonitoring()
             if Defaults[.enableScreenRecordingDetection] {
                 ScreenRecordingManager.shared.startMonitoring()
             }

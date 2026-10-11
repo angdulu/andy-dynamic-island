@@ -70,7 +70,9 @@
 		7EA69B212F5B100000EB2D16 /* Exceptions for "DynamicIsland" folder in "DynamicIsland" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Andy,
 				Info.plist,
+				Vendor,
 			);
 			target = F54406E62CD4987A00C7AFD9 /* DynamicIsland */;
 		};
@@ -101,6 +103,10 @@
 		};
 		F54406E92CD4987A00C7AFD9 /* DynamicIsland */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFolders = (
+				Andy,
+				Vendor,
+			);
 			exceptions = (
 				7EA69B212F5B100000EB2D16 /* Exceptions for "DynamicIsland" folder in "DynamicIsland" target */,
 			);
@@ -313,7 +319,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ANDY_SRC=\"$SRCROOT/DynamicIsland/Andy\"\nANDY_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Andy\"\nif [ -d \"$ANDY_SRC\" ]; then\n\trm -rf \"$ANDY_DST\"\n\tmkdir -p \"$(dirname \"$ANDY_DST\")\"\n\tcp -R \"$ANDY_SRC\" \"$ANDY_DST\"\nfi\n\nWHISPER_SRC=\"$SRCROOT/DynamicIsland/Vendor/Whisper\"\nWHISPER_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Whisper\"\nif [ -d \"$WHISPER_SRC\" ]; then\n\trm -rf \"$WHISPER_DST\"\n\tmkdir -p \"$(dirname \"$WHISPER_DST\")\"\n\tcp -R \"$WHISPER_SRC\" \"$WHISPER_DST\"\n\tchmod +x \"$WHISPER_DST/whisper-cli\" \"$WHISPER_DST/whisper-server\" \"$WHISPER_DST\"/*.dylib 2>/dev/null || true\n\tmkdir -p \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"\n\tcp \"$WHISPER_SRC\"/*.dylib \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/\"\nfi\n\nLLAMA_SRC=\"$SRCROOT/Vendor/Llama\"\nLLAMA_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Llama\"\nif [ -d \"$LLAMA_SRC\" ]; then\n\trm -rf \"$LLAMA_DST\"\n\tmkdir -p \"$(dirname \"$LLAMA_DST\")\"\n\tcp -R \"$LLAMA_SRC\" \"$LLAMA_DST\"\n\tchmod +x \"$LLAMA_DST/llama-server\" \"$LLAMA_DST\"/*.dylib 2>/dev/null || true\nfi\n\nif [ \"$CONFIGURATION\" != \"Release\" ] || [ \"$ACTION\" != \"install\" ]; then\n\texit 0\nfi\n\nAPP=\"$CODESIGNING_FOLDER_PATH\"\nSPARKLE=\"$APP/Contents/Frameworks/Sparkle.framework\"\nXPC_DIR=\"$SPARKLE/Versions/Current/XPCServices\"\n\nif [ ! -d \"$XPC_DIR\" ]; then\n\texit 0\nfi\n\nfor xpc in \"$XPC_DIR\"/*.xpc; do\n\t/usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp --options runtime --preserve-metadata=identifier,entitlements \"$xpc\"\ndone\n\n/usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp --options runtime --preserve-metadata=identifier,entitlements \"$SPARKLE\"\n";
+			shellScript = "ANDY_SRC=\"$SRCROOT/DynamicIsland/Andy\"\nANDY_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Andy\"\nif [ -d \"$ANDY_SRC\" ]; then\n\trm -rf \"$ANDY_DST\"\n\tmkdir -p \"$(dirname \"$ANDY_DST\")\"\n\tcp -R \"$ANDY_SRC\" \"$ANDY_DST\"\nfi\n\nWHISPER_SRC=\"$SRCROOT/DynamicIsland/Vendor/Whisper\"\nWHISPER_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Whisper\"\nif [ -d \"$WHISPER_SRC\" ]; then\n\trm -rf \"$WHISPER_DST\"\n\tmkdir -p \"$(dirname \"$WHISPER_DST\")\"\n\tcp -R \"$WHISPER_SRC\" \"$WHISPER_DST\"\n\tchmod +x \"$WHISPER_DST/whisper-cli\" \"$WHISPER_DST/whisper-server\" \"$WHISPER_DST\"/*.dylib 2>/dev/null || true\nfi\n\nLLAMA_SRC=\"$SRCROOT/Vendor/Llama\"\nLLAMA_DST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Llama\"\nif [ -d \"$LLAMA_SRC\" ]; then\n\trm -rf \"$LLAMA_DST\"\n\tmkdir -p \"$(dirname \"$LLAMA_DST\")\"\n\tcp -R \"$LLAMA_SRC\" \"$LLAMA_DST\"\n\tchmod +x \"$LLAMA_DST/llama-server\" \"$LLAMA_DST\"/*.dylib 2>/dev/null || true\nfi\n\nif [ \"$CONFIGURATION\" != \"Release\" ] || [ \"$ACTION\" != \"install\" ]; then\n\texit 0\nfi\n\nAPP=\"$CODESIGNING_FOLDER_PATH\"\nSPARKLE=\"$APP/Contents/Frameworks/Sparkle.framework\"\nXPC_DIR=\"$SPARKLE/Versions/Current/XPCServices\"\n\nif [ ! -d \"$XPC_DIR\" ]; then\n\texit 0\nfi\n\nfor xpc in \"$XPC_DIR\"/*.xpc; do\n\t/usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp --options runtime --preserve-metadata=identifier,entitlements \"$xpc\"\ndone\n\n/usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp --options runtime --preserve-metadata=identifier,entitlements \"$SPARKLE\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -457,7 +463,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicIsland/Preview Content\"";
 				DEVELOPMENT_TEAM = 9Y64TRM77N;
 				ENABLE_APP_SANDBOX = NO;
@@ -498,7 +504,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.2.10;
+				MARKETING_VERSION = 2.2.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.angdulu.Andy.dev;
 				PRODUCT_NAME = Andy;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -529,7 +535,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicIsland/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = 9Y64TRM77N;
@@ -571,7 +577,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 2.2.10;
+				MARKETING_VERSION = 2.2.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.angdulu.Andy;
 				PRODUCT_NAME = Andy;
 				PROVISIONING_PROFILE_SPECIFIER = "";

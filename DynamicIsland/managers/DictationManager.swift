@@ -13,6 +13,8 @@ import AudioToolbox
 import AVFoundation
 import CryptoKit
 import Defaults
+import Combine
+import ApplicationServices
 
 @MainActor
 final class DictationManager: NSObject, ObservableObject {
@@ -24,6 +26,8 @@ final class DictationManager: NSObject, ObservableObject {
     @Published private(set) var downloadProgress: Double?
     @Published private(set) var modelStorageRevision = 0
     @Published private(set) var lastError: String?
+    @Published private(set) var failedRecordingAvailable = false
+    @Published private(set) var lastTranscript: String?
     /// Normalized live microphone level (0...1) while recording. Drives Andy's
     /// listening animation; 0 whenever we are not capturing.
     @Published private(set) var inputLevel: Double = 0
@@ -34,15 +38,71 @@ final class DictationManager: NSObject, ObservableObject {
     private var activeDownloadDelegate: DictationModelDownloadDelegate?
     private var activeDownloadSession: URLSession?
     private var activeDownloadTask: URLSessionDownloadTask?
+    private var activeDownloadID: UUID?
     private var hudSuppressionTimer: Timer?
     private var meteringTimer: Timer?
 
-    private var serverProcess: Process?
-    private var serverPort = 8178
-    private var currentLoadedModel: DictationModel?
+    private let server = WhisperServer()
+    private var idleUnloadTask: Task<Void, Never>?
+    private var recoveryExpiryTask: Task<Void, Never>?
+    private var failedAudioURL: URL?
+    private var cancellables = Set<AnyCancellable>()
+    private var recordingTargetPID: pid_t?
+    private let recordingStore = DictationRecordingStore(directory: DictationManager.recordingsDirectory)
 
     private override init() {
         super.init()
+        refreshFailedRecording()
+        Defaults.publisher(.dictationModelIdleTimeout)
+            .sink { [weak self] _ in self?.scheduleIdleUnload() }
+            .store(in: &cancellables)
+    }
+
+    func retryFailedRecording() {
+        guard !isRecording, !isTranscribing else { return }
+        refreshFailedRecording()
+        guard let failedAudioURL else { return }
+        // A retry can happen in Settings; keep its output available for explicit copying.
+        transcribe(audioURL: failedAudioURL, targetPID: nil)
+    }
+
+    func discardFailedRecording() {
+        if let failedAudioURL { try? FileManager.default.removeItem(at: failedAudioURL) }
+        failedAudioURL = nil
+        failedRecordingAvailable = false
+        recoveryExpiryTask?.cancel()
+        recoveryExpiryTask = nil
+    }
+
+    func copyLastTranscript() {
+        guard let lastTranscript else { return }
+        copyToClipboard(lastTranscript)
+    }
+
+    private func refreshFailedRecording() {
+        recoveryExpiryTask?.cancel()
+        failedAudioURL = try? recordingStore.latestFailedRecording()
+        failedRecordingAvailable = failedAudioURL != nil
+        guard let failedAudioURL else { return }
+        if lastError == nil { lastError = "A failed dictation is available to retry." }
+        let remaining = recordingStore.expirationDate(for: failedAudioURL).timeIntervalSinceNow
+        recoveryExpiryTask = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(max(0, remaining))) } catch { return }
+            self?.discardFailedRecording()
+        }
+    }
+
+    private func scheduleIdleUnload() {
+        idleUnloadTask?.cancel()
+        idleUnloadTask = nil
+        let interval = Defaults[.dictationModelIdleTimeout].interval
+        guard interval > 0, !isRecording, !isTranscribing else { return }
+        idleUnloadTask = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(interval)) } catch { return }
+            guard let self, !self.isRecording, !self.isTranscribing else { return }
+            self.stopServer()
+            LlamaManager.shared.stopServer()
+        }
     }
 
     func handleShortcutKeyDown() {
@@ -81,11 +141,30 @@ final class DictationManager: NSObject, ObservableObject {
         downloadingModel = model
         downloadProgress = 0
         lastError = nil
+        let downloadID = UUID()
+        activeDownloadID = downloadID
 
         Task {
+            guard activeDownloadID == downloadID else { return }
+            var temporaryFile: URL?
+            defer {
+                if let temporaryFile { try? FileManager.default.removeItem(at: temporaryFile) }
+                if activeDownloadID == downloadID {
+                    activeDownloadSession?.invalidateAndCancel()
+                    activeDownloadSession = nil
+                    activeDownloadDelegate = nil
+                    activeDownloadTask = nil
+                    activeDownloadID = nil
+                    downloadingModel = nil
+                    downloadProgress = nil
+                }
+            }
             do {
-                let temporaryURL = try await downloadFile(for: model)
-                let downloadedHash = try Self.sha256(for: temporaryURL)
+                let temporaryURL = try await downloadFile(for: model, downloadID: downloadID)
+                temporaryFile = temporaryURL
+                guard activeDownloadID == downloadID else { return }
+                let downloadedHash = try await Task.detached { try Self.sha256(for: temporaryURL) }.value
+                guard activeDownloadID == downloadID else { return }
                 guard downloadedHash == model.sha256 else {
                     throw DictationError.checksumMismatch
                 }
@@ -102,20 +181,18 @@ final class DictationManager: NSObject, ObservableObject {
                 modelStorageRevision += 1
                 print("Dictation: downloaded \(model.displayName)")
             } catch {
-                if (error as NSError).code != NSURLErrorCancelled {
+                if activeDownloadID == downloadID, (error as NSError).code != NSURLErrorCancelled {
                     lastError = error.localizedDescription
                     print("Dictation: model download failed: \(error.localizedDescription)")
                 }
             }
 
-            downloadingModel = nil
-            downloadProgress = nil
-            activeDownloadTask = nil
         }
     }
 
     func cancelModelDownload() {
         guard downloadingModel != nil else { return }
+        activeDownloadID = nil
         activeDownloadTask?.cancel()
         activeDownloadSession?.invalidateAndCancel()
         activeDownloadTask = nil
@@ -126,9 +203,11 @@ final class DictationManager: NSObject, ObservableObject {
     }
 
     func deleteDownloadedModel(_ model: DictationModel) {
+        guard !isRecording, !isTranscribing else { return }
         guard let modelURL = Self.downloadedModelURL(for: model) else { return }
 
         do {
+            if Defaults[.dictationSelectedModel] == model { stopServer() }
             try FileManager.default.removeItem(at: modelURL)
             modelStorageRevision += 1
             lastError = nil
@@ -138,7 +217,7 @@ final class DictationManager: NSObject, ObservableObject {
         }
     }
 
-    private func downloadFile(for model: DictationModel) async throws -> URL {
+    private func downloadFile(for model: DictationModel, downloadID: UUID) async throws -> URL {
         let temporaryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("atoll-dictation-\(UUID().uuidString)-\(model.fileName)")
 
@@ -147,15 +226,11 @@ final class DictationManager: NSObject, ObservableObject {
                 temporaryURL: temporaryURL,
                 progressHandler: { [weak self] progress in
                     Task { @MainActor in
+                        guard self?.activeDownloadID == downloadID else { return }
                         self?.downloadProgress = progress
                     }
                 },
-                completion: { [weak self] result in
-                    Task { @MainActor in
-                        self?.activeDownloadSession?.invalidateAndCancel()
-                        self?.activeDownloadSession = nil
-                        self?.activeDownloadDelegate = nil
-                    }
+                completion: { result in
                     continuation.resume(with: result)
                 }
             )
@@ -170,9 +245,11 @@ final class DictationManager: NSObject, ObservableObject {
     }
 
     private func startRecording() {
+        idleUnloadTask?.cancel()
+        refreshFailedRecording()
         do {
             let audioURL = Self.recordingsDirectory
-                .appendingPathComponent("dictation-\(Int(Date().timeIntervalSince1970)).wav")
+                .appendingPathComponent("dictation-\(UUID().uuidString).wav")
             let settings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatLinearPCM),
                 AVSampleRateKey: 16_000,
@@ -189,6 +266,8 @@ final class DictationManager: NSObject, ObservableObject {
 
             guard recorder.record() else {
                 lastError = "Could not start microphone recording."
+                try? FileManager.default.removeItem(at: audioURL)
+                scheduleIdleUnload()
                 return
             }
 
@@ -201,6 +280,7 @@ final class DictationManager: NSObject, ObservableObject {
             playDictationSound(.begin)
 
             currentAudioURL = audioURL
+            recordingTargetPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
             audioRecorder = recorder
             isRecording = true
             lastError = nil
@@ -208,7 +288,7 @@ final class DictationManager: NSObject, ObservableObject {
             print("Dictation: recording started")
 
             Task {
-                try? await ensureServerRunning()
+                _ = try? await ensureServerRunning()
                 if Defaults[.dictationEnableAICleanup] {
                     let cleanupModel = Defaults[.dictationSelectedCleanupModel]
                     if LlamaManager.isModelInstalled(cleanupModel) {
@@ -218,6 +298,7 @@ final class DictationManager: NSObject, ObservableObject {
             }
         } catch {
             lastError = error.localizedDescription
+            scheduleIdleUnload()
             print("Dictation: failed to start recording: \(error)")
         }
     }
@@ -259,10 +340,13 @@ final class DictationManager: NSObject, ObservableObject {
 
         guard let audioURL = currentAudioURL else { return }
         currentAudioURL = nil
-        transcribe(audioURL: audioURL)
+        transcribe(audioURL: audioURL, targetPID: recordingTargetPID)
+        recordingTargetPID = nil
     }
 
-    private func transcribe(audioURL: URL) {
+    private func transcribe(audioURL: URL, targetPID: pid_t?) {
+        idleUnloadTask?.cancel()
+        recoveryExpiryTask?.cancel()
         isTranscribing = true
         lastError = nil
         startContinuousVolumeHUDSuppression()
@@ -283,24 +367,48 @@ final class DictationManager: NSObject, ObservableObject {
                     }
                 }
                 
-                self.isTranscribing = false
-                self.stopContinuousVolumeHUDSuppression()
                 try? FileManager.default.removeItem(at: audioURL)
-                self.lastError = nil
-                self.apply(transcript: transcript)
+                let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+                if text.isEmpty {
+                    self.refreshFailedRecording()
+                } else {
+                    self.discardFailedRecording()
+                    self.lastError = nil
+                    self.lastTranscript = text
+                    if targetPID == nil {
+                        self.copyLastTranscript()
+                    } else {
+                        self.apply(transcript: text, targetPID: targetPID)
+                    }
+                }
             } catch {
-                self.isTranscribing = false
-                self.stopContinuousVolumeHUDSuppression()
-                try? FileManager.default.removeItem(at: audioURL)
+                do { _ = try self.recordingStore.retainFailedRecording(audioURL) } catch {
+                    print("Dictation: could not retain failed recording: \(error.localizedDescription)")
+                }
+                self.refreshFailedRecording()
                 self.lastError = error.localizedDescription
                 print("Dictation: transcription failed: \(error.localizedDescription)")
             }
+            self.isTranscribing = false
+            self.stopContinuousVolumeHUDSuppression()
+            self.scheduleIdleUnload()
         }
     }
 
-    private func apply(transcript: String) {
+    private func apply(transcript: String, targetPID: pid_t?) {
         let cleanedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanedTranscript.isEmpty else { return }
+
+        if Defaults[.dictationPasteMethod] != .clipboard {
+            guard AXIsProcessTrusted() else {
+                lastError = "Accessibility access is needed to insert text. Your transcript is available to copy."
+                return
+            }
+            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == targetPID else {
+                lastError = "The active app changed. Your transcript is available to copy."
+                return
+            }
+        }
 
         switch Defaults[.dictationPasteMethod] {
         case .direct:
@@ -322,8 +430,12 @@ final class DictationManager: NSObject, ObservableObject {
         let source = CGEventSource(stateID: .hidSystemState)
         let utf16 = Array(text.utf16)
 
-        for startIndex in stride(from: 0, to: utf16.count, by: 20) {
-            let endIndex = min(startIndex + 20, utf16.count)
+        var startIndex = 0
+        while startIndex < utf16.count {
+            var endIndex = min(startIndex + 20, utf16.count)
+            if endIndex < utf16.count, (0xD800...0xDBFF).contains(utf16[endIndex - 1]) {
+                endIndex -= 1
+            }
             var chunk = Array(utf16[startIndex..<endIndex])
 
             let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true)
@@ -333,6 +445,7 @@ final class DictationManager: NSObject, ObservableObject {
             let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false)
             keyUp?.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: &chunk)
             keyUp?.post(tap: .cghidEventTap)
+            startIndex = endIndex
         }
     }
 
@@ -371,107 +484,6 @@ final class DictationManager: NSObject, ObservableObject {
         hudSuppressionTimer?.invalidate()
         hudSuppressionTimer = nil
         suppressVolumeHUD(for: 3.5)
-    }
-
-    private nonisolated static func runWhisper(whisperCLI: URL, modelURL: URL, audioURL: URL) -> Result<String, Error> {
-        let duration = Self.audioDuration(for: audioURL)
-        let audioURLs: [URL]
-        do {
-            audioURLs = try Self.chunkedAudioURLs(for: audioURL)
-        } catch {
-            return .failure(error)
-        }
-
-        defer {
-            for chunkURL in audioURLs where chunkURL != audioURL {
-                try? FileManager.default.removeItem(at: chunkURL)
-            }
-        }
-
-        let process = Process()
-        let threadCount = max(4, min(ProcessInfo.processInfo.activeProcessorCount, 8))
-        var arguments = [
-            "-m", modelURL.path,
-            "-t", "\(threadCount)",
-            "-l", "auto",
-            "-mc", "0",
-            "-bo", "1",
-            "-bs", "1",
-            "-nf",
-            "-np",
-            "-nt"
-        ]
-
-        if (duration ?? 0) >= 8, let vadModelURL = vadModelURL {
-            arguments += [
-                "--vad",
-                "--vad-model", vadModelURL.path
-            ]
-        }
-        arguments += audioURLs.map(\.path)
-
-        process.executableURL = whisperCLI
-        process.arguments = arguments
-
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return .failure(error)
-        }
-
-        let output = String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let errorOutput = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-
-        guard process.terminationStatus == 0 else {
-            return .failure(DictationError.transcriptionFailed(errorOutput.trimmingCharacters(in: .whitespacesAndNewlines)))
-        }
-
-        return .success(Self.cleanTranscript(output))
-    }
-
-    private nonisolated static func chunkedAudioURLs(for audioURL: URL) throws -> [URL] {
-        let inputFile = try AVAudioFile(forReading: audioURL)
-        let format = inputFile.processingFormat
-        let framesPerChunk = AVAudioFrameCount(format.sampleRate * 20)
-        guard framesPerChunk > 0, inputFile.length > Int64(framesPerChunk) else {
-            return [audioURL]
-        }
-
-        var chunkURLs: [URL] = []
-        var chunkIndex = 0
-
-        while inputFile.framePosition < inputFile.length {
-            let remainingFrames = inputFile.length - inputFile.framePosition
-            let frameCount = AVAudioFrameCount(min(Int64(framesPerChunk), remainingFrames))
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-                throw DictationError.transcriptionFailed("Could not prepare audio chunk.")
-            }
-
-            try inputFile.read(into: buffer, frameCount: frameCount)
-            guard buffer.frameLength > 0 else { break }
-
-            let chunkURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("atoll-dictation-chunk-\(UUID().uuidString)-\(chunkIndex).wav")
-            let outputFile = try AVAudioFile(forWriting: chunkURL, settings: inputFile.fileFormat.settings)
-            try outputFile.write(from: buffer)
-            chunkURLs.append(chunkURL)
-            chunkIndex += 1
-        }
-
-        return chunkURLs.isEmpty ? [audioURL] : chunkURLs
-    }
-
-    private nonisolated static func audioDuration(for audioURL: URL) -> TimeInterval? {
-        guard let file = try? AVAudioFile(forReading: audioURL) else { return nil }
-        let sampleRate = file.processingFormat.sampleRate
-        guard sampleRate > 0 else { return nil }
-        return TimeInterval(file.length) / sampleRate
     }
 
     private nonisolated static func cleanTranscript(_ output: String) -> String {
@@ -606,18 +618,14 @@ final class DictationManager: NSObject, ObservableObject {
     // MARK: - Persistent whisper-server Management
 
     func stopServer() {
-        if let process = serverProcess, process.isRunning {
-            process.terminate()
-            process.waitUntilExit()
-            print("Dictation: whisper-server terminated")
-        }
-        serverProcess = nil
-        currentLoadedModel = nil
+        idleUnloadTask?.cancel()
+        idleUnloadTask = nil
+        server.stop()
     }
 
-    private func startServer(for model: DictationModel) async throws {
-        stopServer()
-
+    @discardableResult
+    func ensureServerRunning() async throws -> Int {
+        let model = Defaults[.dictationSelectedModel]
         guard let serverURL = Self.whisperServerURL else {
             throw NSError(domain: "DictationManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "whisper-server was not found."])
         }
@@ -625,67 +633,24 @@ final class DictationManager: NSObject, ObservableObject {
             throw NSError(domain: "DictationManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Model \(model.displayName) is not installed."])
         }
 
-        let port = 8178
         let threadCount = max(4, min(ProcessInfo.processInfo.activeProcessorCount, 8))
-
-        let process = Process()
-        process.executableURL = serverURL
-        process.arguments = [
-            "--model", modelURL.path,
-            "--port", "\(port)",
-            "--host", "127.0.0.1",
-            "--threads", "\(threadCount)",
-            "--language", "auto"
-        ]
-
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-
-        try process.run()
-        self.serverProcess = process
-        self.serverPort = port
-        self.currentLoadedModel = model
-
-        print("Dictation: whisper-server started on port \(port) for model \(model.displayName)")
-    }
-
-    func ensureServerRunning() async throws {
-        let selectedModel = Defaults[.dictationSelectedModel]
-
-        if let process = serverProcess, process.isRunning, currentLoadedModel == selectedModel {
-            return
-        }
-
-        try await startServer(for: selectedModel)
-
-        var retries = 0
-        let client = URLSession.shared
-        let pingURL = URL(string: "http://127.0.0.1:\(serverPort)/")!
-
-        while retries < 50 {
-            do {
-                let (_, response) = try await client.data(from: pingURL)
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                    print("Dictation: whisper-server is ready and healthy!")
-                    return
-                }
-            } catch {
-                try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-            }
-            retries += 1
-        }
-
-        throw NSError(domain: "DictationManager", code: 504, userInfo: [NSLocalizedDescriptionKey: "whisper-server startup timed out."])
+        let port = try await server.ensureRunning(configuration: .init(
+            executableURL: serverURL, modelURL: modelURL,
+            threadCount: threadCount, vadModelURL: Self.vadModelURL
+        ))
+        scheduleIdleUnload()
+        return port
     }
 
     private func transcribeViaHTTP(audioURL: URL) async throws -> String {
-        try await ensureServerRunning()
+        let serverPort = try await ensureServerRunning()
 
-        let fileData = try Data(contentsOf: audioURL)
+        let fileData = try await Task.detached { try Data(contentsOf: audioURL) }.value
         let boundary = "Boundary-\(UUID().uuidString)"
 
         var request = URLRequest(url: URL(string: "http://127.0.0.1:\(serverPort)/inference")!)
         request.httpMethod = "POST"
+        request.timeoutInterval = 120
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         var body = Data()
@@ -700,7 +665,7 @@ final class DictationManager: NSObject, ObservableObject {
         // Language part
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"language\"\r\n\r\n".data(using: .utf8)!)
-        body.append("auto\r\n".data(using: .utf8)!)
+        body.append("\(Defaults[.dictationLanguage].rawValue)\r\n".data(using: .utf8)!)
 
         // Response format part
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
@@ -760,21 +725,29 @@ private enum DictationSound {
 extension DictationManager: AVAudioRecorderDelegate {
     nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
         Task { @MainActor in
+            guard self.audioRecorder === recorder, self.isRecording else { return }
+            recorder.stop()
             self.stopMetering()
+            self.audioRecorder = nil
             self.isRecording = false
-            self.lastError = error?.localizedDescription
+            if let audioURL = self.currentAudioURL {
+                _ = try? self.recordingStore.retainFailedRecording(audioURL)
+                self.refreshFailedRecording()
+            }
+            self.currentAudioURL = nil
+            self.recordingTargetPID = nil
+            self.stopContinuousVolumeHUDSuppression()
+            self.lastError = error?.localizedDescription ?? "Microphone recording failed."
+            self.scheduleIdleUnload()
         }
     }
 }
 
 private enum DictationError: LocalizedError {
-    case transcriptionFailed(String)
     case checksumMismatch
 
     var errorDescription: String? {
         switch self {
-        case .transcriptionFailed(let message):
-            return message.isEmpty ? "Whisper transcription failed." : message
         case .checksumMismatch:
             return "Downloaded model did not pass verification."
         }

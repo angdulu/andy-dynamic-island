@@ -80,9 +80,29 @@ class BluetoothAudioManager: ObservableObject {
     // MARK: - Initialization
     private init() {
         print("🎧 [BluetoothAudioManager] Initializing...")
-        setupBluetoothObservers()
-        checkInitialDevices()
-        startPollingForChanges()
+        updateMonitoringState()
+        Defaults.publisher(.dictationOnlyMode, options: [])
+            .sink { [weak self] _ in
+                Task { @MainActor in self?.updateMonitoringState() }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func updateMonitoringState() {
+        if Defaults[.dictationOnlyMode] {
+            pollingTimer?.invalidate()
+            pollingTimer = nil
+            DistributedNotificationCenter.default().removeObserver(self)
+            hudBatteryWaitTasks.values.forEach { $0.cancel() }
+            hudBatteryWaitTasks.removeAll()
+            connectedDevices.removeAll()
+            lastConnectedDevice = nil
+            isBluetoothAudioConnected = false
+        } else if pollingTimer == nil {
+            setupBluetoothObservers()
+            checkInitialDevices()
+            startPollingForChanges()
+        }
     }
     
     deinit {
@@ -128,6 +148,7 @@ class BluetoothAudioManager: ObservableObject {
     
     /// Checks for device connection/disconnection changes
     private func checkForDeviceChanges() {
+        guard !Defaults[.dictationOnlyMode] else { return }
         // Check if Bluetooth is powered on
         guard IOBluetoothHostController.default()?.powerState == kBluetoothHCIPowerStateON else {
             // Bluetooth is off - clear connected devices if any

@@ -237,11 +237,15 @@ class LlamaManager: ObservableObject {
                     let reasoning_content: String?
                 }
                 let message: Message?
+                let finish_reason: String?
             }
             let choices: [Choice]?
         }
         
         let decoded = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
+        guard decoded.choices?.first?.finish_reason != "length" else {
+            throw NSError(domain: "LlamaManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "AI cleanup was truncated; using the original transcript."])
+        }
         guard let message = decoded.choices?.first?.message,
               let content = message.content ?? message.reasoning_content else {
             throw NSError(domain: "LlamaManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "No content returned from Llama server."])
@@ -254,7 +258,11 @@ class LlamaManager: ObservableObject {
         if cleanedResult.hasSuffix("</transcription>") {
             cleanedResult = cleanedResult.replacingOccurrences(of: "</transcription>", with: "")
         }
-        return cleanedResult.trimmingCharacters(in: .whitespacesAndNewlines)
+        let result = cleanedResult.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !result.isEmpty else {
+            throw NSError(domain: "LlamaManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "AI cleanup returned empty text; using the original transcript."])
+        }
+        return result
     }
     
     func download(model: CleanupModel) {

@@ -35,7 +35,10 @@ graph TD
 ### 1. The Speech-to-Text Daemon (`DictationManager.swift`)
 - Integrates a precompiled **Whisper C/C++ server binary** (`whisper-server`) directly into the macOS application bundle.
 - Manages recording state, playing custom sound cues (`whisper_begin.wav`, `whisper_end.wav`) to signify recording intervals.
-- Handles audio capture and streams `.wav` buffers to the local Whisper daemon, returning a raw text transcript in real-time.
+- Records 16 kHz mono audio and sends the completed WAV to the local Whisper daemon when recording stops. Concurrent startup requests share one readiness check.
+- Bundles whisper.cpp v1.9.5 with Metal acceleration and Silero voice activity detection. Whisper Turbo Q5 is available as a 574 MB multilingual model alongside the existing models.
+- Models unload after ten minutes of inactivity by default; Settings also offers five minutes, thirty minutes, or always keeping them loaded.
+- The most recent failed recording is retained locally for up to 24 hours with Retry and Discard actions. The last successful transcript can be copied from the menu bar or Settings.
 
 ### 2. Apple Silicon Metal-Accelerated Post-Processing (`LlamaManager.swift`)
 - Bundles a custom **llama-server** executable with matching dynamic libraries (`libllama`, `libggml-metal`, etc.) to run GGUF models locally.
@@ -49,7 +52,7 @@ graph TD
 ## 🌟 Highlights & Original Features
 
 - **Local AI Transcription Cleanup:** Bundles a local `llama-server` process manager and HTTP completion client. Supports runtime model selections (Llama-3.2-1B, Qwen-2.5-0.5B/1.5B) to fix grammar, remove filler words, and clean transcription stutters completely offline.
-- **Dictation-Only Mode:** A toggle that disables lock screen widgets, Dynamic Island panel hover behaviors, and sound effects, converting the app into a focused, background dictation daemon.
+- **Dictation-Only Mode:** Disables the optional island UI, media controllers, Bluetooth polling, Downloads monitoring, extension servers, and memory polling. Dictation indicators and configurable recording sound cues remain available.
 - **Notch Pet Emotions ("Grumpy Return"):** Features an opinionated, state-aware notch pet (`^._.^`) that reacts dynamically to macOS system events. When displaced from the notch by macOS media or microphone notifications, Andy returns with an annoyed/grumpy reaction animation.
 - **Media Controls:** Dynamic widgets for Apple Music, Spotify, and system volume with inline previews.
 - **System Insight:** Real-time displays for CPU, GPU, memory, network, and disk health metrics.

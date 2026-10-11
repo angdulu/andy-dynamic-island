@@ -140,6 +140,9 @@ PrivateWorks
 
 *.py
 *.sh
+!/scripts/update-whisper.sh
+!/scripts/test-dictation-core.sh
+!/DynamicIsland/Vendor/Whisper/*.dylib
 comparison_report.json
 *.txt
 ANIMATION_DEBUG_GUIDE.md

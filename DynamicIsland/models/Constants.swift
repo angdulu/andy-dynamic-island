@@ -374,6 +374,7 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
     case medium = "medium"
     case large = "large"
     case turbo = "turbo"
+    case turboQuantized = "turboQuantized"
 
     var displayName: String {
         switch self {
@@ -383,6 +384,7 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
         case .medium: return String(localized: "Whisper Medium")
         case .large: return String(localized: "Whisper Large")
         case .turbo: return String(localized: "Whisper Turbo")
+        case .turboQuantized: return String(localized: "Whisper Turbo Q5")
         }
     }
 
@@ -394,6 +396,7 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
         case .medium: return String(localized: "High quality")
         case .large: return String(localized: "Best quality, slowest")
         case .turbo: return String(localized: "Fast with good quality")
+        case .turboQuantized: return String(localized: "Fast multilingual transcription, smaller download")
         }
     }
 
@@ -405,6 +408,7 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
         case .medium: return "whisper-medium-q4_1.bin"
         case .large: return "ggml-large-v3-q5_0.bin"
         case .turbo: return "ggml-large-v3-turbo.bin"
+        case .turboQuantized: return "ggml-large-v3-turbo-q5_0.bin"
         }
     }
 
@@ -416,6 +420,7 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
         case .medium: return "469 MB"
         case .large: return "1.03 GB"
         case .turbo: return "1.62 GB"
+        case .turboQuantized: return "574 MB"
         }
     }
 
@@ -427,6 +432,7 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
         case .medium: return URL(string: "https://blob.handy.computer/whisper-medium-q4_1.bin")!
         case .large: return URL(string: "https://blob.handy.computer/ggml-large-v3-q5_0.bin")!
         case .turbo: return URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!
+        case .turboQuantized: return URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo-q5_0.bin")!
         }
     }
 
@@ -438,6 +444,39 @@ enum DictationModel: String, CaseIterable, Codable, Defaults.Serializable {
         case .medium: return "79283fc1f9fe12ca3248543fbd54b73292164d8df5a16e095e2bceeaaabddf57"
         case .large: return "d75795ecff3f83b5faa89d1900604ad8c780abd5739fae406de19f23ecd98ad1"
         case .turbo: return "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
+        case .turboQuantized: return "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2"
+        }
+    }
+}
+
+enum DictationModelIdleTimeout: Int, CaseIterable, Codable, Defaults.Serializable {
+    case never = 0
+    case fiveMinutes = 5
+    case tenMinutes = 10
+    case thirtyMinutes = 30
+
+    var interval: TimeInterval { Double(rawValue) * 60 }
+
+    var displayName: String {
+        switch self {
+        case .never: return String(localized: "Always keep loaded")
+        case .fiveMinutes: return String(localized: "5 minutes")
+        case .tenMinutes: return String(localized: "10 minutes")
+        case .thirtyMinutes: return String(localized: "30 minutes")
+        }
+    }
+}
+
+enum DictationLanguage: String, CaseIterable, Codable, Defaults.Serializable {
+    case automatic = "auto"
+    case english = "en"
+    case korean = "ko"
+
+    var displayName: String {
+        switch self {
+        case .automatic: return String(localized: "Automatic")
+        case .english: return String(localized: "English")
+        case .korean: return String(localized: "Korean")
         }
     }
 }
@@ -1150,6 +1189,8 @@ extension Defaults.Keys {
     static let dictationPasteMethod = Key<DictationPasteMethod>("dictationPasteMethod", default: .direct)
     static let dictationSelectedModel = Key<DictationModel>("dictationSelectedModel", default: .base)
     static let dictationSoundEffects = Key<Bool>("dictationSoundEffects", default: true)
+    static let dictationModelIdleTimeout = Key<DictationModelIdleTimeout>("dictationModelIdleTimeout", default: .tenMinutes)
+    static let dictationLanguage = Key<DictationLanguage>("dictationLanguage", default: .automatic)
     static let dictationEnableAICleanup = Key<Bool>("dictationEnableAICleanup", default: false)
     static let dictationSelectedCleanupModel = Key<CleanupModel>("dictationSelectedCleanupModel", default: .llama1b)
     static let geminiApiKey = Key<String>("geminiApiKey", default: "")

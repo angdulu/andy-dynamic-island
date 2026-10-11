@@ -20,6 +20,7 @@ import Foundation
 import SwiftUI
 import Observation
 import Defaults
+import Combine
 
 @Observable
 @MainActor
@@ -33,6 +34,7 @@ class DownloadManager {
     private var source: DispatchSourceFileSystemObject?
     private let queue = DispatchQueue(label: "com.dynamicisland.downloads.monitor", qos: .utility)
     private var completionTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
     private var hasPerformedInitialScan: Bool = false
     private var initialCrDownloadFiles: Set<String> = []
     private var previousAllFiles: Set<String> = []
@@ -43,20 +45,22 @@ class DownloadManager {
     }
     
     init() {
-        requestDownloadsPermissionIfNeeded()
         startMonitoringIfNeeded()
         
         Defaults.publisher(.enableDownloadListener)
+            .merge(with: Defaults.publisher(.dictationOnlyMode))
             .sink { [weak self] _ in
                 guard let self else { return }
                 Task { @MainActor in
                     self.startMonitoringIfNeeded()
                 }
             }
+            .store(in: &cancellables)
     }
     
     private func startMonitoringIfNeeded() {
-        if Defaults[.enableDownloadListener] {
+        if Defaults[.enableDownloadListener] && !Defaults[.dictationOnlyMode] {
+            requestDownloadsPermissionIfNeeded()
             startMonitoring()
         } else {
             stopMonitoring()
@@ -100,6 +104,9 @@ class DownloadManager {
     private func stopMonitoring() {
         source?.cancel()
         source = nil
+        completionTimer?.invalidate()
+        completionTimer = nil
+        isDownloadCompleted = false
         
         hasPerformedInitialScan = false
         initialCrDownloadFiles.removeAll()
@@ -108,6 +115,7 @@ class DownloadManager {
     }
     
     private func scanDownloadsDirectory() {
+        guard !Defaults[.dictationOnlyMode] else { return }
         guard let downloadsDirectory else { return }
         
         let crDownloadFiles: Set<String>
@@ -139,6 +147,7 @@ class DownloadManager {
     }
     
     private func processDownloadFiles(_ crDownloadFiles: Set<String>, allFiles: Set<String>) {
+        guard !Defaults[.dictationOnlyMode], Defaults[.enableDownloadListener] else { return }
         
         if !hasPerformedInitialScan {
             hasPerformedInitialScan = true
