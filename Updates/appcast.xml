@@ -3,6 +3,25 @@
     <channel>
         <title>Atoll</title>
         <item>
+            <title>2.2.11</title>
+            <pubDate>Sun, 11 Oct 2026 14:25:11 +0900</pubDate>
+            <sparkle:version>23</sparkle:version>
+            <sparkle:shortVersionString>2.2.11</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h2>More reliable, lighter local dictation</h2>
+                <ul>
+                    <li>Updated whisper.cpp to 1.9.5 and added the smaller Whisper Turbo Q5 model.</li>
+                    <li>Fixed model startup timing and added retry recovery for failed dictations.</li>
+                    <li>Added Automatic, English, and Korean transcription language choices.</li>
+                    <li>Models unload after 10 idle minutes by default and reload automatically when you dictate. This can be changed in Settings.</li>
+                    <li>Reduced background activity in Dictation-Only Mode and removed duplicate bundled resources.</li>
+                </ul>
+                <p>Your existing model selection is preserved. Requires an Apple Silicon Mac running macOS 14.6 or later.</p>
+            ]]></description>
+            <enclosure url="https://github.com/angdulu/andy-dynamic-island/releases/download/v2.2.11/Andy-2.2.11.dmg" length="45896823" type="application/octet-stream" sparkle:edSignature="TUXed63Dw+VG6T0v9hDjUXeRj+0Uia6woDWYmEmBFd7Sc62Pxerdm8RV9csJQJlyDXkji72l1mLROW6jvbYnCw=="/>
+        </item>
+        <item>
             <title>2.2.10</title>
             <pubDate>Thu, 30 Jul 2026 15:12:05 +0900</pubDate>
             <sparkle:version>22</sparkle:version>
