@@ -3,6 +3,26 @@
     <channel>
         <title>Atoll</title>
         <item>
+            <title>2.2.12</title>
+            <pubDate>Fri, 16 Oct 2026 18:26:11 +0900</pubDate>
+            <sparkle:version>24</sparkle:version>
+            <sparkle:shortVersionString>2.2.12</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h2>Recording startup and optional AI cleanup improvements</h2>
+                <ul>
+                    <li>Prepare recording resources in advance and reduce work before microphone capture starts.</li>
+                    <li>Use more conservative cleanup instructions and retain the original text when correction fails validation.</li>
+                    <li>Reduce cleanup memory overhead and reuse model startup.</li>
+                    <li>Add an optional experimental Cleanup Preview while recording, with completed-phrase reuse.</li>
+                    <li>Make the original transcript available to copy when cleanup changes it.</li>
+                </ul>
+                <p>Cleanup and preview remain optional and default to off for new settings. Existing preferences are preserved. Preview uses periodic recognition, not a native streaming recognizer. Cleanup remains experimental; first-word cutoff has not yet been confirmed resolved in actual microphone use.</p>
+                <p>Requires an Apple Silicon Mac running macOS 14.6 or later. Models are downloaded separately.</p>
+            ]]></description>
+            <enclosure url="https://github.com/angdulu/andy-dynamic-island/releases/download/v2.2.12/Andy-2.2.12.dmg" length="52095797" type="application/octet-stream" sparkle:edSignature="sAoNq46mUmx56+McinJkG6i17VWA4GrWw9ZyqaWSov7IyBSs59DdyXNISynmr0JxeM49Fs+pMLx9lTyYJiGmAg=="/>
+        </item>
+        <item>
             <title>2.2.11</title>
             <pubDate>Sun, 11 Oct 2026 14:25:11 +0900</pubDate>
             <sparkle:version>23</sparkle:version>
