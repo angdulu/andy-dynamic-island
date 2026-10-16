@@ -30,6 +30,8 @@ struct DynamicNotchApp: App {
     @Default(.menubarIcon) var showMenuBarIcon
     @ObservedObject private var dictationManager = DictationManager.shared
     @Default(.dictationLanguage) var dictationLanguage
+    @Default(.dictationEnableAICleanup) var dictationEnableAICleanup
+    @Default(.dictationCleanupPreview) var dictationCleanupPreview
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
@@ -50,6 +52,12 @@ struct DynamicNotchApp: App {
                 SettingsWindowController.shared.showWindow()
             }
             CheckForUpdatesView(updater: updaterController.updater)
+            Menu("AI Cleanup") {
+                Toggle("Enable AI Cleanup", isOn: $dictationEnableAICleanup)
+                Toggle("Preview While Recording", isOn: $dictationCleanupPreview)
+                    .disabled(!dictationEnableAICleanup)
+            }
+            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
             Menu("Transcription Language") {
                 Picker("Language", selection: $dictationLanguage) {
                     ForEach(DictationLanguage.allCases, id: \.self) { language in

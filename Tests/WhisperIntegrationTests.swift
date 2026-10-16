@@ -41,6 +41,43 @@ struct WhisperIntegrationTests {
 
         let english = try await transcribe(URL(fileURLWithPath: args[4]))
         guard english.lowercased().contains("fellow americans") else { throw Failure.missingSpeech }
+        if let openingPath = ProcessInfo.processInfo.environment["ANDY_TEST_OPENING_AUDIO"] {
+            let opening = try await transcribe(URL(fileURLWithPath: openingPath), language: "en")
+            let letters = opening.lowercased().filter { $0.isLetter }
+            guard letters.hasPrefix("iwanttocheck") else { throw Failure.missingSpeech }
+        }
+        // Exercise the same bounded WAV snapshots used by live preview against
+        // the real server, without accessing the microphone.
+        let previewURL = FileManager.default.temporaryDirectory.appendingPathComponent("andy-preview-\(UUID().uuidString).wav")
+        defer { try? FileManager.default.removeItem(at: previewURL) }
+        guard let preview = try LiveDictationAudio.snapshot(from: URL(fileURLWithPath: args[4]), startingAt: 0, endingAt: 5) else {
+            throw Failure.invalidResponse
+        }
+        try preview.wav.write(to: previewURL)
+        let partial = try await transcribe(previewURL)
+        guard partial.lowercased().contains("fellow americans") else { throw Failure.missingSpeech }
+        let full = try LiveDictationAudio.snapshot(from: URL(fileURLWithPath: args[4]), startingAt: 0)!
+        let pcm = Data(full.wav.dropFirst(44))
+        var joined = full.wav.prefix(44)
+        let joinedPCM = pcm + Data(repeating: 0, count: 32_000) + pcm
+        func writeSize(_ size: UInt32, at offset: Int) {
+            var value = size.littleEndian
+            withUnsafeBytes(of: &value) { joined.replaceSubrange(offset..<offset + 4, with: $0) }
+        }
+        writeSize(UInt32(36 + joinedPCM.count), at: 4)
+        writeSize(UInt32(joinedPCM.count), at: 40)
+        joined.append(joinedPCM)
+        try joined.write(to: previewURL)
+        let boundary = full.endTime + 0.5
+        let tail = try LiveDictationAudio.snapshot(from: previewURL, startingAt: boundary)!
+        guard tail.wav.count < joined.count else { throw Failure.invalidResponse }
+        try tail.wav.write(to: previewURL)
+        let finalTail = try await transcribe(previewURL)
+        guard finalTail.lowercased().contains("fellow americans") else { throw Failure.missingSpeech }
+        var reused = DictationPreviewTranscript()
+        reused.append(english, endingAt: boundary)
+        reused.append(finalTail, endingAt: tail.endTime)
+        guard reused.rawText.lowercased().components(separatedBy: "fellow americans").count == 3 else { throw Failure.invalidResponse }
         if args.count > 5 {
             let korean = try await transcribe(URL(fileURLWithPath: args[5]))
             guard korean.unicodeScalars.contains(where: { (0xAC00...0xD7A3).contains($0.value) }) else { throw Failure.missingSpeech }
@@ -63,6 +100,6 @@ struct WhisperIntegrationTests {
         guard silence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Failure.unexpectedSilence }
         server.stop()
         try await Task.sleep(for: .seconds(2.2))
-        print("PASS: native HTTP transcription, language detection, VAD silence, concurrent cold startup")
+        print("PASS: native HTTP transcription, preview phrase reuse and tail-only decoding, language detection, VAD silence, concurrent cold startup")
     }
 }

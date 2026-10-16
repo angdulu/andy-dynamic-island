@@ -1192,6 +1192,7 @@ extension Defaults.Keys {
     static let dictationModelIdleTimeout = Key<DictationModelIdleTimeout>("dictationModelIdleTimeout", default: .tenMinutes)
     static let dictationLanguage = Key<DictationLanguage>("dictationLanguage", default: .automatic)
     static let dictationEnableAICleanup = Key<Bool>("dictationEnableAICleanup", default: false)
+    static let dictationCleanupPreview = Key<Bool>("dictationCleanupPreview", default: false)
     static let dictationSelectedCleanupModel = Key<CleanupModel>("dictationSelectedCleanupModel", default: .llama1b)
     static let geminiApiKey = Key<String>("geminiApiKey", default: "")
     static let openaiApiKey = Key<String>("openaiApiKey", default: "")

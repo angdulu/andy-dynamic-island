@@ -15,6 +15,7 @@ import CryptoKit
 import Defaults
 import Combine
 import ApplicationServices
+import CoreAudio
 
 @MainActor
 final class DictationManager: NSObject, ObservableObject {
@@ -28,11 +29,16 @@ final class DictationManager: NSObject, ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var failedRecordingAvailable = false
     @Published private(set) var lastTranscript: String?
+    @Published private(set) var lastRawTranscript: String?
+    @Published private(set) var liveTranscript = ""
+    @Published private(set) var isRefiningLive = false
+    @Published private(set) var liveNotice: String?
     /// Normalized live microphone level (0...1) while recording. Drives Andy's
     /// listening animation; 0 whenever we are not capturing.
     @Published private(set) var inputLevel: Double = 0
 
     private var audioRecorder: AVAudioRecorder?
+    private var preparedRecording: (recorder: AVAudioRecorder, url: URL, inputDeviceID: AudioDeviceID)?
     private var currentAudioURL: URL?
     private var suppressNextKeyUp = false
     private var activeDownloadDelegate: DictationModelDownloadDelegate?
@@ -41,6 +47,14 @@ final class DictationManager: NSObject, ObservableObject {
     private var activeDownloadID: UUID?
     private var hudSuppressionTimer: Timer?
     private var meteringTimer: Timer?
+    private var liveTask: Task<Void, Never>?
+    private var cleanupTask: Task<Void, Never>?
+    private var liveSession: UUID?
+    private var previewTranscript = DictationPreviewTranscript()
+    private var previewDraft = ""
+    private var recordingUsesLiveMode = false
+    private var recordingUsesLiveCleanup = false
+    private var lastSpeechTime: TimeInterval = 0
 
     private let server = WhisperServer()
     private var idleUnloadTask: Task<Void, Never>?
@@ -56,12 +70,33 @@ final class DictationManager: NSObject, ObservableObject {
         Defaults.publisher(.dictationModelIdleTimeout)
             .sink { [weak self] _ in self?.scheduleIdleUnload() }
             .store(in: &cancellables)
+        Defaults.publisher(.dictationEnableAICleanup)
+            .sink { [weak self] _ in self?.prepareCleanupIfNeeded() }
+            .store(in: &cancellables)
+        Defaults.publisher(.enableScreenAssistant)
+            .sink { [weak self] _ in self?.prepareNextRecording() }
+            .store(in: &cancellables)
+    }
+
+    private func prepareCleanupIfNeeded() {
+        guard !isRecording, !isTranscribing else { return }
+        guard Defaults[.dictationEnableAICleanup] else {
+            LlamaManager.shared.stopServer()
+            return
+        }
+        let model = Defaults[.dictationSelectedCleanupModel]
+        guard LlamaManager.isModelInstalled(model) else { return }
+        Task { [weak self] in
+            try? await LlamaManager.shared.ensureServerRunning(for: model)
+            self?.scheduleIdleUnload()
+        }
     }
 
     func retryFailedRecording() {
         guard !isRecording, !isTranscribing else { return }
         refreshFailedRecording()
         guard let failedAudioURL else { return }
+        recordingUsesLiveCleanup = Defaults[.dictationEnableAICleanup]
         // A retry can happen in Settings; keep its output available for explicit copying.
         transcribe(audioURL: failedAudioURL, targetPID: nil)
     }
@@ -77,6 +112,11 @@ final class DictationManager: NSObject, ObservableObject {
     func copyLastTranscript() {
         guard let lastTranscript else { return }
         copyToClipboard(lastTranscript)
+    }
+
+    func copyOriginalTranscript() {
+        guard let lastRawTranscript else { return }
+        copyToClipboard(lastRawTranscript)
     }
 
     private func refreshFailedRecording() {
@@ -107,7 +147,9 @@ final class DictationManager: NSObject, ObservableObject {
 
     func handleShortcutKeyDown() {
         guard Defaults[.enableShortcuts], Defaults[.enableScreenAssistant] else { return }
-        ScreenAssistantPanelManager.shared.hideScreenAssistantPanel()
+        if !Defaults[.dictationOnlyMode] {
+            ScreenAssistantPanelManager.shared.hideScreenAssistantPanel()
+        }
 
         if Defaults[.dictationPushToTalk] {
             guard !isRecording, !isTranscribing else { return }
@@ -244,25 +286,71 @@ final class DictationManager: NSObject, ObservableObject {
         }
     }
 
+    private static var defaultInputDeviceID: AudioDeviceID {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var device = AudioDeviceID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device)
+        return device
+    }
+
+    private func makeRecording() throws -> (recorder: AVAudioRecorder, url: URL, inputDeviceID: AudioDeviceID) {
+        let inputDeviceID = Self.defaultInputDeviceID
+        let audioURL = Self.recordingsDirectory
+            .appendingPathComponent("dictation-\(UUID().uuidString).wav")
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatLinearPCM),
+            AVSampleRateKey: 16_000,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false
+        ]
+
+        let recorder = try AVAudioRecorder(url: audioURL, settings: settings)
+        recorder.delegate = self
+        recorder.isMeteringEnabled = true
+        guard recorder.prepareToRecord() else {
+            try? FileManager.default.removeItem(at: audioURL)
+            throw NSError(domain: "DictationManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not prepare the microphone."])
+        }
+        return (recorder, audioURL, inputDeviceID)
+    }
+
+    private func discardPreparedRecording() {
+        guard let preparedRecording else { return }
+        preparedRecording.recorder.stop()
+        try? FileManager.default.removeItem(at: preparedRecording.url)
+        self.preparedRecording = nil
+    }
+
+    private func prepareNextRecording() {
+        guard !isRecording, !isTranscribing else { return }
+        guard Defaults[.enableScreenAssistant] else {
+            discardPreparedRecording()
+            return
+        }
+        // Prepare resources ahead of the shortcut, but never start an idle
+        // recording or trigger a microphone permission request at launch.
+        guard preparedRecording == nil,
+              AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else { return }
+        preparedRecording = try? makeRecording()
+    }
+
     private func startRecording() {
         idleUnloadTask?.cancel()
-        refreshFailedRecording()
         do {
-            let audioURL = Self.recordingsDirectory
-                .appendingPathComponent("dictation-\(UUID().uuidString).wav")
-            let settings: [String: Any] = [
-                AVFormatIDKey: Int(kAudioFormatLinearPCM),
-                AVSampleRateKey: 16_000,
-                AVNumberOfChannelsKey: 1,
-                AVLinearPCMBitDepthKey: 16,
-                AVLinearPCMIsFloatKey: false,
-                AVLinearPCMIsBigEndianKey: false
-            ]
-
-            let recorder = try AVAudioRecorder(url: audioURL, settings: settings)
-            recorder.delegate = self
-            recorder.isMeteringEnabled = true
-            recorder.prepareToRecord()
+            if let preparedRecording, preparedRecording.inputDeviceID != Self.defaultInputDeviceID {
+                discardPreparedRecording()
+            }
+            let prepared = try preparedRecording ?? makeRecording()
+            preparedRecording = nil
+            let recorder = prepared.recorder
+            let audioURL = prepared.url
 
             guard recorder.record() else {
                 lastError = "Could not start microphone recording."
@@ -282,15 +370,31 @@ final class DictationManager: NSObject, ObservableObject {
             currentAudioURL = audioURL
             recordingTargetPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
             audioRecorder = recorder
+            recordingUsesLiveCleanup = Defaults[.dictationEnableAICleanup]
+            recordingUsesLiveMode = recordingUsesLiveCleanup && Defaults[.dictationCleanupPreview]
+            previewTranscript = DictationPreviewTranscript()
+            previewDraft = ""
+            liveTranscript = ""
+            liveNotice = nil
+            lastSpeechTime = 0
             isRecording = true
             lastError = nil
             startMetering()
             print("Dictation: recording started")
+            refreshFailedRecording()
+
+            if recordingUsesLiveMode {
+                startLivePreview(audioURL: audioURL)
+            }
 
             Task {
                 _ = try? await ensureServerRunning()
-                if Defaults[.dictationEnableAICleanup] {
-                    let cleanupModel = Defaults[.dictationSelectedCleanupModel]
+            }
+            // Load cleanup independently of Whisper so their cold starts overlap
+            // the recording instead of delaying the first completed phrase.
+            if recordingUsesLiveCleanup {
+                let cleanupModel = Defaults[.dictationSelectedCleanupModel]
+                Task {
                     if LlamaManager.isModelInstalled(cleanupModel) {
                         try? await LlamaManager.shared.ensureServerRunning(for: cleanupModel)
                     }
@@ -315,6 +419,9 @@ final class DictationManager: NSObject, ObservableObject {
                 // -55 dB (room noise) → 0, -8 dB (talking close) → 1
                 let normalized = (power + 55.0) / 47.0
                 self.inputLevel = min(1, max(0, normalized))
+                if self.recordingUsesLiveMode, power > -48 {
+                    self.lastSpeechTime = recorder.currentTime
+                }
             }
         }
         meteringTimer = timer
@@ -325,6 +432,83 @@ final class DictationManager: NSObject, ObservableObject {
         meteringTimer?.invalidate()
         meteringTimer = nil
         inputLevel = 0
+    }
+
+    private func startLivePreview(audioURL: URL) {
+        let session = UUID()
+        liveSession = session
+        LiveDictationPreviewPanel.shared.show()
+        if recordingUsesLiveCleanup, !LlamaManager.isModelInstalled(Defaults[.dictationSelectedCleanupModel]) {
+            liveNotice = "Download a cleanup model in Settings to enable light correction."
+        }
+        liveTask = Task { [weak self] in
+            guard let self else { return }
+            var previewEnd: TimeInterval = 0
+            while self.isRecording, self.liveSession == session {
+                do { try await Task.sleep(for: .milliseconds(600)) } catch { return }
+                guard self.isRecording, self.liveSession == session else { return }
+                // Don't send silence to the recognizer or queue overlapping requests.
+                guard self.lastSpeechTime > self.previewTranscript.endTime else { continue }
+                let speechEnd = self.lastSpeechTime
+                let captureTime = self.audioRecorder?.currentTime ?? 0
+                let paused = captureTime - speechEnd >= 0.65
+                do {
+                    let start = self.previewTranscript.endTime
+                    guard let snapshot = try await Task.detached(operation: {
+                        try LiveDictationAudio.snapshot(from: audioURL, startingAt: start, endingAt: captureTime)
+                    }).value, snapshot.endTime > previewEnd + 0.3 else { continue }
+                    guard self.isRecording, self.liveSession == session else { return }
+                    let text = try await self.transcribeViaHTTP(audioData: snapshot.wav)
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard self.liveSession == session else { return }
+                    previewEnd = snapshot.endTime
+                    self.previewDraft = text
+                    self.updateCleanupPreview()
+                    // Only edit a completed phrase, never an unfinished word.
+                    if paused, snapshot.endTime >= speechEnd + 0.4 {
+                        self.previewDraft = ""
+                        self.previewTranscript.append(text, endingAt: snapshot.endTime)
+                        self.startPreviewCleanup(session: session)
+                        self.updateCleanupPreview()
+                    }
+                } catch {
+                    guard self.isRecording, self.liveSession == session else { return }
+                    self.liveNotice = "Preview paused. Remaining audio will be transcribed when you finish."
+                    return
+                }
+            }
+        }
+    }
+
+    private func updateCleanupPreview() {
+        liveTranscript = [previewTranscript.text, previewDraft].filter { !$0.isEmpty }.joined(separator: " ")
+    }
+
+    private func startPreviewCleanup(session: UUID) {
+        guard cleanupTask == nil else { return }
+        cleanupTask = Task { [weak self] in
+            guard let self else { return }
+            defer { if self.liveSession == session { self.cleanupTask = nil } }
+            while self.liveSession == session, let next = self.previewTranscript.nextCorrection {
+                let corrected = await self.lightlyCleanLiveText(next.text)
+                guard self.liveSession == session else { return }
+                self.previewTranscript.finishCorrection(at: next.index, text: corrected)
+                self.updateCleanupPreview()
+            }
+        }
+    }
+
+    private func lightlyCleanLiveText(_ text: String) async -> String {
+        guard recordingUsesLiveCleanup,
+              LlamaManager.isModelInstalled(Defaults[.dictationSelectedCleanupModel]) else { return text }
+        isRefiningLive = true
+        defer { isRefiningLive = false }
+        do {
+            return try await LlamaManager.shared.cleanText(text, conservative: true)
+        } catch {
+            liveNotice = "Some corrections were skipped; original wording was kept."
+            return text
+        }
     }
 
     private func stopRecordingAndTranscribe() {
@@ -340,11 +524,11 @@ final class DictationManager: NSObject, ObservableObject {
 
         guard let audioURL = currentAudioURL else { return }
         currentAudioURL = nil
-        transcribe(audioURL: audioURL, targetPID: recordingTargetPID)
+        transcribe(audioURL: audioURL, targetPID: recordingTargetPID, live: recordingUsesLiveMode)
         recordingTargetPID = nil
     }
 
-    private func transcribe(audioURL: URL, targetPID: pid_t?) {
+    private func transcribe(audioURL: URL, targetPID: pid_t?, live: Bool = false) {
         idleUnloadTask?.cancel()
         recoveryExpiryTask?.cancel()
         isTranscribing = true
@@ -352,19 +536,41 @@ final class DictationManager: NSObject, ObservableObject {
         startContinuousVolumeHUDSuppression()
 
         Task {
+            // Let an in-flight preview finish before final inference. Cancelling
+            // its HTTP request would not stop the server's GPU work.
+            if live { await liveTask?.value }
+            liveTask = nil
             do {
-                var transcript = try await transcribeViaHTTP(audioURL: audioURL)
-                
-                if !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && Defaults[.dictationEnableAICleanup] {
-                    let cleanupModel = Defaults[.dictationSelectedCleanupModel]
-                    if LlamaManager.isModelInstalled(cleanupModel) {
-                        do {
-                            print("Dictation: running local AI cleanup using \(cleanupModel.displayName)...")
-                            transcript = try await LlamaManager.shared.cleanText(transcript)
-                        } catch {
-                            print("Dictation: local AI cleanup failed, using raw transcript: \(error.localizedDescription)")
-                        }
+                let rawTranscript: String
+                let transcript: String
+                if live {
+                    // Confirmed phrases already have recognition results. Decode
+                    // only the remaining tail, then drain the correction queue.
+                    let start = previewTranscript.endTime
+                    let tail = try await Task.detached {
+                        try LiveDictationAudio.snapshot(from: audioURL, startingAt: start)
+                    }.value
+                    previewDraft = ""
+                    if let tail {
+                        let raw = try await transcribeViaHTTP(audioData: tail.wav)
+                        previewTranscript.append(raw, endingAt: tail.endTime)
+                    } else if start == 0 || lastSpeechTime > start {
+                        // Unsupported headers or a very short spoken tail: prefer
+                        // a complete decode over silently dropping audio.
+                        let raw = try await transcribeViaHTTP(audioURL: audioURL)
+                        // A replacement must not race a correction of old segments.
+                        await cleanupTask?.value
+                        previewTranscript = DictationPreviewTranscript()
+                        previewTranscript.append(raw, endingAt: .greatestFiniteMagnitude)
                     }
+                    if let session = liveSession { startPreviewCleanup(session: session) }
+                    await cleanupTask?.value
+                    rawTranscript = previewTranscript.rawText
+                    transcript = previewTranscript.text
+                    liveTranscript = transcript
+                } else {
+                    rawTranscript = try await transcribeViaHTTP(audioURL: audioURL)
+                    transcript = await lightlyCleanLiveText(rawTranscript)
                 }
                 
                 try? FileManager.default.removeItem(at: audioURL)
@@ -375,6 +581,7 @@ final class DictationManager: NSObject, ObservableObject {
                     self.discardFailedRecording()
                     self.lastError = nil
                     self.lastTranscript = text
+                    self.lastRawTranscript = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
                     if targetPID == nil {
                         self.copyLastTranscript()
                     } else {
@@ -390,8 +597,12 @@ final class DictationManager: NSObject, ObservableObject {
                 print("Dictation: transcription failed: \(error.localizedDescription)")
             }
             self.isTranscribing = false
+            self.liveSession = nil
+            self.cleanupTask = nil
+            if live { LiveDictationPreviewPanel.shared.hide() }
             self.stopContinuousVolumeHUDSuppression()
             self.scheduleIdleUnload()
+            self.prepareNextRecording()
         }
     }
 
@@ -621,6 +832,7 @@ final class DictationManager: NSObject, ObservableObject {
         idleUnloadTask?.cancel()
         idleUnloadTask = nil
         server.stop()
+        if !isRecording, !isTranscribing { discardPreparedRecording() }
     }
 
     @discardableResult
@@ -643,9 +855,12 @@ final class DictationManager: NSObject, ObservableObject {
     }
 
     private func transcribeViaHTTP(audioURL: URL) async throws -> String {
-        let serverPort = try await ensureServerRunning()
-
         let fileData = try await Task.detached { try Data(contentsOf: audioURL) }.value
+        return try await transcribeViaHTTP(audioData: fileData)
+    }
+
+    private func transcribeViaHTTP(audioData fileData: Data) async throws -> String {
+        let serverPort = try await ensureServerRunning()
         let boundary = "Boundary-\(UUID().uuidString)"
 
         var request = URLRequest(url: URL(string: "http://127.0.0.1:\(serverPort)/inference")!)
@@ -730,6 +945,12 @@ extension DictationManager: AVAudioRecorderDelegate {
             self.stopMetering()
             self.audioRecorder = nil
             self.isRecording = false
+            self.liveSession = nil
+            self.liveTask?.cancel()
+            self.liveTask = nil
+            self.cleanupTask?.cancel()
+            self.cleanupTask = nil
+            LiveDictationPreviewPanel.shared.hide()
             if let audioURL = self.currentAudioURL {
                 _ = try? self.recordingStore.retainFailedRecording(audioURL)
                 self.refreshFailedRecording()

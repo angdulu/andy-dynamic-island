@@ -891,6 +891,7 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .screenAssistant, title: "Dictation-Only Mode", keywords: ["dictation", "transcription", "only", "disable dynamic island", "notchless", "air"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Dictation-Only Mode")),
             SettingsSearchEntry(tab: .screenAssistant, title: "Paste Method", keywords: ["dictation", "transcription", "paste", "clipboard"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Paste Method")),
             SettingsSearchEntry(tab: .screenAssistant, title: "AI Text Cleanup", keywords: ["dictation", "transcription", "cleanup", "llama", "ai", "stutter"], highlightID: SettingsTab.screenAssistant.highlightID(for: "AI Text Cleanup")),
+            SettingsSearchEntry(tab: .screenAssistant, title: "Cleanup Preview", keywords: ["live", "preview", "correction", "cleanup"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Cleanup Preview")),
 
 
 
@@ -6925,6 +6926,7 @@ struct ScreenAssistantSettings: View {
     @Default(.dictationPasteMethod) var dictationPasteMethod
     @Default(.dictationSelectedModel) var dictationSelectedModel
     @Default(.dictationEnableAICleanup) var dictationEnableAICleanup
+    @Default(.dictationCleanupPreview) var dictationCleanupPreview
     @Default(.dictationSelectedCleanupModel) var dictationSelectedCleanupModel
     @Default(.dictationModelIdleTimeout) var dictationModelIdleTimeout
     @Default(.dictationLanguage) var dictationLanguage
@@ -6978,6 +6980,14 @@ struct ScreenAssistantSettings: View {
                         Text(transcript).textSelection(.enabled)
                         Button("Copy Transcript", systemImage: "doc.on.doc") {
                             dictationManager.copyLastTranscript()
+                        }
+                        if let original = dictationManager.lastRawTranscript, original != transcript {
+                            DisclosureGroup("Original Before Cleanup") {
+                                Text(original).textSelection(.enabled)
+                                Button("Copy Original", systemImage: "doc.on.doc") {
+                                    dictationManager.copyOriginalTranscript()
+                                }
+                            }
                         }
                     }
                 }
@@ -7122,6 +7132,7 @@ struct ScreenAssistantSettings: View {
                                             }
                                             .buttonStyle(.plain)
                                             .help("Delete model")
+                                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
                                         }
                                     }
                                 } else {
@@ -7162,15 +7173,29 @@ struct ScreenAssistantSettings: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("AI Text Cleanup")
-                            Text("Use a local AI model to clean up transcriptions (remove stutters, filler words, fix grammar).")
+                            Text("Lightly correct grammar, punctuation and accidental repetition while preserving what you said.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
                         Toggle("", isOn: $dictationEnableAICleanup)
                             .toggleStyle(.switch)
+                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
                     }
                     .settingsHighlight(id: highlightID("AI Text Cleanup"))
+                    if dictationEnableAICleanup {
+                        Toggle("Preview While Recording", isOn: $dictationCleanupPreview)
+                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
+                            .settingsHighlight(id: highlightID("Cleanup Preview"))
+                        Text("Optional periodic preview of transcription and corrections. Completed phrases are reused when recording ends. This uses additional processing while you speak.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        if !LlamaManager.isModelInstalled(dictationSelectedCleanupModel) {
+                            Text("Download a cleanup model below to enable correction.")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 } header: {
                     Text("AI Post-Processing")
                 }
@@ -7200,6 +7225,7 @@ struct ScreenAssistantSettings: View {
                                             .font(.title3)
                                     }
                                     .buttonStyle(.plain)
+                                    .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
 
                                     // Model details
                                     VStack(alignment: .leading, spacing: 2) {
@@ -7255,6 +7281,7 @@ struct ScreenAssistantSettings: View {
                                             }
                                             .buttonStyle(.plain)
                                             .help("Delete model")
+                                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
                                         }
                                     } else {
                                         Button {
