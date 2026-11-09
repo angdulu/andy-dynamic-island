@@ -12,6 +12,14 @@
   </a>
 </p>
 
+## Project status: development paused
+
+Active development is paused, with no further feature development currently planned. Dictation built into AI desktop apps now covers most of my everyday needs, so Andy is no longer a development priority for me.
+
+I may still use Andy occasionally for personal or sensitive dictation, where keeping speech recognition and text cleanup on-device remains a valuable advantage. The existing source and releases remain available for that use.
+
+---
+
 **Andy** (formerly Atoll-Andy) is an advanced, customized macOS desktop pet and productivity assistant that lives directly in your MacBook notch or Dynamic Island. 
 
 While preserving native system insight telemetry and media widgets, this fork integrates an **on-device Speech-to-Text (STT) Whisper transcriber** and a **Metal-GPU accelerated local Llama-3/Qwen cleanup pipeline** to turn voice dictations into copy-ready text with zero cloud dependency.
