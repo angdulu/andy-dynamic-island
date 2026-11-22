@@ -9,10 +9,6 @@ struct AndyNotchWebViewMenuActions {
     let hideFromNotch: () -> Void
 }
 
-/// Dedicated opaque CALayer for Andy rendering. Updating only this sublayer via
-/// `setNeedsDisplay()` avoids `NSView.setNeedsDisplay`, which otherwise triggers
-/// `NSViewSetNeedsUpdateVibrancy` and forces the entire SwiftUI notch window
-/// backing store to re-upload on every frame.
 private final class AndyFaceLayer: CALayer {
     let mode: AndyViewMode
     var snapshot: AndyFrameSnapshot?
@@ -41,12 +37,54 @@ private final class AndyFaceLayer: CALayer {
         locations: [0.0, 0.28, 0.78, 1.0]
     )
 
+    private static let lowBatteryEyeGradient: CGGradient? = CGGradient(
+        colorsSpace: colorSpace,
+        colors: [
+            CGColor(red: 1.0, green: 0xEC / 255.0, blue: 0xB8 / 255.0, alpha: 1.0),
+            CGColor(red: 1.0, green: 0xC2 / 255.0, blue: 0x5E / 255.0, alpha: 1.0),
+            CGColor(red: 0xD9 / 255.0, green: 0x88 / 255.0, blue: 0x29 / 255.0, alpha: 1.0),
+            CGColor(red: 0xD9 / 255.0, green: 0x88 / 255.0, blue: 0x29 / 255.0, alpha: 0.0)
+        ] as CFArray,
+        locations: [0.0, 0.28, 0.78, 1.0]
+    )
+
+    private static let chargeEyeGradient: CGGradient? = CGGradient(
+        colorsSpace: colorSpace,
+        colors: [
+            CGColor(red: 0xE8 / 255.0, green: 1.0, blue: 0xF4 / 255.0, alpha: 1.0),
+            CGColor(red: 0x6A / 255.0, green: 1.0, blue: 0xC8 / 255.0, alpha: 1.0),
+            CGColor(red: 0x2E / 255.0, green: 0xE5 / 255.0, blue: 0xA8 / 255.0, alpha: 1.0),
+            CGColor(red: 0x2E / 255.0, green: 0xE5 / 255.0, blue: 0xA8 / 255.0, alpha: 0.0)
+        ] as CFArray,
+        locations: [0.0, 0.28, 0.78, 1.0]
+    )
+
     private static let haloGradient: CGGradient? = CGGradient(
         colorsSpace: colorSpace,
         colors: [
             CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.42),
             CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.14),
             CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.0)
+        ] as CFArray,
+        locations: [0.0, 0.55, 1.0]
+    )
+
+    private static let amberHaloGradient: CGGradient? = CGGradient(
+        colorsSpace: colorSpace,
+        colors: [
+            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.36),
+            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.10),
+            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.0)
+        ] as CFArray,
+        locations: [0.0, 0.55, 1.0]
+    )
+
+    private static let chargeHaloGradient: CGGradient? = CGGradient(
+        colorsSpace: colorSpace,
+        colors: [
+            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.50),
+            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.18),
+            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.0)
         ] as CFArray,
         locations: [0.0, 0.55, 1.0]
     )
@@ -99,7 +137,6 @@ private final class AndyFaceLayer: CALayer {
             return
         }
 
-        // Expanded tab draws subtle CRT scanlines; skip in tiny wing where 1px lines are invisible sub-pixel noise
         if mode == .expanded {
             ctx.setFillColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.022)
             var y: Double = 0
@@ -148,10 +185,12 @@ private final class AndyFaceLayer: CALayer {
 
         ctx.saveGState()
         let tx = AndyPetEngine.lerp(safe.faceCenterX * 1.1, 0.0, morph) + snap.swayX * (1.0 - morph)
-        let ty = AndyPetEngine.lerp(safe.faceCenterY * 0.78, 0.0, morph) + snap.swayY * (1.0 - morph)
+        let ty = AndyPetEngine.lerp(safe.faceCenterY * 0.78, 0.0, morph)
+            + snap.swayY * (1.0 - morph)
+            + snap.returnDropOffsetY * (1.0 - morph)
         ctx.translateBy(x: tx, y: ty)
 
-        let angle = AndyPetEngine.clamp(AndyPetEngine.lerp(safe.faceAngle, 0.0, morph) + snap.tilt, -0.2, 0.2)
+        let angle = AndyPetEngine.clamp(AndyPetEngine.lerp(safe.faceAngle, 0.0, morph) + snap.tilt, -0.24, 0.24)
         ctx.rotate(by: angle)
         ctx.scaleBy(x: faceSX * finalScale * squash, y: faceSY * finalScale / sqrt(max(0.1, squash)))
         ctx.translateBy(x: snap.lookX, y: snap.lookY)
@@ -160,14 +199,126 @@ private final class AndyFaceLayer: CALayer {
         drawEye(ctx, params: safe.rightEye, isLeft: false, snap: snap)
         drawLoaderMiddleDot(ctx, snap: snap)
 
-        if snap.isHot {
-            ctx.setFillColor(red: 0x5F / 255.0, green: 0xFA / 255.0, blue: 0xFA / 255.0, alpha: 0.9)
-            let sweat1 = snap.nowMs.truncatingRemainder(dividingBy: 1000.0) / 1000.0
-            let sweat2 = (snap.nowMs + 500.0).truncatingRemainder(dividingBy: 1000.0) / 1000.0
-            ctx.fill(CGRect(x: -20, y: -10 + sweat1 * 20, width: 2, height: 4))
-            ctx.fill(CGRect(x: 20, y: -15 + sweat2 * 20, width: 2, height: 4))
+        if morph < 0.15 {
+            if snap.specialEffect == .chargeBurst {
+                drawChargeSparks(ctx, progress: snap.effectProgress)
+            }
+            if snap.isHot {
+                drawSweatDrops(ctx, nowMs: snap.nowMs)
+            }
+            if snap.mood == .sleeping && !snap.voicePhase.isActive {
+                drawSleepZzz(ctx, nowMs: snap.nowMs)
+            }
+            if snap.isOffline && !snap.voicePhase.isActive && snap.mood != .sleeping {
+                drawOfflineAccent(ctx, nowMs: snap.nowMs)
+            }
+            if snap.isLowBattery && mode == .expanded && !snap.voicePhase.isActive {
+                drawLowBatteryBadge(ctx, nowMs: snap.nowMs)
+            }
         }
 
+        ctx.restoreGState()
+    }
+
+    private func drawChargeSparks(_ ctx: CGContext, progress: Double) {
+        let fade = sin(min(1.0, progress * 1.4) * .pi) * (1.0 - progress * 0.35)
+        guard fade > 0.02 else { return }
+        ctx.saveGState()
+        ctx.setStrokeColor(red: 0x7E / 255.0, green: 1.0, blue: 0xD2 / 255.0, alpha: fade * 0.95)
+        ctx.setLineWidth(1.6)
+        ctx.setLineCap(.round)
+
+        let angles: [Double] = [-2.55, -1.9, -1.25, -0.6, 0.55, 2.55]
+        for (idx, a) in angles.enumerated() {
+            let phase = AndyPetEngine.clamp(progress * 1.3 - Double(idx % 3) * 0.12, 0, 1)
+            guard phase > 0 && phase < 1 else { continue }
+            let r1 = 22.0 + phase * 14.0
+            let r2 = r1 + (1.0 - phase) * 6.5
+            ctx.move(to: CGPoint(x: cos(a) * r1, y: sin(a) * r1))
+            ctx.addLine(to: CGPoint(x: cos(a) * r2, y: sin(a) * r2))
+        }
+        ctx.strokePath()
+        ctx.restoreGState()
+    }
+
+    private func drawSweatDrops(_ ctx: CGContext, nowMs: Double) {
+        let drops: [(x: Double, offset: Double, scale: Double)] = [
+            (28.0, 0.0, 1.0),
+            (-27.0, 520.0, 0.8)
+        ]
+        ctx.saveGState()
+        for d in drops {
+            let p = (nowMs + d.offset).truncatingRemainder(dividingBy: 1100.0) / 1100.0
+            let alpha = sin(p * .pi) * 0.88
+            let y = -16.0 + p * 18.0
+            let s = 3.2 * d.scale
+            ctx.saveGState()
+            ctx.translateBy(x: d.x, y: y)
+            ctx.setFillColor(red: 0x7A / 255.0, green: 0xFC / 255.0, blue: 1.0, alpha: alpha)
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: 0, y: -s * 1.35))
+            ctx.addQuadCurve(to: CGPoint(x: s, y: s * 0.4), control: CGPoint(x: s * 1.05, y: -s * 0.25))
+            ctx.addArc(center: CGPoint(x: 0, y: s * 0.4), radius: s, startAngle: 0, endAngle: .pi, clockwise: false)
+            ctx.addQuadCurve(to: CGPoint(x: 0, y: -s * 1.35), control: CGPoint(x: -s * 1.05, y: -s * 0.25))
+            ctx.closePath()
+            ctx.fillPath()
+            ctx.restoreGState()
+        }
+        ctx.restoreGState()
+    }
+
+    private func drawSleepZzz(_ ctx: CGContext, nowMs: Double) {
+        ctx.saveGState()
+        ctx.setLineCap(.round)
+        ctx.setLineJoin(.round)
+        for i in 0..<2 {
+            let cycle = 2400.0
+            let p = (nowMs + Double(i) * 1200.0).truncatingRemainder(dividingBy: cycle) / cycle
+            let alpha = sin(p * .pi) * 0.72
+            guard alpha > 0.04 else { continue }
+            let x = 21.0 + p * 7.0 + sin(p * .pi * 2.0) * 1.6
+            let y = -8.0 - p * 15.0
+            let sz = (3.4 + p * 2.2) * (i == 0 ? 1.0 : 0.82)
+
+            ctx.setStrokeColor(red: 0x5F / 255.0, green: 0xFA / 255.0, blue: 0xFA / 255.0, alpha: alpha)
+            ctx.setLineWidth(1.3)
+            ctx.beginPath()
+            ctx.move(to: CGPoint(x: x - sz, y: y - sz))
+            ctx.addLine(to: CGPoint(x: x + sz, y: y - sz))
+            ctx.addLine(to: CGPoint(x: x - sz, y: y + sz))
+            ctx.addLine(to: CGPoint(x: x + sz, y: y + sz))
+            ctx.strokePath()
+        }
+        ctx.restoreGState()
+    }
+
+    private func drawOfflineAccent(_ ctx: CGContext, nowMs: Double) {
+        let pulse = (sin(nowMs / 750.0) + 1.0) * 0.5
+        let alpha = 0.25 + pulse * 0.55
+        ctx.saveGState()
+        ctx.translateBy(x: 24.0, y: -19.0 - pulse * 1.5)
+        ctx.setStrokeColor(red: 0x5F / 255.0, green: 0xFA / 255.0, blue: 0xFA / 255.0, alpha: alpha)
+        ctx.setFillColor(red: 0x5F / 255.0, green: 0xFA / 255.0, blue: 0xFA / 255.0, alpha: alpha)
+        ctx.setLineWidth(1.4)
+        ctx.setLineCap(.round)
+        ctx.beginPath()
+        ctx.addArc(center: CGPoint(x: 0, y: -2.2), radius: 2.4, startAngle: .pi * 1.1, endAngle: .pi * 0.25, clockwise: false)
+        ctx.addLine(to: CGPoint(x: 0, y: 1.5))
+        ctx.strokePath()
+        ctx.fillEllipse(in: CGRect(x: -0.9, y: 3.1, width: 1.8, height: 1.8))
+        ctx.restoreGState()
+    }
+
+    private func drawLowBatteryBadge(_ ctx: CGContext, nowMs: Double) {
+        let pulse = 0.45 + 0.4 * ((sin(nowMs / 800.0) + 1.0) * 0.5)
+        ctx.saveGState()
+        ctx.translateBy(x: 42.0, y: -16.0)
+        ctx.setStrokeColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: pulse)
+        ctx.setFillColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: pulse)
+        ctx.setLineWidth(1.2)
+        ctx.stroke(CGRect(x: -6, y: -3.5, width: 11, height: 7))
+        ctx.fill(CGRect(x: 5.5, y: -1.6, width: 1.6, height: 3.2))
+        ctx.fill(CGRect(x: -4.2, y: -1.8, width: 2.5, height: 3.6))
         ctx.restoreGState()
     }
 
@@ -227,10 +378,10 @@ private final class AndyFaceLayer: CALayer {
         let scaleY = AndyPetEngine.clamp(p(3, 1), 0.1, 1.8)
         let rawScale = (scaleX + scaleY) / 2.0
         let eyeScale = AndyPetEngine.clamp(1.0 + (rawScale - 1.0) * 0.42, 0.82, 1.36)
-        let angle = AndyPetEngine.clamp(p(4, 0), -14, 14) * .pi / 180.0
+        var angle = AndyPetEngine.clamp(p(4, 0), -14, 14) * .pi / 180.0
 
         var upperLid = AndyPetEngine.clamp(p(13, 0), 0, 1)
-        let upperLidAngle = p(14, 0) * .pi / 180.0
+        var upperLidAngle = p(14, 0) * .pi / 180.0
         var lowerLid = AndyPetEngine.clamp(p(16, 0), 0, 1)
         let lowerLidAngle = p(17, 0) * .pi / 180.0
         let glow = AndyPetEngine.clamp(p(21, 0) + p(24, 0) + 0.35, 0.15, 1.2)
@@ -242,8 +393,8 @@ private final class AndyFaceLayer: CALayer {
         var width = 28.0 * eyeScale
         var height = 28.0 * eyeScale
         let alivePulse = sin(snap.nowMs / 680.0 + (isLeft ? 0.0 : 0.35)) * 0.018
-        width *= 1.0 + alivePulse
-        height *= 1.0 - alivePulse * 0.55
+        width *= 1.0 + alivePulse - snap.blinkRebound * 0.4
+        height *= 1.0 - alivePulse * 0.55 + snap.blinkRebound
 
         switch snap.mood {
         case .happy, .content, .affectionate:
@@ -255,6 +406,42 @@ private final class AndyFaceLayer: CALayer {
         case .sad:
             height *= 0.90
         default:
+            break
+        }
+
+        if snap.isLowBattery && !snap.voicePhase.isActive && snap.mood != .sleeping {
+            upperLid = max(upperLid, 0.28)
+            height *= 0.88
+        } else if snap.isLateNight && !snap.voicePhase.isActive && snap.mood == .idle {
+            upperLid = max(upperLid, 0.16)
+        }
+
+        var extraGlow = 0.0
+        switch snap.specialEffect {
+        case .chargeBurst:
+            let s = sin(min(1.0, snap.effectProgress * 1.5) * .pi)
+            width *= 1.0 + 0.08 * s
+            height *= 1.0 + 0.06 * s
+            extraGlow = 3.5 * s
+        case .grumpyReturn:
+            let s = sin(snap.effectProgress * .pi)
+            upperLid = max(upperLid, 0.32 * s)
+            upperLidAngle += (isLeft ? -0.22 : 0.22) * s
+        case .startledWake:
+            let s = sin(min(1.0, snap.effectProgress * 2.2) * .pi)
+            width *= 1.0 + 0.14 * s
+            height *= 1.0 + 0.16 * s
+            upperLid *= (1.0 - s)
+        case .dizzy:
+            let s = 1.0 - snap.effectProgress
+            let asym = sin(snap.effectProgress * .pi * 6.0 + (isLeft ? 0 : .pi)) * 0.14 * s
+            height *= 1.0 + asym
+            angle += asym * 0.8
+        case .happyReturn:
+            let s = sin(snap.effectProgress * .pi)
+            lowerLid = max(lowerLid, 0.22 * s)
+            width *= 1.0 + 0.06 * s
+        case .none:
             break
         }
 
@@ -303,8 +490,19 @@ private final class AndyFaceLayer: CALayer {
         ctx.translateBy(x: renderCenterX, y: centerY + floatY * (1.0 - morph) + bounceY)
         ctx.rotate(by: angle * (1.0 - morph))
 
-        if let halo = Self.haloGradient {
-            let glowBoost = 1.0 + min(0.55, (glow * 0.14 + snap.pulse * 0.08 + voiceGlow * 0.06))
+        let useChargePalette = (snap.specialEffect == .chargeBurst && !snap.voicePhase.isActive)
+        let useLowBatPalette = (snap.isLowBattery && !useChargePalette && !snap.voicePhase.isActive)
+        let isSleepy = (snap.mood == .sleeping || snap.mood == .sleepy)
+
+        let haloGrad: CGGradient? = useChargePalette
+            ? Self.chargeHaloGradient
+            : (useLowBatPalette ? Self.amberHaloGradient : Self.haloGradient)
+        let eyeGrad: CGGradient? = useChargePalette
+            ? Self.chargeEyeGradient
+            : (useLowBatPalette ? Self.lowBatteryEyeGradient : (isSleepy ? Self.sleepyEyeGradient : Self.normalEyeGradient))
+
+        if let halo = haloGrad {
+            let glowBoost = 1.0 + min(0.60, (glow * 0.14 + snap.pulse * 0.08 + (voiceGlow + extraGlow) * 0.06))
             let haloRadius = max(width, height) * 0.68 * glowBoost
             ctx.saveGState()
             ctx.scaleBy(x: width / max(width, height), y: height / max(width, height))
@@ -319,8 +517,7 @@ private final class AndyFaceLayer: CALayer {
 
         let eyePath = makeEyePath(width: width, height: height, params: params, roundness: morph)
 
-        let isSleepy = (snap.mood == .sleeping || snap.mood == .sleepy)
-        if let grad = isSleepy ? Self.sleepyEyeGradient : Self.normalEyeGradient {
+        if let grad = eyeGrad {
             ctx.saveGState()
             ctx.addPath(eyePath)
             ctx.clip()
@@ -467,8 +664,6 @@ final class AndyCanvasNSView: NSView {
         faceLayer.snapshot = snapshot
         faceLayer.setNeedsDisplay()
     }
-
-    // MARK: - Pointer & Context Menu
 
     override func mouseDown(with event: NSEvent) {
         dragOrigin = convert(event.locationInWindow, from: nil)

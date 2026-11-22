@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import Foundation
+import Network
 import QuartzCore
 
 enum AndyViewMode: Equatable, Sendable {
@@ -36,6 +37,15 @@ enum AndyVoicePhase: Equatable, Sendable {
     var isActive: Bool {
         self != .idle
     }
+}
+
+enum AndySpecialEffect: Equatable, Sendable {
+    case none
+    case chargeBurst
+    case happyReturn
+    case grumpyReturn
+    case startledWake
+    case dizzy
 }
 
 struct AndyEmotions: Codable {
@@ -88,6 +98,7 @@ struct AndyFrameSnapshot: Sendable {
     let pulse: Double
     let breathScale: Double
     let blinkProgress: Double
+    let blinkRebound: Double
     let saccadeX: Double
     let saccadeY: Double
     let voicePhase: AndyVoicePhase
@@ -95,6 +106,13 @@ struct AndyFrameSnapshot: Sendable {
     let voiceLevel: Double
     let thinkMorph: Double
     let isHot: Bool
+    let isLowBattery: Bool
+    let isCharging: Bool
+    let isOffline: Bool
+    let isLateNight: Bool
+    let specialEffect: AndySpecialEffect
+    let effectProgress: Double
+    let returnDropOffsetY: Double
     let lookX: Double
     let lookY: Double
     let swayX: Double
@@ -126,8 +144,6 @@ final class AndyPetEngine {
         }
     }
 
-    // MARK: - Mood behavior weights (ported from engine.js)
-
     private static let moodBehaviors: [AndyMood: [(String, Double)]] = [
         .idle:         [("idle_blink", 20), ("idle_look", 20), ("gazing", 20), ("eyepose_micro", 15), ("explore", 10), ("curious_observe", 5), ("self_amuse", 5), ("bored", 5)],
         .curious:      [("curious_observe", 25), ("gazing", 20), ("explore", 20), ("eyepose_micro", 10), ("idle_blink", 10), ("self_amuse", 8), ("referencing", 7)],
@@ -145,15 +161,12 @@ final class AndyPetEngine {
         .waking:       [("waking", 40), ("curious_observe", 25), ("eyepose_micro", 15), ("greeting_hello", 10), ("idle_blink", 10)]
     ]
 
-    // MARK: - Porthole framing constants (tuned so peeking is charming, not harshly sliced)
-    // Wing renders in a virtual 86.02x86.02 square clipped to a circle of radius 43.01.
     nonisolated static let wingVirtualDiameter: Double = 80.0 / 0.93
     nonisolated static let wingVisibleHalfWidth: Double = (80.0 / 0.93) / 2.0
-    // Gaze may gently kiss the rim up to ~15% of an eye; guard pulls back past ~22% after 500ms;
-    // hard soft-limit prevents eyes from ever getting sheared past ~28%.
     nonisolated static let maxGazeEyeClip: Double = 0.15
     nonisolated static let guardEyeClip: Double = 0.22
     nonisolated static let maxHardEyeClip: Double = 0.28
+    nonisolated static let wingBaseScale: Double = 0.99
     private static let portholeGraceMs: Double = 500
     private static let portholeReleaseMs: Double = 300
 
@@ -161,8 +174,6 @@ final class AndyPetEngine {
     private static let lastWakeupDateKey = "andyLastWakeupDate"
     private static let voiceResolveMs: Double = 900
     private static let moodDwellMs: Double = 1200
-
-    // MARK: - Core state
 
     private let library = AndyAnimationLibrary.shared
     private var emotions = AndyEmotions()
@@ -188,7 +199,6 @@ final class AndyPetEngine {
     private var lastNeedUpdateMs: Double = 0
     private var lastSaveAtMs: Double = 0
 
-    // Pose state
     private var lookOffsetX: Double = 0
     private var lookOffsetY: Double = 0
     private var renderLookX: Double = 0
@@ -198,28 +208,31 @@ final class AndyPetEngine {
     private var renderTilt: Double = 0
     private var renderSquash: Double = 1
 
-    // Distraction state
+    private var specialEffect: AndySpecialEffect = .none
+    private var effectStartedAtMs: Double = 0
+    private var effectDurationMs: Double = 0
+    private var returnDropStartedAtMs: Double = 0
+    private var returnDropDurationMs: Double = 520
+
     private var isDistracted = false
     private var nextDistractionAtMs: Double = 0
     private var distractionOffsetX: Double = 0
     private var distractionOffsetY: Double = 0
     private var hasDistractionOffset = false
 
-    // Blink state
     private var nextBlinkAtMs: Double = 0
     private var isBlinking = false
     private var blinkProgress: Double = 0
     private var blinkDurationMs: Double = 180
     private var blinkStartedAtMs: Double = 0
+    private var blinkEndedAtMs: Double = 0
 
-    // Saccade state
     private var saccadeX: Double = 0
     private var saccadeY: Double = 0
     private var saccadeTargetX: Double = 0
     private var saccadeTargetY: Double = 0
     private var nextSaccadeAtMs: Double = 0
 
-    // Gaze edge & self-amusement
     private var gazeDirX: Double = 0
     private var gazeDirY: Double = 0
     private var gazeTargetX: Double = 0
@@ -229,23 +242,29 @@ final class AndyPetEngine {
     private var nextAmuseAtMs: Double = 0
     private var isAmusing = false
 
-    // Porthole guard
     private var portholeOutSinceMs: Double = 0
     private var portholeBackSinceMs: Double = 0
     private var portholeAmount: Double = 0
     private var portholeOffCentre = false
 
-    // Interactions & petting
     private var lastInteractionAtMs: Double = 0
     private var lastClickAtMs: Double = 0
     private var clickCount: Int = 0
     private var pokeCount: Int = 0
     private var gentleClickWindowMs: [Double] = []
+    private var lastMouseSampleX: Double = 0.5
+    private var mouseShakeEnergy: Double = 0
+    private var lastDizzyAtMs: Double = 0
+    private var typingBurstCount: Int = 0
 
-    // System signals
     private var isTyping = false
     private var isIdle = false
     private var isHot = false
+    private var isLowBattery = false
+    private var isCharging = false
+    private var wasPluggedIn: Bool? = nil
+    private var isOffline = false
+    private var wasOffline: Bool? = nil
     private var isRecording = false
     private var isTranscribing = false
     private var voiceFailed = false
@@ -260,7 +279,9 @@ final class AndyPetEngine {
     private var typingResetTask: DispatchWorkItem?
     private var voiceArmingTask: DispatchWorkItem?
 
-    // Voice pipeline state
+    private var sawMusicWhileHidden = false
+    private var sawPrivacyWhileHidden = false
+
     private var voicePhase: AndyVoicePhase = .idle
     private var voicePhaseAmount: Double = 0
     private var voiceResolveAtMs: Double = 0
@@ -269,7 +290,6 @@ final class AndyPetEngine {
     private var thinkMorph: Double = 0
     private var lastVoiceUpdateMs: Double = 0
 
-    // Lifecycle & adaptive rendering
     private var attachedViews: [UUID: AttachedView] = [:]
     private var renderTimer: Timer?
     private var currentTimerInterval: TimeInterval = 0
@@ -282,6 +302,7 @@ final class AndyPetEngine {
     private var monitors: [Any] = []
     private var cancellables = Set<AnyCancellable>()
     private var workspaceObservers: [NSObjectProtocol] = []
+    private var pathMonitor: NWPathMonitor?
 
     private(set) var latestSnapshot: AndyFrameSnapshot?
 
@@ -310,7 +331,17 @@ final class AndyPetEngine {
         CACurrentMediaTime() * 1000.0
     }
 
-    // MARK: - View Attachment & Adaptive Power Management
+    private func triggerEffect(_ effect: AndySpecialEffect, durationMs: Double) {
+        specialEffect = effect
+        effectStartedAtMs = Self.nowMs()
+        effectDurationMs = durationMs
+        updateRenderTimer()
+    }
+
+    private func triggerReturnDrop() {
+        returnDropStartedAtMs = Self.nowMs()
+        updateRenderTimer()
+    }
 
     func attach(view: AndyCanvasNSView, id: UUID, mode: AndyViewMode) {
         ensureStarted()
@@ -320,20 +351,13 @@ final class AndyPetEngine {
         if mode == .wing, let unmounted = wingUnmountedAt {
             let sinceWing = Date().timeIntervalSince(unmounted)
             let sinceExpanded = expandedUnmountedAt.map { Date().timeIntervalSince($0) } ?? .greatestFiniteMagnitude
-            // Displaced by music/mic/hover (> 2.5s) rather than a quick dictation swap or expanded tab close
             if sinceWing >= 2.5 && sinceExpanded > 2.0 {
-                emotions.calmness = max(0, emotions.calmness - 45)
-                emotions.happiness = max(0, emotions.happiness - 25)
-                emotions.stimulation = min(100, emotions.stimulation + 30)
-                let annoyed = library.resolveBehavior("annoyed_react")
-                if let pick = annoyed.randomElement() {
-                    animQueue.append(pick)
-                    if animQueue.count == 1 {
-                        playNextAnimation()
-                    }
-                }
+                triggerReturnDrop()
+                handleContextAwareReturn()
             }
             wingUnmountedAt = nil
+            sawMusicWhileHidden = false
+            sawPrivacyWhileHidden = false
         }
 
         if wasEmpty {
@@ -348,11 +372,41 @@ final class AndyPetEngine {
         updateRenderTimer()
     }
 
+    private func handleContextAwareReturn() {
+        if sawMusicWhileHidden && !sawPrivacyWhileHidden {
+            if Double.random(in: 0...1) < 0.75 {
+                emotions.happiness = min(100, emotions.happiness + 18)
+                emotions.stimulation = min(100, emotions.stimulation + 15)
+                emotions.calmness = min(100, emotions.calmness + 8)
+                triggerEffect(.happyReturn, durationMs: 2400)
+                playBehaviorCategory(Double.random(in: 0...1) < 0.5 ? "excited_dance" : "happy_react", immediate: true)
+            } else {
+                emotions.calmness = max(0, emotions.calmness - 30)
+                emotions.happiness = max(0, emotions.happiness - 15)
+                emotions.stimulation = min(100, emotions.stimulation + 20)
+                triggerEffect(.grumpyReturn, durationMs: 1800)
+                playBehaviorCategory("annoyed_react", immediate: true)
+            }
+        } else {
+            emotions.calmness = max(0, emotions.calmness - 45)
+            emotions.happiness = max(0, emotions.happiness - 25)
+            emotions.stimulation = min(100, emotions.stimulation + 30)
+            triggerEffect(.grumpyReturn, durationMs: 1800)
+            playBehaviorCategory("annoyed_react", immediate: true)
+        }
+    }
+
     func detach(id: UUID) {
         guard let removed = attachedViews.removeValue(forKey: id) else { return }
         let now = Date()
         if removed.mode == .wing {
             wingUnmountedAt = now
+            if MusicManager.shared.isPlaying || !MusicManager.shared.isPlayerIdle {
+                sawMusicWhileHidden = true
+            }
+            if PrivacyIndicatorManager.shared.microphoneActive || PrivacyIndicatorManager.shared.cameraActive {
+                sawPrivacyWhileHidden = true
+            }
         } else {
             expandedUnmountedAt = now
         }
@@ -378,8 +432,6 @@ final class AndyPetEngine {
         stepAndPublish(forceDraw: true)
     }
 
-    // MARK: - User Interactions (Tap / Pet / Drag)
-
     func handleTap() {
         let now = Self.nowMs()
         let rapid = (now - lastClickAtMs) < 600
@@ -391,7 +443,8 @@ final class AndyPetEngine {
             applyInteraction(.rapidClick)
             pokeCount += 1
             if pokeCount >= 3 {
-                playBehaviorCategory("annoyed_react")
+                triggerEffect(.grumpyReturn, durationMs: 1400)
+                playBehaviorCategory("annoyed_react", immediate: true)
                 pokeCount = 0
             }
         } else {
@@ -399,7 +452,6 @@ final class AndyPetEngine {
             pokeCount = 0
         }
 
-        // Petting detection (0.4 - 1.5 clicks/sec over 5s window)
         gentleClickWindowMs.append(now)
         while let first = gentleClickWindowMs.first, now - first > 5000 {
             gentleClickWindowMs.removeFirst()
@@ -416,7 +468,7 @@ final class AndyPetEngine {
             else if emotions.calmness < 30 { playBehaviorCategory("feedback_negative") }
         }
 
-        wakeFromSleepIfNeeded()
+        wakeFromSleepIfNeeded(startle: rapid)
         updateRenderTimer()
     }
 
@@ -424,18 +476,21 @@ final class AndyPetEngine {
         let now = Self.nowMs()
         lastInteractionAtMs = now
         applyInteraction(.drag)
-        wakeFromSleepIfNeeded()
+        wakeFromSleepIfNeeded(startle: true)
         updateRenderTimer()
     }
 
-    private func wakeFromSleepIfNeeded() {
+    private func wakeFromSleepIfNeeded(startle: Bool) {
         if mood == .sleeping || mood == .sleepy {
-            emotions.tiredness = max(0, emotions.tiredness - 25)
-            emotions.stimulation = min(100, emotions.stimulation + 30)
+            let wasDeepSleep = (mood == .sleeping)
+            emotions.tiredness = max(0, emotions.tiredness - 35)
+            emotions.stimulation = min(100, emotions.stimulation + 35)
+            if wasDeepSleep && startle {
+                triggerEffect(.startledWake, durationMs: 1100)
+                playBehaviorCategory("startled_react", immediate: true)
+            }
         }
     }
-
-    // MARK: - Startup & Persistence
 
     private func ensureStarted() {
         guard !hasStarted else { return }
@@ -512,8 +567,6 @@ final class AndyPetEngine {
         }
     }
 
-    // MARK: - System Observers (Zero 30Hz polling!)
-
     private func setupSystemObservers() {
         NotificationCenter.default.addObserver(
             self,
@@ -547,7 +600,6 @@ final class AndyPetEngine {
             }
         )
 
-        // Global monitors run on the main thread — throttle inline with zero Task allocations.
         if let keyboardMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown], handler: { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.handleTypingEvent()
@@ -596,6 +648,70 @@ final class AndyPetEngine {
                 self.voiceFailed = true
             }
             .store(in: &cancellables)
+
+        let battery = BatteryStatusViewModel.shared
+        battery.$isPluggedIn
+            .combineLatest(battery.$isCharging, battery.$levelBattery, battery.$maxCapacity)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] pluggedIn, charging, level, maxCap in
+                guard let self else { return }
+                let pct = maxCap > 0 ? (Double(level) / Double(maxCap) * 100.0) : Double(level)
+                self.isCharging = charging || pluggedIn
+                self.isLowBattery = !pluggedIn && pct > 0 && pct <= 20.0
+
+                if let prev = self.wasPluggedIn, !prev && pluggedIn {
+                    self.emotions.stimulation = min(100, self.emotions.stimulation + 22)
+                    self.emotions.happiness = min(100, self.emotions.happiness + 18)
+                    self.emotions.tiredness = max(0, self.emotions.tiredness - 20)
+                    if !self.attachedViews.isEmpty {
+                        self.triggerEffect(.chargeBurst, durationMs: 2200)
+                        self.playBehaviorCategory("happy_react", immediate: true)
+                    }
+                }
+                self.wasPluggedIn = pluggedIn
+            }
+            .store(in: &cancellables)
+
+        MusicManager.shared.$isPlaying
+            .receive(on: RunLoop.main)
+            .sink { [weak self] playing in
+                guard let self else { return }
+                if playing && self.wingUnmountedAt != nil {
+                    self.sawMusicWhileHidden = true
+                }
+            }
+            .store(in: &cancellables)
+
+        PrivacyIndicatorManager.shared.$microphoneActive
+            .combineLatest(PrivacyIndicatorManager.shared.$cameraActive)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] mic, cam in
+                guard let self else { return }
+                if (mic || cam) && self.wingUnmountedAt != nil {
+                    self.sawPrivacyWhileHidden = true
+                }
+            }
+            .store(in: &cancellables)
+
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            let offline = (path.status != .satisfied)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.isOffline = offline
+                if let prev = self.wasOffline, prev != offline, !self.attachedViews.isEmpty {
+                    if offline {
+                        self.playBehaviorCategory("explore", immediate: true)
+                    } else {
+                        self.emotions.happiness = min(100, self.emotions.happiness + 8)
+                        self.playBehaviorCategory("happy_react")
+                    }
+                }
+                self.wasOffline = offline
+            }
+        }
+        monitor.start(queue: DispatchQueue.global(qos: .utility))
+        pathMonitor = monitor
     }
 
     @objc private func updateThermalState() {
@@ -610,16 +726,25 @@ final class AndyPetEngine {
     private func handleTypingEvent() {
         lastActivityDate = Date()
         guard !attachedViews.isEmpty, !isScreenAsleep else { return }
+
+        if mood == .sleeping {
+            wakeFromSleepIfNeeded(startle: true)
+        }
+
+        typingBurstCount += 1
+        let scanX = sin(Double(typingBurstCount) * 0.55) * 6.0
+        lookOffsetX = scanX
+        lookOffsetY = 14.0
+
         if !isTyping {
             isTyping = true
-            lookOffsetX = 0
-            lookOffsetY = 18
             applyInteraction(.typing)
         }
         typingResetTask?.cancel()
         let task = DispatchWorkItem { [weak self] in
             guard let self else { return }
             self.isTyping = false
+            self.typingBurstCount = 0
             self.lookOffsetX = 0
             self.lookOffsetY = 0
         }
@@ -641,6 +766,23 @@ final class AndyPetEngine {
         if point.y > upperHalfStartY {
             let relX = Self.clamp(Double((point.x - screen.frame.minX) / screen.frame.width), 0, 1)
             let relY = Self.clamp(Double((point.y - upperHalfStartY) / (screen.frame.height * 0.5)), 0, 1)
+
+            let dx = abs(relX - lastMouseSampleX)
+            lastMouseSampleX = relX
+            mouseShakeEnergy = max(0, mouseShakeEnergy * 0.86 + dx)
+            let nowMs = Self.nowMs()
+            if mouseShakeEnergy > 1.35 && (nowMs - lastDizzyAtMs) > 12_000 && !voicePhase.isActive {
+                lastDizzyAtMs = nowMs
+                mouseShakeEnergy = 0
+                emotions.stimulation = min(100, emotions.stimulation + 18)
+                triggerEffect(.dizzy, durationMs: 1800)
+                playBehaviorCategory("startled_react", immediate: true)
+            }
+
+            if mood == .sleeping && dx > 0.08 {
+                wakeFromSleepIfNeeded(startle: true)
+            }
+
             if abs(mouseX - relX) > 0.005 || abs(mouseY - relY) > 0.005 {
                 mouseX = relX
                 mouseY = relY
@@ -649,6 +791,7 @@ final class AndyPetEngine {
         } else if mouseX != 0.5 || mouseY != 0.5 {
             mouseX = 0.5
             mouseY = 0.5
+            mouseShakeEnergy *= 0.7
         }
     }
 
@@ -681,6 +824,7 @@ final class AndyPetEngine {
             emotions.tiredness = 95
             emotions.stimulation = 5
         } else {
+            let wasSleeping = (mood == .sleeping)
             emotions.tiredness = 10
             emotions.stimulation = 50
             let now = Self.nowMs()
@@ -688,11 +832,13 @@ final class AndyPetEngine {
                 lastInteractionAtMs = now
                 applyInteraction(.mouseMove)
             }
+            if wasSleeping {
+                triggerEffect(.startledWake, durationMs: 1000)
+                playBehaviorCategory("waking", immediate: true)
+            }
         }
         updateRenderTimer()
     }
-
-    // MARK: - Voice Pipeline
 
     private func updateVoicePipeline(recording: Bool, transcribing: Bool) {
         let prevRecording = isRecording
@@ -753,30 +899,35 @@ final class AndyPetEngine {
         }
     }
 
-    // MARK: - Adaptive Render Loop
-
     private func pruneDeadViews() {
         attachedViews = attachedViews.filter { $0.value.view != nil }
+    }
+
+    private func hasActiveMotionBurst(now: Double) -> Bool {
+        if specialEffect != .none { return true }
+        if returnDropStartedAtMs > 0 && (now - returnDropStartedAtMs) < returnDropDurationMs { return true }
+        if blinkEndedAtMs > 0 && (now - blinkEndedAtMs) < 220 { return true }
+        return false
     }
 
     private func desiredFrameInterval() -> TimeInterval? {
         pruneDeadViews()
         guard !attachedViews.isEmpty, !isScreenAsleep else { return nil }
 
+        let now = Self.nowMs()
         let hasExpanded = attachedViews.values.contains { $0.mode == .expanded }
         if voicePhase.isActive || thinkMorph > 0.002 || hasExpanded {
             return 1.0 / 60.0
         }
-        if isBlinking {
+        if isBlinking || hasActiveMotionBurst(now: now) {
             return 1.0 / 30.0
         }
         if mood == .sleeping {
             return 1.0 / 12.0
         }
-        if mood == .sleepy {
+        if mood == .sleepy || isLowBattery {
             return 1.0 / 15.0
         }
-        // Closed wing: smooth 24fps (plenty fluid in a ~37pt circle, cuts CPU/GPU work dramatically)
         return 1.0 / 24.0
     }
 
@@ -795,7 +946,6 @@ final class AndyPetEngine {
                 self?.tick()
             }
         }
-        // Allow gentle timer coalescing in low-FPS idle modes for better battery efficiency
         timer.tolerance = target >= (1.0 / 25.0) ? min(0.008, target * 0.15) : 0.001
         renderTimer = timer
         RunLoop.main.add(timer, forMode: .common)
@@ -817,8 +967,6 @@ final class AndyPetEngine {
         updateRenderTimer()
     }
 
-    // MARK: - Simulation Step
-
     private func stepAndPublish(forceDraw: Bool) {
         let now = Self.nowMs()
 
@@ -837,12 +985,46 @@ final class AndyPetEngine {
             savePersistedState()
         }
 
+        var effectProgress = 0.0
+        if specialEffect != .none {
+            let elapsed = now - effectStartedAtMs
+            if elapsed >= effectDurationMs {
+                specialEffect = .none
+                effectProgress = 0.0
+            } else {
+                effectProgress = Self.clamp(elapsed / max(1.0, effectDurationMs), 0, 1)
+            }
+        }
+
+        var dropY = 0.0
+        if returnDropStartedAtMs > 0 {
+            let elapsed = now - returnDropStartedAtMs
+            if elapsed >= returnDropDurationMs {
+                returnDropStartedAtMs = 0
+            } else {
+                let t = elapsed / returnDropDurationMs
+                dropY = -26.0 * exp(-6.2 * t) * cos(t * .pi * 2.2)
+            }
+        }
+
+        var blinkRebound = 0.0
+        if blinkEndedAtMs > 0 {
+            let elapsed = now - blinkEndedAtMs
+            if elapsed < 200 {
+                let t = elapsed / 200.0
+                blinkRebound = sin(t * .pi) * (1.0 - t) * 0.045
+            } else {
+                blinkEndedAtMs = 0
+            }
+        }
+
         let elapsed = max(0, now - clipStartedAtMs)
         let animTime = elapsed.truncatingRemainder(dividingBy: max(1, currentClip.durationMs))
         let rawFace = sampleFaceTrack(currentClip.faceFrames, at: animTime)
         let smoothed = smoothFaceFrame(rawFace, now: now)
         let safe = normalizeFaceForDisplay(smoothed)
-        let breath = getBreathScale(now: now * (isHot ? 2.0 : 1.0))
+        let breathRate = isHot ? 2.0 : (isLowBattery ? 0.65 : 1.0)
+        let breath = getBreathScale(now: now * breathRate)
         let pulse = (sin(now / 260.0) + 1.0) / 2.0
 
         let isPerforming = !animQueue.isEmpty || currentClip.durationMs > 2000
@@ -852,7 +1034,33 @@ final class AndyPetEngine {
         let targetSwayX = sin(now / 2400.0) * 0.9 * idleAmount
         let targetSwayY = sin(now / 1700.0 + 0.8) * 0.7 * idleAmount
         var targetTilt = sin(now / 3600.0 + 0.4) * 0.018 * idleAmount
-        let targetSquash = 1.0 + sin(now / 1900.0) * 0.012 * idleAmount
+        var targetSquash = 1.0 + sin(now / 1900.0) * 0.012 * idleAmount
+
+        switch specialEffect {
+        case .happyReturn:
+            let bounce = abs(sin(effectProgress * .pi * 4.0)) * (1.0 - effectProgress * 0.5)
+            targetLookY -= bounce * 5.0
+            targetTilt += sin(effectProgress * .pi * 4.0) * 0.07 * (1.0 - effectProgress)
+            targetSquash += bounce * 0.06
+        case .grumpyReturn:
+            let shake = sin(effectProgress * .pi * 7.0) * exp(-2.2 * effectProgress)
+            targetLookX += shake * 7.5
+            targetTilt += shake * 0.09
+        case .startledWake:
+            let pop = sin(min(1.0, effectProgress * 2.5) * .pi) * exp(-2.5 * effectProgress)
+            targetLookY -= pop * 7.0
+            targetSquash += pop * 0.09
+        case .dizzy:
+            let amp = (1.0 - effectProgress)
+            targetLookX += cos(effectProgress * .pi * 6.0) * 6.0 * amp
+            targetLookY += sin(effectProgress * .pi * 6.0) * 3.5 * amp
+            targetTilt += sin(effectProgress * .pi * 6.0) * 0.10 * amp
+        case .chargeBurst:
+            let pop = sin(min(1.0, effectProgress * 3.0) * .pi) * (1.0 - effectProgress * 0.4)
+            targetSquash += pop * 0.08
+        case .none:
+            break
+        }
 
         if thinkMorph > 0 {
             targetLookX = Self.lerp(targetLookX, 0, thinkMorph)
@@ -860,12 +1068,11 @@ final class AndyPetEngine {
             targetTilt = Self.lerp(targetTilt, 0, thinkMorph)
         }
 
-        // Frame-rate independent smoothing (referenced to 30fps baseline)
         let dtScale = Self.clamp((currentTimerInterval > 0 ? currentTimerInterval : 1.0 / 30.0) * 30.0, 0.25, 2.5)
         let poseEase = 1.0 - pow(1.0 - (isPerforming ? 0.08 : 0.12), dtScale)
         let swayEase = 1.0 - pow(1.0 - 0.06, dtScale)
-        let tiltEase = 1.0 - pow(1.0 - 0.05, dtScale)
-        let squashEase = 1.0 - pow(1.0 - 0.08, dtScale)
+        let tiltEase = 1.0 - pow(1.0 - 0.08, dtScale)
+        let squashEase = 1.0 - pow(1.0 - 0.10, dtScale)
 
         renderSwayX += (targetSwayX - renderSwayX) * swayEase
         renderSwayY += (targetSwayY - renderSwayY) * swayEase
@@ -889,6 +1096,9 @@ final class AndyPetEngine {
             safe: safe, now: now, baseX: rawFaceX, xFactor: eyeXFactor, lookX: renderLookX, isWing: isWingOnly, dtScale: dtScale
         )
 
+        let hour = Calendar.current.component(.hour, from: Date())
+        let lateNight = (hour >= 23 || hour < 5)
+
         let snapshot = AndyFrameSnapshot(
             nowMs: now,
             face: safe,
@@ -896,6 +1106,7 @@ final class AndyPetEngine {
             pulse: pulse,
             breathScale: breath,
             blinkProgress: blinkProgress,
+            blinkRebound: blinkRebound,
             saccadeX: saccadeX,
             saccadeY: saccadeY,
             voicePhase: voicePhase,
@@ -903,6 +1114,13 @@ final class AndyPetEngine {
             voiceLevel: voiceLevel,
             thinkMorph: thinkMorph,
             isHot: isHot,
+            isLowBattery: isLowBattery,
+            isCharging: isCharging,
+            isOffline: isOffline,
+            isLateNight: lateNight,
+            specialEffect: specialEffect,
+            effectProgress: effectProgress,
+            returnDropOffsetY: dropY,
             lookX: renderLookX,
             lookY: renderLookY,
             swayX: renderSwayX,
@@ -918,8 +1136,6 @@ final class AndyPetEngine {
             entry.view?.updateFrame(snapshot, force: forceDraw)
         }
     }
-
-    // MARK: - Emotion, Behavior & Subsystems
 
     private enum InteractionKind {
         case gentleClick, rapidClick, drag, mouseNear, mouseMove, typing, petting
@@ -951,7 +1167,6 @@ final class AndyPetEngine {
         lastNeedUpdateMs = now
         let idleSeconds = (now - lastInteractionAtMs) / 1000.0
 
-        // Emotion decay toward baseline
         let step = min(dt, 0.1) * 60.0
         emotions.stimulation += (35 - emotions.stimulation) * 0.008 * step
         emotions.happiness += (45 - emotions.happiness) * 0.004 * step
@@ -959,6 +1174,11 @@ final class AndyPetEngine {
         emotions.social += (30 - emotions.social) * 0.005 * step
         emotions.calmness += (65 - emotions.calmness) * 0.006 * step
         emotions.tiredness += 0.015 * step
+
+        if isLowBattery {
+            emotions.tiredness += 0.04 * step
+            emotions.stimulation -= 0.015 * step
+        }
 
         let hour = Calendar.current.component(.hour, from: Date())
         if hour >= 23 || hour < 6 {
@@ -978,7 +1198,6 @@ final class AndyPetEngine {
         }
         emotions.clampAll()
 
-        // Cursor proximity
         smoothCursorX += (mouseX - smoothCursorX) * 0.04
         smoothCursorY += (mouseY - smoothCursorY) * 0.04
         let dx = mouseX - 0.5
@@ -989,7 +1208,6 @@ final class AndyPetEngine {
         }
         cursorWasNear = isNear
 
-        // Gaze edge cliff check
         if now > nextGazeShiftAtMs {
             gazeTargetX = Double.random(in: -1...1)
             gazeTargetY = Double.random(in: -0.75...0.75)
@@ -1005,7 +1223,6 @@ final class AndyPetEngine {
             }
         }
 
-        // Self-amusement
         if now > nextAmuseAtMs && !isAmusing && animQueue.isEmpty && mood != .sleeping {
             isAmusing = true
             nextAmuseAtMs = now + 120_000 + Double.random(in: 0...240_000)
@@ -1020,7 +1237,6 @@ final class AndyPetEngine {
             }
         }
 
-        // Mood dwell hysteresis
         let rawMood = emotions.deriveMood()
         if rawMood != moodCandidate {
             moodCandidate = rawMood
@@ -1028,7 +1244,6 @@ final class AndyPetEngine {
         }
         let newMood = (now - moodCandidateSinceMs >= Self.moodDwellMs) ? rawMood : mood
 
-        // Sleep/wake transitions
         if newMood == .sleeping && mood != .sleeping {
             wasAsleep = true
             if hour >= 21 || hour < 5, let pick = library.findIndices(matching: "greeting_goodnight").randomElement() {
@@ -1056,7 +1271,6 @@ final class AndyPetEngine {
             }
         }
 
-        // Morning greeting
         let dayOfMonth = Calendar.current.component(.day, from: Date())
         if !greetedToday && dayOfMonth != lastGreetingDay && hour >= 6 && hour < 10 {
             greetedToday = true
@@ -1099,7 +1313,9 @@ final class AndyPetEngine {
         if !isBlinking && now > nextBlinkAtMs {
             isBlinking = true
             blinkStartedAtMs = now
-            blinkDurationMs = 140 + Double.random(in: 0...100)
+            blinkDurationMs = (isLowBattery || mood == .sleepy)
+                ? 220 + Double.random(in: 0...110)
+                : 140 + Double.random(in: 0...100)
             let doubleBlink = Double.random(in: 0...1) < 0.2
             nextBlinkAtMs = now + blinkDurationMs + (doubleBlink ? 200 + Double.random(in: 0...200) : 3000 + Double.random(in: 0...5000))
         }
@@ -1113,6 +1329,7 @@ final class AndyPetEngine {
             } else {
                 blinkProgress = 0
                 isBlinking = false
+                blinkEndedAtMs = now
             }
         }
     }
@@ -1152,16 +1369,19 @@ final class AndyPetEngine {
         }
     }
 
-    // MARK: - Animation Selection & Interpolation
-
-    private func playBehaviorCategory(_ category: String) {
+    private func playBehaviorCategory(_ category: String, immediate: Bool = false) {
         let indices = AndyAnimationLibrary.behaviorAnimations[category] != nil
             ? library.resolveBehavior(category)
             : library.findIndices(matching: category)
         guard let pick = indices.randomElement() else { return }
-        animQueue.append(pick)
-        if animQueue.count == 1 {
+        if immediate {
+            animQueue.insert(pick, at: 0)
             playNextAnimation()
+        } else {
+            animQueue.append(pick)
+            if animQueue.count == 1 {
+                playNextAnimation()
+            }
         }
     }
 
@@ -1169,6 +1389,10 @@ final class AndyPetEngine {
         if isIdle {
             let sleepIndices = library.resolveBehavior("sleeping")
             if let pick = sleepIndices.randomElement() { return pick }
+        }
+        if isOffline && Double.random(in: 0...1) < 0.45 {
+            let exploreIndices = library.resolveBehavior("explore")
+            if let pick = exploreIndices.randomElement() { return pick }
         }
         let weights = Self.moodBehaviors[mood] ?? Self.moodBehaviors[.idle]!
         let behavior = weightedPick(weights)
@@ -1277,12 +1501,6 @@ final class AndyPetEngine {
         1.0 + sin(now / 1800.0) * 0.008 + sin(now / 4200.0) * 0.004
     }
 
-    // MARK: - Balanced Porthole Framing (Wing Mode)
-
-    /// Slightly pulled back vs the old 1.095 so neutral eyes have clean dark margin
-    /// inside the notch circle while keeping the peek-a-boo charm on glancing clips.
-    nonisolated static let wingBaseScale: Double = 0.99
-
     nonisolated static func eyeHalfWidth(_ params: [Double]) -> Double {
         let sx = clamp(params.count > 2 ? params[2] : 1, 0.28, 2.2)
         let sy = clamp(params.count > 3 ? params[3] : 1, 0.1, 1.8)
@@ -1357,7 +1575,6 @@ final class AndyPetEngine {
         lookX: Double,
         saccadeX: Double
     ) {
-        // 1) Time-based recentering when a clip lingers off-centre
         if guardAmount > 0 {
             let mid = (face.leftEye[0] + face.rightEye[0]) / 2.0
             let pull = mid * guardAmount
@@ -1368,7 +1585,6 @@ final class AndyPetEngine {
 
         guard xFactor > 0 else { return }
 
-        // 2) Ensure eye spread fits within the wing porthole so both eyes stay legible
         let halfL = eyeHalfWidth(face.leftEye) * xFactor
         let halfR = eyeHalfWidth(face.rightEye) * xFactor
         let limitL = wingVisibleHalfWidth - halfL * (1.0 - 2.0 * maxHardEyeClip)
@@ -1384,8 +1600,6 @@ final class AndyPetEngine {
             face.rightEye[0] = centre - target / 2.0
         }
 
-        // 3) Hard rim envelope: keep at least (1 - maxHardEyeClip) ≈ 72% of each eye visible
-        //    on both sides even during extreme animations (gentle peek, never sliced in half).
         let leftCentre = baseX + (lookX + face.leftEye[0] * 3.0 + saccadeX) * xFactor
         let rightCentre = baseX + (lookX + face.rightEye[0] * 3.0 + saccadeX) * xFactor
 
@@ -1403,8 +1617,6 @@ final class AndyPetEngine {
             face.rightEye[0] += shiftEyeUnits
         }
     }
-
-    // MARK: - Math helpers
 
     nonisolated static func clamp(_ v: Double, _ minVal: Double, _ maxVal: Double) -> Double {
         min(maxVal, max(minVal, v))
