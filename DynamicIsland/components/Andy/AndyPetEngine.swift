@@ -281,6 +281,8 @@ final class AndyPetEngine {
 
     private var sawMusicWhileHidden = false
     private var sawPrivacyWhileHidden = false
+    private var sawBatteryHUDWhileHidden = false
+    private var pendingChargeBurstUntil: Date?
 
     private var voicePhase: AndyVoicePhase = .idle
     private var voicePhaseAmount: Double = 0
@@ -349,15 +351,26 @@ final class AndyPetEngine {
         attachedViews[id] = AttachedView(view: view, mode: mode)
 
         if mode == .wing, let unmounted = wingUnmountedAt {
-            let sinceWing = Date().timeIntervalSince(unmounted)
-            let sinceExpanded = expandedUnmountedAt.map { Date().timeIntervalSince($0) } ?? .greatestFiniteMagnitude
-            if sinceWing >= 2.5 && sinceExpanded > 2.0 {
+            let nowDate = Date()
+            let sinceWing = nowDate.timeIntervalSince(unmounted)
+            let sinceExpanded = expandedUnmountedAt.map { nowDate.timeIntervalSince($0) } ?? .greatestFiniteMagnitude
+            if let until = pendingChargeBurstUntil, nowDate <= until {
+                // Charging HUD just finished — play the spark burst now that Andy is actually visible
+                pendingChargeBurstUntil = nil
+                triggerReturnDrop()
+                triggerEffect(.chargeBurst, durationMs: 2200)
+                playBehaviorCategory("happy_react", immediate: true)
+            } else if sawBatteryHUDWhileHidden {
+                // Low/full battery toast finished — drop back in calmly without getting grumpy
+                triggerReturnDrop()
+            } else if sinceWing >= 2.5 && sinceExpanded > 2.0 {
                 triggerReturnDrop()
                 handleContextAwareReturn()
             }
             wingUnmountedAt = nil
             sawMusicWhileHidden = false
             sawPrivacyWhileHidden = false
+            sawBatteryHUDWhileHidden = false
         }
 
         if wasEmpty {
@@ -406,6 +419,9 @@ final class AndyPetEngine {
             }
             if PrivacyIndicatorManager.shared.microphoneActive || PrivacyIndicatorManager.shared.cameraActive {
                 sawPrivacyWhileHidden = true
+            }
+            if BatteryStatusViewModel.shared.activeTemporaryHUDKind != nil {
+                sawBatteryHUDWhileHidden = true
             }
         } else {
             expandedUnmountedAt = now
@@ -663,12 +679,25 @@ final class AndyPetEngine {
                     self.emotions.stimulation = min(100, self.emotions.stimulation + 22)
                     self.emotions.happiness = min(100, self.emotions.happiness + 18)
                     self.emotions.tiredness = max(0, self.emotions.tiredness - 20)
-                    if !self.attachedViews.isEmpty {
+                    // Queue a pending burst for when the Dynamic Island charging HUD finishes and wing returns
+                    self.pendingChargeBurstUntil = Date().addingTimeInterval(10.0)
+                    if !self.attachedViews.isEmpty && BatteryStatusViewModel.shared.activeTemporaryHUDKind == nil {
+                        self.pendingChargeBurstUntil = nil
                         self.triggerEffect(.chargeBurst, durationMs: 2200)
                         self.playBehaviorCategory("happy_react", immediate: true)
                     }
                 }
                 self.wasPluggedIn = pluggedIn
+            }
+            .store(in: &cancellables)
+
+        battery.$activeTemporaryHUDKind
+            .receive(on: RunLoop.main)
+            .sink { [weak self] kind in
+                guard let self else { return }
+                if kind != nil && self.wingUnmountedAt != nil {
+                    self.sawBatteryHUDWhileHidden = true
+                }
             }
             .store(in: &cancellables)
 
