@@ -3,6 +3,26 @@
     <channel>
         <title>Atoll</title>
         <item>
+            <title>2.2.13</title>
+            <pubDate>Sun, 22 Nov 2026 13:13:31 +0900</pubDate>
+            <sparkle:version>25</sparkle:version>
+            <sparkle:shortVersionString>2.2.13</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h2>Upstream Atoll fixes and charging power</h2>
+                <ul>
+                    <li>Fixed a timer-mirroring hang, a notch freeze, a Bluetooth launch crash, and a music artwork memory leak.</li>
+                    <li>The extensions RPC server now listens only on this Mac.</li>
+                    <li>Lower idle CPU from system OSD and hover polling.</li>
+                    <li>Fixed the notch top-edge gap and hover flapping on Macs with a physical notch.</li>
+                    <li>Show actual charging power and power input in watts.</li>
+                    <li>Removed clipboard history, system stats, and the built-in timer. macOS Clock timer mirroring remains.</li>
+                </ul>
+                <p>Requires an Apple Silicon Mac running macOS 14.6 or later. Models are downloaded separately.</p>
+            ]]></description>
+            <enclosure url="https://github.com/angdulu/andy-dynamic-island/releases/download/v2.2.13/Andy-2.2.13.dmg" length="51302059" type="application/octet-stream" sparkle:edSignature="qukxtb16BbOXC8eShtcAOilsFyBxsKzOH7D+6tXOoulRn+F3SqikcNdQnZ5/ZxTj0aDujVdlTgsE5IDarT/zCQ=="/>
+        </item>
+        <item>
             <title>2.2.12</title>
             <pubDate>Fri, 16 Oct 2026 18:26:11 +0900</pubDate>
             <sparkle:version>24</sparkle:version>
