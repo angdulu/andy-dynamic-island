@@ -33,7 +33,6 @@ struct LockScreenTimerWidget: View {
     @Default(.lockScreenTimerGlassCustomizationMode) private var timerGlassCustomizationMode
     @Default(.lockScreenTimerLiquidGlassVariant) private var timerGlassVariant
     @Default(.lockScreenTimerWidgetUsesBlur) private var timerGlassModeIsGlass
-    @Default(.timerPresets) private var timerPresets
     @Default(.lockScreenTimerWidgetWidth) private var widgetWidth
 
     @MainActor
@@ -68,13 +67,8 @@ struct LockScreenTimerWidget: View {
         timerManager.formattedRemainingTime()
     }
 
-    private var activePresetColor: Color? {
-        guard let presetId = timerManager.activePresetId else { return nil }
-        return timerPresets.first { $0.id == presetId }?.color
-    }
-
     private var accentColor: Color {
-        (activePresetColor ?? timerManager.timerColor)
+        (timerManager.timerColor)
             .ensureMinimumBrightness(factor: 0.75)
     }
 

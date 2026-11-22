@@ -205,7 +205,6 @@ func applyProfileSettings(_ profiles: Set<String>) {
     let isDeveloper = profiles.contains("developer")
     if isDeveloper {
         Defaults[.enableTerminalFeature] = true
-        Defaults[.enableTimerFeature] = false
         Defaults[.enableScreenAssistant] = true
         Defaults[.showMirror] = false
         Defaults[.enableMinimalisticUI] = false
@@ -217,7 +216,6 @@ func applyProfileSettings(_ profiles: Set<String>) {
         Defaults[.showMirror] = true
         Defaults[.lightingEffect] = true
         Defaults[.inlineHUD] = true
-        Defaults[.enableTimerFeature] = false
         Defaults[.enableMinimalisticUI] = false
         Defaults[.enableScreenAssistant] = false
     }
@@ -227,7 +225,6 @@ func applyProfileSettings(_ profiles: Set<String>) {
     if isLightUse {
         Defaults[.enableMinimalisticUI] = true
         Defaults[.showMirror] = false
-        Defaults[.enableTimerFeature] = false
         Defaults[.inlineHUD] = true
         Defaults[.enableScreenAssistant] = false
         Defaults[.enableLyrics] = false
@@ -236,7 +233,6 @@ func applyProfileSettings(_ profiles: Set<String>) {
     // Student Profile Settings
     let isStudent = profiles.contains("student")
     if isStudent {
-        Defaults[.enableTimerFeature] = false
         Defaults[.showCalendar] = true
         Defaults[.showMirror] = false
         Defaults[.enableMinimalisticUI] = false

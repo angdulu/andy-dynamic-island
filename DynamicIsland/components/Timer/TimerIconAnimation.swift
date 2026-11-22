@@ -23,7 +23,6 @@ struct TimerIconAnimation: View {
     @ObservedObject var timerManager = TimerManager.shared
     @Default(.timerIconColorMode) private var colorMode
     @Default(.timerSolidColor) private var solidColor
-    @Default(.timerPresets) private var timerPresets
     @Default(.accentColor) private var accentColor
     
     var body: some View {
@@ -42,10 +41,6 @@ struct TimerIconAnimation: View {
         guard timerManager.isTimerActive else { return accentColor }
         switch colorMode {
         case .adaptive:
-            if let presetId = timerManager.activePresetId,
-               let preset = timerPresets.first(where: { $0.id == presetId }) {
-                return preset.color
-            }
             return timerManager.timerColor
         case .solid:
             return solidColor

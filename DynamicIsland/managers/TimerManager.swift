@@ -36,7 +36,6 @@ class TimerManager: ObservableObject {
     @Published var isFinished: Bool = false
     @Published var isOvertime: Bool = false // Timer has gone past 0 and is counting negative
     @Published var lastUpdated: Date = .distantPast
-    @Published var activePresetId: UUID?
     @Published private(set) var activeSource: TimerSource = .none
     
     // Timer progress (0.0 to 1.0, or >1.0 for overtime)
@@ -137,7 +136,7 @@ class TimerManager: ObservableObject {
     }
     
     // MARK: - Timer Methods
-    func startTimer(duration: TimeInterval, name: String = "Timer", preset: TimerPreset? = nil) {
+    func startTimer(duration: TimeInterval, name: String = "Timer") {
         if activeSource == .external {
             endExternalTimer(triggerSmoothClose: false)
         }
@@ -159,8 +158,6 @@ class TimerManager: ObservableObject {
         isPaused = false
         lastUpdated = Date()
 
-        activePresetId = preset?.id
-        
         // Start countdown timer
         timerInstance = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
@@ -295,7 +292,6 @@ class TimerManager: ObservableObject {
         self.isPaused = isPaused
         isFinished = false
         isOvertime = remaining < 0
-        activePresetId = nil
         lastUpdated = Date()
     }
 
@@ -356,15 +352,10 @@ class TimerManager: ObservableObject {
         isPaused = false
         isFinished = false
         isOvertime = false
-        activePresetId = nil
         activeSource = .none
     }
 
     // MARK: - Derived State
-    var activePreset: TimerPreset? {
-        guard let presetId = activePresetId else { return nil }
-        return Defaults[.timerPresets].first { $0.id == presetId }
-    }
 
     var isExternalTimerActive: Bool {
         activeSource == .external && isTimerActive

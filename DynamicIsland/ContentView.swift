@@ -58,7 +58,6 @@ struct ContentView: View {
     @State private var isDictationActiveAnimated = false
     
     @Default(.enableReminderLiveActivity) var enableReminderLiveActivity
-    @Default(.enableTimerFeature) var enableTimerFeature
     @Default(.enableHorizontalMusicGestures) var enableHorizontalMusicGestures
     @Default(.reminderPresentationStyle) var reminderPresentationStyle
     @Default(.timerShowsCountdown) var timerShowsCountdown
@@ -66,7 +65,6 @@ struct ContentView: View {
     @Default(.timerProgressStyle) var timerProgressStyle
     @Default(.timerIconColorMode) var timerIconColorMode
     @Default(.timerSolidColor) var timerSolidColor
-    @Default(.timerPresets) var timerPresets
     @Default(.showCapsLockLabel) var showCapsLockLabel
     @Default(.capsLockIndicatorTintMode) var capsLockTintMode
     @Default(.enableDoNotDisturbDetection) var enableDoNotDisturbDetection
@@ -135,10 +133,6 @@ struct ContentView: View {
                 
                 return CGSize(width: width, height: height)
             }
-        }
-        
-        if coordinator.currentView == .timer {
-            return CGSize(width: baseSize.width, height: 250) // Extra height for timer presets
         }
         
 
@@ -1056,8 +1050,6 @@ struct ContentView: View {
                                   NotchHomeView(albumArtNamespace: albumArtNamespace)
                               case .shelf:
                                   NotchShelfView()
-                              case .timer:
-                                  NotchTimerView()
                             case .terminal:
                                 NotchTerminalView()
                             case .andy:
@@ -1544,10 +1536,6 @@ struct ContentView: View {
     private var timerAccentColor: Color {
         switch timerIconColorMode {
         case .adaptive:
-            if let presetId = timerManager.activePresetId,
-               let preset = timerPresets.first(where: { $0.id == presetId }) {
-                return preset.color
-            }
             return timerManager.timerColor
         case .solid:
             return timerSolidColor
@@ -2051,11 +2039,9 @@ struct ContentView: View {
                 triggerHapticIfAllowed()
             }
 
-            let shouldFocusTimerTab = enableTimerFeature && timerManager.isTimerActive && !enableMinimalisticUI
-
             guard vm.notchState == .closed,
                 !isSneakPeekVisibleOnCurrentScreen,
-                (Defaults[.openNotchOnHover] || shouldFocusTimerTab) else { return }
+                Defaults[.openNotchOnHover] else { return }
 
             hoverTask = Task {
                 try? await Task.sleep(for: .seconds(Defaults[.minimumHoverDuration]))
@@ -2067,11 +2053,6 @@ struct ContentView: View {
                           !self.isSneakPeekVisibleOnCurrentScreen,
                           !self.coordinator.isHoverOpenSuppressed else { return }
 
-                    if shouldFocusTimerTab {
-                        withAnimation(.smooth) {
-                            self.coordinator.currentView = .timer
-                        }
-                    }
                     self.openNotch()
                 }
             }

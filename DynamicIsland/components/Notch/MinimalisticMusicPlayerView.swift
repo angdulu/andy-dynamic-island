@@ -40,7 +40,6 @@ struct MinimalisticMusicPlayerView: View {
     @State private var hudLastDragged: Date = .distantPast
     @Default(.enableReminderLiveActivity) private var enableReminderLiveActivity
     @Default(.enableLyrics) private var enableLyrics
-    @Default(.timerPresets) private var timerPresets
     private let seekInterval: TimeInterval = 10
     private let skipMagnitude: CGFloat = 8
 
@@ -221,14 +220,7 @@ struct MinimalisticMusicPlayerView: View {
     }
 
     private var timerCountdownColor: Color {
-        let baseColor: Color
-        if let presetId = timerManager.activePresetId,
-           let preset = timerPresets.first(where: { $0.id == presetId }) {
-            baseColor = preset.color
-        } else {
-            baseColor = timerManager.timerColor
-        }
-        return baseColor.ensureMinimumBrightness(factor: 0.75)
+        return timerManager.timerColor.ensureMinimumBrightness(factor: 0.75)
     }
 
     private var timerCountdownText: String {
