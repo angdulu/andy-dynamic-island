@@ -868,8 +868,6 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .screenAssistant, title: "Enable Dictation", keywords: ["dictation", "transcription", "voice", "whisper"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Enable Dictation")),
             SettingsSearchEntry(tab: .screenAssistant, title: "Dictation-Only Mode", keywords: ["dictation", "transcription", "only", "disable dynamic island", "notchless", "air"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Dictation-Only Mode")),
             SettingsSearchEntry(tab: .screenAssistant, title: "Paste Method", keywords: ["dictation", "transcription", "paste", "clipboard"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Paste Method")),
-            SettingsSearchEntry(tab: .screenAssistant, title: "AI Text Cleanup", keywords: ["dictation", "transcription", "cleanup", "llama", "ai", "stutter"], highlightID: SettingsTab.screenAssistant.highlightID(for: "AI Text Cleanup")),
-            SettingsSearchEntry(tab: .screenAssistant, title: "Cleanup Preview", keywords: ["live", "preview", "correction", "cleanup"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Cleanup Preview")),
 
 
 
@@ -6430,15 +6428,11 @@ struct TimerSettings: View {
 
 struct ScreenAssistantSettings: View {
     @ObservedObject private var dictationManager = DictationManager.shared
-    @ObservedObject private var llamaManager = LlamaManager.shared
     @Default(.enableScreenAssistant) var enableScreenAssistant
     @Default(.dictationOnlyMode) var dictationOnlyMode
     @Default(.dictationPushToTalk) var dictationPushToTalk
     @Default(.dictationPasteMethod) var dictationPasteMethod
     @Default(.dictationSelectedModel) var dictationSelectedModel
-    @Default(.dictationEnableAICleanup) var dictationEnableAICleanup
-    @Default(.dictationCleanupPreview) var dictationCleanupPreview
-    @Default(.dictationSelectedCleanupModel) var dictationSelectedCleanupModel
     @Default(.dictationModelIdleTimeout) var dictationModelIdleTimeout
     @Default(.dictationLanguage) var dictationLanguage
 
@@ -6491,14 +6485,6 @@ struct ScreenAssistantSettings: View {
                         Text(transcript).textSelection(.enabled)
                         Button("Copy Transcript", systemImage: "doc.on.doc") {
                             dictationManager.copyLastTranscript()
-                        }
-                        if let original = dictationManager.lastRawTranscript, original != transcript {
-                            DisclosureGroup("Original Before Cleanup") {
-                                Text(original).textSelection(.enabled)
-                                Button("Copy Original", systemImage: "doc.on.doc") {
-                                    dictationManager.copyOriginalTranscript()
-                                }
-                            }
                         }
                     }
                 }
@@ -6678,155 +6664,6 @@ struct ScreenAssistantSettings: View {
                     Text("Transcription Model")
                 } footer: {
                     Text("Models are stored locally. Turbo Q5 supports multilingual dictation with a smaller download. Accuracy and speed depend on the language and recording.")
-                }
-
-                Section {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("AI Text Cleanup")
-                            Text("Lightly correct grammar, punctuation and accidental repetition while preserving what you said.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        Toggle("", isOn: $dictationEnableAICleanup)
-                            .toggleStyle(.switch)
-                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
-                    }
-                    .settingsHighlight(id: highlightID("AI Text Cleanup"))
-                    if dictationEnableAICleanup {
-                        Toggle("Preview While Recording", isOn: $dictationCleanupPreview)
-                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
-                            .settingsHighlight(id: highlightID("Cleanup Preview"))
-                        Text("Optional periodic preview of transcription and corrections. Completed phrases are reused when recording ends. This uses additional processing while you speak.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if !LlamaManager.isModelInstalled(dictationSelectedCleanupModel) {
-                            Text("Download a cleanup model below to enable correction.")
-                                .font(.caption)
-                                .foregroundStyle(.orange)
-                        }
-                    }
-                } header: {
-                    Text("AI Post-Processing")
-                }
-
-                if dictationEnableAICleanup {
-                    Section {
-                        VStack(alignment: .leading, spacing: 10) {
-                            ForEach(CleanupModel.allCases, id: \.self) { model in
-                                let isSelected = dictationSelectedCleanupModel == model
-                                let isInstalled = LlamaManager.isModelInstalled(model)
-                                let isDownloading = llamaManager.downloadingModel == model
-                                let storageRevision = llamaManager.modelStorageRevision
-
-                                HStack(spacing: 12) {
-                                    // Radio button for selection
-                                    Button {
-                                        dictationSelectedCleanupModel = model
-                                        if isInstalled {
-                                            Task {
-                                                llamaManager.stopServer()
-                                                try? await llamaManager.startServer(for: model)
-                                            }
-                                        }
-                                    } label: {
-                                        Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                                            .foregroundColor(isSelected ? .accentColor : .secondary)
-                                            .font(.title3)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
-
-                                    // Model details
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        HStack(spacing: 6) {
-                                            Text(model.displayName)
-                                                .font(.body)
-                                                .fontWeight(isSelected ? .medium : .regular)
-
-                                            if model == .llama1b {
-                                                Text("Recommended")
-                                                    .font(.system(size: 9, weight: .semibold))
-                                                    .padding(.horizontal, 5)
-                                                    .padding(.vertical, 1.5)
-                                                    .background(Color.blue.opacity(0.15))
-                                                    .foregroundColor(.blue)
-                                                    .cornerRadius(4)
-                                            }
-                                        }
-
-                                        Text("\(model.sizeDescription) · \(model.description)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-
-                                    Spacer()
-
-                                    // Actions
-                                    if isDownloading {
-                                        HStack(spacing: 8) {
-                                            ProgressView(value: llamaManager.downloadProgress ?? 0)
-                                                .frame(width: 80)
-                                            Text("\(Int(((llamaManager.downloadProgress ?? 0) * 100).rounded()))%")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                            Button("Cancel") {
-                                                llamaManager.cancelModelDownload()
-                                            }
-                                            .buttonStyle(.plain)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                        }
-                                    } else if isInstalled {
-                                        HStack(spacing: 8) {
-                                            Text(isSelected ? "Active" : "Installed")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-
-                                            Button {
-                                                llamaManager.deleteDownloadedModel(model)
-                                            } label: {
-                                                Image(systemName: "trash")
-                                                    .foregroundColor(.red.opacity(0.8))
-                                            }
-                                            .buttonStyle(.plain)
-                                            .help("Delete model")
-                                            .disabled(dictationManager.isRecording || dictationManager.isTranscribing)
-                                        }
-                                    } else {
-                                        Button {
-                                            llamaManager.download(model: model)
-                                        } label: {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "arrow.down.to.line")
-                                                Text("Download")
-                                            }
-                                            .font(.caption)
-                                            .fontWeight(.medium)
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 5)
-                                            .background(Color.accentColor)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(6)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .id("\(model.rawValue)-\(storageRevision)")
-                                .padding(.vertical, 4)
-
-                                if model != CleanupModel.allCases.last {
-                                    Divider()
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    } header: {
-                        Text("Cleanup AI Model")
-                    } footer: {
-                        Text("Models are run entirely offline on your Mac's Apple Silicon GPU using llama.cpp. A smaller model has a lower memory footprint and processes text faster.")
-                    }
                 }
 
                 Section {

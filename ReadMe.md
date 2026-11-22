@@ -16,28 +16,25 @@
 
 Active development is paused, with no further feature development currently planned. Dictation built into AI desktop apps now covers most of my everyday needs, so Andy is no longer a development priority for me.
 
-I may still use Andy occasionally for personal or sensitive dictation, where keeping speech recognition and text cleanup on-device remains a valuable advantage. The existing source and releases remain available for that use.
+I may still use Andy occasionally for personal or sensitive dictation, where keeping speech recognition on-device remains a valuable advantage. The existing source and releases remain available for that use.
 
 ---
 
 **Andy** (formerly Atoll-Andy) is an advanced, customized macOS desktop pet and productivity assistant that lives directly in your MacBook notch or Dynamic Island. 
 
-While preserving native system insight telemetry and media widgets, this fork integrates an **on-device Speech-to-Text (STT) Whisper transcriber** and a **Metal-GPU accelerated local Llama-3/Qwen cleanup pipeline** to turn voice dictations into copy-ready text with zero cloud dependency.
+While preserving native system insight telemetry and media widgets, this fork integrates an **on-device Speech-to-Text (STT) Whisper transcriber** to turn voice dictations into text with zero cloud dependency.
 
 ---
 
 ## 🧠 Custom Architecture: Local AI Dictation Workspace
 
-This fork introduces a **Dictation-Only Mode** and custom local daemon bindings designed to run private LLMs locally on macOS:
+This fork introduces a **Dictation-Only Mode** and a local Whisper daemon binding for private on-device dictation:
 
 ```mermaid
 graph TD
     User(["User Voice"]) -->|"HotKey / Dictation Mode"| DM[Dictation Manager]
     DM -->|"Record Audio (.wav)"| WS[Local whisper-server Subprocess]
-    WS -->|"Raw Transcript"| LM[Llama Manager]
-    LM -->|"Start Process (--n-gpu-layers 99)"| LS[Local llama-server Subprocess]
-    LS -->|"GPU Metal-Accelerated Inference"| Llama[Llama GGUF Model]
-    Llama -->|"Formatted & Cleaned Text"| Clipboard[macOS System Clipboard]
+    WS -->|"Transcript"| Out[Active App or Clipboard]
 ```
 
 ### 1. The Speech-to-Text Daemon (`DictationManager.swift`)
@@ -48,44 +45,23 @@ graph TD
 - Models unload after ten minutes of inactivity by default; Settings also offers five minutes, thirty minutes, or always keeping them loaded.
 - The most recent failed recording is retained locally for up to 24 hours with Retry and Discard actions. The last successful transcript can be copied from the menu bar or Settings.
 
-### 2. Apple Silicon Metal-Accelerated Post-Processing (`LlamaManager.swift`)
-- Bundles a custom **llama-server** executable with matching dynamic libraries (`libllama`, `libggml-metal`, etc.) to run GGUF models locally.
-- **Metal GPU Acceleration:** Starts the server subprocess with `--n-gpu-layers 99` and `--threads 4`, offloading model evaluation entirely to Apple Silicon Unified Memory for immediate, sub-second inference.
-- **Prompt Injection Defense:** Wraps the transcription in XML tags (`<transcription>...</transcription>`) within the structured system prompt, preventing the AI from executing commands spoken in the dictation text.
-- **Dynamic Model Fetching:** Features an asynchronous model downloader (`URLSessionDownloadTask`) that installs GGUF models directly to the macOS Application Support folder with SHA-256 integrity verification.
-- **Output:** Automatically cleans up grammatical errors, false starts, and stuttering before copying the polished, publication-ready text directly to the system clipboard.
 
 ---
 
 ## 🌟 Highlights & Original Features
 
-- **Local AI Transcription Cleanup:** Bundles a local `llama-server` process manager and HTTP completion client. Supports runtime model selections (Llama-3.2-1B, Qwen-2.5-0.5B/1.5B) to fix grammar, remove filler words, and clean transcription stutters completely offline.
 - **Dictation-Only Mode:** Disables the optional island UI, media controllers, Bluetooth polling, Downloads monitoring, extension servers, and memory polling. Dictation indicators and configurable recording sound cues remain available.
 - **Notch Pet Emotions ("Grumpy Return"):** Features an opinionated, state-aware notch pet (`^._.^`) that reacts dynamically to macOS system events. When displaced from the notch by macOS media or microphone notifications, Andy returns with an annoyed/grumpy reaction animation.
 - **Media Controls:** Dynamic widgets for Apple Music, Spotify, and system volume with inline previews.
-- **System Insight:** Real-time displays for CPU, GPU, memory, network, and disk health metrics.
-- **Productivity Panel:** Built-in timers, calendar widgets, clipboard history managers, and color pickers.
+- **Productivity:** Calendar widgets and macOS Clock timer mirroring.
 
 ---
 
 ## 💻 Tech Stack
 
 - **UI Framework:** SwiftUI 5 / AppKit
-- **Core AI Runtimes:** Custom C++ wrappers for `llama.cpp` and `whisper.cpp`
+- **Speech Runtime:** Bundled `whisper.cpp` server
 - **Build Tooling:** Xcode 15+ / Swift Package Manager (SPM)
-
----
-
-## 🔧 Subprocess Configuration Detail
-
-To load the bundled `.dylib` library dependencies in macOS sandbox-compliant environments, `LlamaManager` modifies its subprocess launch environment:
-```swift
-var env = ProcessInfo.processInfo.environment
-let binDir = serverBinary.deletingLastPathComponent().path
-env["DYLD_LIBRARY_PATH"] = binDir
-process.environment = env
-```
-This forces the macOS dynamic loader to locate `libggml-metal.dylib` and other key dependencies packaged inside the App bundle, allowing portable local inference without system-wide library installations.
 
 ---
 
@@ -113,4 +89,4 @@ It builds upon the work of several exceptional open-source projects:
 - [**Boring.Notch**](https://github.com/TheBoredTeam/boring.notch) - Foundation for media integration and notches.
 - [**Alcove**](https://tryalcove.com) - Inspiration for widget layout.
 - [**Stats**](https://github.com/exelban/stats) - SMC CPU reading architecture.
-- [**llama.cpp**](https://github.com/ggerganov/llama.cpp) & [**whisper.cpp**](https://github.com/ggerganov/whisper.cpp) - Core AI engines.
+- [**whisper.cpp**](https://github.com/ggerganov/whisper.cpp) - Speech recognition engine.
