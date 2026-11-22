@@ -3,6 +3,24 @@
     <channel>
         <title>Atoll</title>
         <item>
+            <title>2.2.14</title>
+            <pubDate>Sun, 22 Nov 2026 13:31:44 +0900</pubDate>
+            <sparkle:version>26</sparkle:version>
+            <sparkle:shortVersionString>2.2.14</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.6</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h2>Single-pass Whisper dictation</h2>
+                <ul>
+                    <li>Removed optional AI cleanup and the preview while recording. Dictation now runs one local Whisper pass.</li>
+                    <li>Removed the notch terminal tab.</li>
+                    <li>Removed the lock screen weather widget and its battery, focus, and calendar rows.</li>
+                    <li>About 19 MB smaller download without the bundled llama.cpp runtime.</li>
+                </ul>
+                <p>Existing Whisper models and settings are unchanged. Requires an Apple Silicon Mac running macOS 14.6 or later.</p>
+            ]]></description>
+            <enclosure url="https://github.com/angdulu/andy-dynamic-island/releases/download/v2.2.14/Andy-2.2.14.dmg" length="32389330" type="application/octet-stream" sparkle:edSignature="QeduVw5VEzJfQZi/6PnLQ+TRfCEnrKgzsX1zJnbkizD2knNRSz4a3dv8xCioY2aqOkukGrR10F6YWM8jlcgoDg=="/>
+        </item>
+        <item>
             <title>2.2.13</title>
             <pubDate>Sun, 22 Nov 2026 13:13:31 +0900</pubDate>
             <sparkle:version>25</sparkle:version>
