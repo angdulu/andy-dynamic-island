@@ -3,12 +3,12 @@ import Combine
 import Foundation
 import QuartzCore
 
-enum AndyViewMode: Equatable {
+enum AndyViewMode: Equatable, Sendable {
     case wing
     case expanded
 }
 
-enum AndyMood: String, CaseIterable {
+enum AndyMood: String, CaseIterable, Sendable {
     case idle
     case curious
     case happy
@@ -25,7 +25,7 @@ enum AndyMood: String, CaseIterable {
     case waking
 }
 
-enum AndyVoicePhase: Equatable {
+enum AndyVoicePhase: Equatable, Sendable {
     case idle
     case arming
     case listening
@@ -81,7 +81,7 @@ struct AndyEmotions: Codable {
     }
 }
 
-struct AndyFrameSnapshot {
+struct AndyFrameSnapshot: Sendable {
     let nowMs: Double
     let face: AndyFaceKeyFrame
     let mood: AndyMood
@@ -147,13 +147,13 @@ final class AndyPetEngine {
 
     // MARK: - Porthole framing constants (tuned so peeking is charming, not harshly sliced)
     // Wing renders in a virtual 86.02x86.02 square clipped to a circle of radius 43.01.
-    static let wingVirtualDiameter: Double = 80.0 / 0.93
-    static let wingVisibleHalfWidth: Double = (80.0 / 0.93) / 2.0
+    nonisolated static let wingVirtualDiameter: Double = 80.0 / 0.93
+    nonisolated static let wingVisibleHalfWidth: Double = (80.0 / 0.93) / 2.0
     // Gaze may gently kiss the rim up to ~15% of an eye; guard pulls back past ~22% after 500ms;
     // hard soft-limit prevents eyes from ever getting sheared past ~28%.
-    static let maxGazeEyeClip: Double = 0.15
-    static let guardEyeClip: Double = 0.22
-    static let maxHardEyeClip: Double = 0.28
+    nonisolated static let maxGazeEyeClip: Double = 0.15
+    nonisolated static let guardEyeClip: Double = 0.22
+    nonisolated static let maxHardEyeClip: Double = 0.28
     private static let portholeGraceMs: Double = 500
     private static let portholeReleaseMs: Double = 300
 
@@ -1281,21 +1281,21 @@ final class AndyPetEngine {
 
     /// Slightly pulled back vs the old 1.095 so neutral eyes have clean dark margin
     /// inside the notch circle while keeping the peek-a-boo charm on glancing clips.
-    static let wingBaseScale: Double = 0.99
+    nonisolated static let wingBaseScale: Double = 0.99
 
-    static func eyeHalfWidth(_ params: [Double]) -> Double {
+    nonisolated static func eyeHalfWidth(_ params: [Double]) -> Double {
         let sx = clamp(params.count > 2 ? params[2] : 1, 0.28, 2.2)
         let sy = clamp(params.count > 3 ? params[3] : 1, 0.1, 1.8)
         let eyeScale = clamp(1.0 + ((sx + sy) / 2.0 - 1.0) * 0.42, 0.82, 1.36)
         return 14.0 * eyeScale
     }
 
-    static func eyeHiddenFraction(centre: Double, half: Double) -> Double {
+    nonisolated static func eyeHiddenFraction(centre: Double, half: Double) -> Double {
         guard half > 0 else { return 0 }
         return clamp((abs(centre) + half - wingVisibleHalfWidth) / (2.0 * half), 0, 1)
     }
 
-    static func clampLookXToPorthole(safe: AndyFaceKeyFrame, lookX: Double, faceX: Double, xFactor: Double) -> Double {
+    nonisolated static func clampLookXToPorthole(safe: AndyFaceKeyFrame, lookX: Double, faceX: Double, xFactor: Double) -> Double {
         guard xFactor > 0 else { return lookX }
         var lo = -Double.infinity
         var hi = Double.infinity
@@ -1349,7 +1349,7 @@ final class AndyPetEngine {
         return portholeAmount
     }
 
-    static func applyPortholeFraming(
+    nonisolated static func applyPortholeFraming(
         to face: inout AndyFaceKeyFrame,
         guardAmount: Double,
         baseX: Double,
@@ -1406,19 +1406,19 @@ final class AndyPetEngine {
 
     // MARK: - Math helpers
 
-    static func clamp(_ v: Double, _ minVal: Double, _ maxVal: Double) -> Double {
+    nonisolated static func clamp(_ v: Double, _ minVal: Double, _ maxVal: Double) -> Double {
         min(maxVal, max(minVal, v))
     }
 
-    static func lerp(_ a: Double, _ b: Double, _ t: Double) -> Double {
+    nonisolated static func lerp(_ a: Double, _ b: Double, _ t: Double) -> Double {
         a + (b - a) * t
     }
 
-    static func ease(_ t: Double) -> Double {
+    nonisolated static func ease(_ t: Double) -> Double {
         t * t * (3.0 - 2.0 * t)
     }
 
-    static func interpolateFrame(_ a: AndyFaceKeyFrame, _ b: AndyFaceKeyFrame, amount: Double) -> AndyFaceKeyFrame {
+    nonisolated static func interpolateFrame(_ a: AndyFaceKeyFrame, _ b: AndyFaceKeyFrame, amount: Double) -> AndyFaceKeyFrame {
         let lCount = max(a.leftEye.count, b.leftEye.count)
         let rCount = max(a.rightEye.count, b.rightEye.count)
         var left = [Double](repeating: 0, count: lCount)

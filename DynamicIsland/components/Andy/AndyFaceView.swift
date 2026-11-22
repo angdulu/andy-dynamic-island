@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import SwiftUI
 
 struct AndyNotchWebViewMenuActions {
@@ -8,17 +9,14 @@ struct AndyNotchWebViewMenuActions {
     let hideFromNotch: () -> Void
 }
 
-final class AndyCanvasNSView: NSView {
-    let viewID = UUID()
+/// Dedicated opaque CALayer for Andy rendering. Updating only this sublayer via
+/// `setNeedsDisplay()` avoids `NSView.setNeedsDisplay`, which otherwise triggers
+/// `NSViewSetNeedsUpdateVibrancy` and forces the entire SwiftUI notch window
+/// backing store to re-upload on every frame.
+private final class AndyFaceLayer: CALayer {
     let mode: AndyViewMode
-    var menuActions: AndyNotchWebViewMenuActions?
+    var snapshot: AndyFrameSnapshot?
 
-    private var snapshot: AndyFrameSnapshot?
-    private var dragOrigin: NSPoint?
-    private var dragFired = false
-    private var isAttached = false
-
-    // Pre-allocated CoreGraphics resources (zero per-frame allocations & zero shadowBlur pass!)
     private static let colorSpace = CGColorSpaceCreateDeviceRGB()
 
     private static let normalEyeGradient: CGGradient? = CGGradient(
@@ -60,121 +58,46 @@ final class AndyCanvasNSView: NSView {
 
     init(mode: AndyViewMode) {
         self.mode = mode
-        super.init(frame: .zero)
-        wantsLayer = true
-        layer?.isOpaque = false
-        layer?.backgroundColor = NSColor.clear.cgColor
+        super.init()
+        isOpaque = true
+        backgroundColor = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+        isGeometryFlipped = true
+        drawsAsynchronously = true
+        actions = [
+            "contents": NSNull(),
+            "bounds": NSNull(),
+            "position": NSNull(),
+            "frame": NSNull()
+        ]
+    }
+
+    override init(layer: Any) {
+        if let other = layer as? AndyFaceLayer {
+            self.mode = other.mode
+            self.snapshot = other.snapshot
+        } else {
+            self.mode = .wing
+        }
+        super.init(layer: layer)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override var isFlipped: Bool { true }
-    override var isOpaque: Bool { false }
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if window != nil && !isAttached {
-            isAttached = true
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                AndyPetEngine.shared.attach(view: self, id: self.viewID, mode: self.mode)
-            }
-        } else if window == nil && isAttached {
-            isAttached = false
-            let id = viewID
-            Task { @MainActor in
-                AndyPetEngine.shared.detach(id: id)
-            }
-        }
-    }
-
-    deinit {
-        if isAttached {
-            let id = viewID
-            Task { @MainActor in
-                AndyPetEngine.shared.detach(id: id)
-            }
-        }
-    }
-
-    func updateFrame(_ snapshot: AndyFrameSnapshot, force: Bool) {
-        self.snapshot = snapshot
-        needsDisplay = true
-    }
-
-    // MARK: - Pointer & Context Menu
-
-    override func mouseDown(with event: NSEvent) {
-        dragOrigin = convert(event.locationInWindow, from: nil)
-        dragFired = false
-        Task { @MainActor in
-            AndyPetEngine.shared.handleTap()
-        }
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        guard let origin = dragOrigin, !dragFired else { return }
-        let current = convert(event.locationInWindow, from: nil)
-        if hypot(current.x - origin.x, current.y - origin.y) > 14 {
-            dragFired = true
-            Task { @MainActor in
-                AndyPetEngine.shared.handleDrag()
-            }
-        }
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        dragOrigin = nil
-        dragFired = false
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        guard let menuActions else {
-            super.rightMouseDown(with: event)
-            return
-        }
-        let isCollapsed = menuActions.isCollapsed()
-        let menu = NSMenu()
-
-        let showItem = NSMenuItem(title: "Show Andy in Notch", action: #selector(showAndyInNotch), keyEquivalent: "")
-        showItem.target = self
-        showItem.isEnabled = isCollapsed
-        menu.addItem(showItem)
-
-        let hideItem = NSMenuItem(title: "Hide Andy from Notch", action: #selector(hideAndyFromNotch), keyEquivalent: "")
-        hideItem.target = self
-        hideItem.isEnabled = !isCollapsed
-        menu.addItem(hideItem)
-
-        NSMenu.popUpContextMenu(menu, with: event, for: self)
-    }
-
-    @objc private func showAndyInNotch() {
-        DispatchQueue.main.async { [weak self] in
-            self?.menuActions?.showInNotch()
-        }
-    }
-
-    @objc private func hideAndyFromNotch() {
-        DispatchQueue.main.async { [weak self] in
-            self?.menuActions?.hideFromNotch()
-        }
-    }
-
-    // MARK: - Native CoreGraphics Rendering
-
-    override func draw(_ dirtyRect: NSRect) {
-        guard let ctx = NSGraphicsContext.current?.cgContext,
-              let snap = snapshot,
-              bounds.width > 0, bounds.height > 0 else { return }
-
-        ctx.saveGState()
-        ctx.clear(bounds)
-
+    override func draw(in ctx: CGContext) {
         let width = Double(bounds.width)
         let height = Double(bounds.height)
+        guard width > 0, height > 0 else { return }
+
+        ctx.saveGState()
+        ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
+        ctx.fill(bounds)
+
+        guard let snap = snapshot else {
+            ctx.restoreGState()
+            return
+        }
 
         // Expanded tab draws subtle CRT scanlines; skip in tiny wing where 1px lines are invisible sub-pixel noise
         if mode == .expanded {
@@ -186,12 +109,10 @@ final class AndyCanvasNSView: NSView {
             }
         }
 
-        // Map view bounds into logical face coordinates
         ctx.translateBy(x: width / 2.0, y: height / 2.0)
 
         let finalScale: Double
         if mode == .wing {
-            // Map virtual diameter (86.02) directly to the circular wing bounds
             let viewToVirtual = min(width, height) / AndyPetEngine.wingVirtualDiameter
             ctx.scaleBy(x: viewToVirtual, y: viewToVirtual)
             finalScale = AndyPetEngine.wingBaseScale * snap.breathScale
@@ -268,7 +189,6 @@ final class AndyCanvasNSView: NSView {
         ctx.translateBy(x: Self.loaderSlotX[1], y: y)
         ctx.setAlpha(morph)
 
-        // Cheap radial halo instead of Gaussian shadowBlur
         if let halo = Self.haloGradient {
             ctx.drawRadialGradient(
                 halo,
@@ -338,7 +258,6 @@ final class AndyCanvasNSView: NSView {
             break
         }
 
-        // Voice pipeline procedural modulation
         let vAmt = snap.voicePhaseAmount
         var voiceGlow = 0.0
         switch snap.voicePhase {
@@ -364,7 +283,6 @@ final class AndyCanvasNSView: NSView {
             break
         }
 
-        // Loader morph (eyes become outer two dots of 3-dot loader)
         let morph = snap.thinkMorph
         var bounceY = 0.0
         var renderCenterX = centerX
@@ -385,7 +303,6 @@ final class AndyCanvasNSView: NSView {
         ctx.translateBy(x: renderCenterX, y: centerY + floatY * (1.0 - morph) + bounceY)
         ctx.rotate(by: angle * (1.0 - morph))
 
-        // Fast GPU-friendly soft cyan glow halo (replaces expensive per-frame Gaussian shadowBlur)
         if let halo = Self.haloGradient {
             let glowBoost = 1.0 + min(0.55, (glow * 0.14 + snap.pulse * 0.08 + voiceGlow * 0.06))
             let haloRadius = max(width, height) * 0.68 * glowBoost
@@ -402,7 +319,6 @@ final class AndyCanvasNSView: NSView {
 
         let eyePath = makeEyePath(width: width, height: height, params: params, roundness: morph)
 
-        // Fill eye with radial gradient
         let isSleepy = (snap.mood == .sleeping || snap.mood == .sleepy)
         if let grad = isSleepy ? Self.sleepyEyeGradient : Self.normalEyeGradient {
             ctx.saveGState()
@@ -416,13 +332,11 @@ final class AndyCanvasNSView: NSView {
                 endRadius: width * 0.78,
                 options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
             )
-            // Draw upper & lower lids clipped inside the eye
             drawLid(ctx, width: width, height: height, amount: upperLid, angle: upperLidAngle, isTop: true)
             drawLid(ctx, width: width, height: height, amount: lowerLid, angle: lowerLidAngle, isTop: false)
             ctx.restoreGState()
         }
 
-        // Crisp black outer stroke matching original look
         ctx.setStrokeColor(red: 0, green: 0, blue: 0, alpha: 1)
         ctx.setLineWidth(1.5)
         ctx.addPath(eyePath)
@@ -478,6 +392,139 @@ final class AndyCanvasNSView: NSView {
             ctx.fill(CGRect(x: -width * 1.6, y: height / 2.0 - cover - 0.5, width: width * 3.2, height: cover + 12.0))
         }
         ctx.restoreGState()
+    }
+}
+
+final class AndyCanvasNSView: NSView {
+    let viewID = UUID()
+    let mode: AndyViewMode
+    var menuActions: AndyNotchWebViewMenuActions?
+
+    private let faceLayer: AndyFaceLayer
+    private var dragOrigin: NSPoint?
+    private var dragFired = false
+    private var isAttached = false
+
+    init(mode: AndyViewMode) {
+        self.mode = mode
+        self.faceLayer = AndyFaceLayer(mode: mode)
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.isOpaque = true
+        layer?.backgroundColor = NSColor.black.cgColor
+        layerContentsRedrawPolicy = .never
+        layer?.addSublayer(faceLayer)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var isFlipped: Bool { true }
+    override var isOpaque: Bool { true }
+
+    override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        faceLayer.frame = bounds
+        if let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor {
+            faceLayer.contentsScale = scale
+        }
+        CATransaction.commit()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor {
+            faceLayer.contentsScale = scale
+        }
+        if window != nil && !isAttached {
+            isAttached = true
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                AndyPetEngine.shared.attach(view: self, id: self.viewID, mode: self.mode)
+            }
+        } else if window == nil && isAttached {
+            isAttached = false
+            let id = viewID
+            Task { @MainActor in
+                AndyPetEngine.shared.detach(id: id)
+            }
+        }
+    }
+
+    deinit {
+        if isAttached {
+            let id = viewID
+            Task { @MainActor in
+                AndyPetEngine.shared.detach(id: id)
+            }
+        }
+    }
+
+    func updateFrame(_ snapshot: AndyFrameSnapshot, force: Bool) {
+        faceLayer.snapshot = snapshot
+        faceLayer.setNeedsDisplay()
+    }
+
+    // MARK: - Pointer & Context Menu
+
+    override func mouseDown(with event: NSEvent) {
+        dragOrigin = convert(event.locationInWindow, from: nil)
+        dragFired = false
+        Task { @MainActor in
+            AndyPetEngine.shared.handleTap()
+        }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let origin = dragOrigin, !dragFired else { return }
+        let current = convert(event.locationInWindow, from: nil)
+        if hypot(current.x - origin.x, current.y - origin.y) > 14 {
+            dragFired = true
+            Task { @MainActor in
+                AndyPetEngine.shared.handleDrag()
+            }
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragOrigin = nil
+        dragFired = false
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        guard let menuActions else {
+            super.rightMouseDown(with: event)
+            return
+        }
+        let isCollapsed = menuActions.isCollapsed()
+        let menu = NSMenu()
+
+        let showItem = NSMenuItem(title: "Show Andy in Notch", action: #selector(showAndyInNotch), keyEquivalent: "")
+        showItem.target = self
+        showItem.isEnabled = isCollapsed
+        menu.addItem(showItem)
+
+        let hideItem = NSMenuItem(title: "Hide Andy from Notch", action: #selector(hideAndyFromNotch), keyEquivalent: "")
+        hideItem.target = self
+        hideItem.isEnabled = !isCollapsed
+        menu.addItem(hideItem)
+
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    @objc private func showAndyInNotch() {
+        DispatchQueue.main.async { [weak self] in
+            self?.menuActions?.showInNotch()
+        }
+    }
+
+    @objc private func hideAndyFromNotch() {
+        DispatchQueue.main.async { [weak self] in
+            self?.menuActions?.hideFromNotch()
+        }
     }
 }
 
