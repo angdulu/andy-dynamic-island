@@ -1194,7 +1194,7 @@ struct ContentView: View {
                     .frame(width: vm.closedNotchSize.width - 20)
                 ClosedAndyWing(size: sideSize)
             }
-        }.frame(height: vm.effectiveClosedNotchHeight + (isHovering ? 8 : 0), alignment: .top)
+        }.frame(height: vm.effectiveClosedNotchHeight + (isHovering ? 8 : 0), alignment: .center)
     }
 
     @ViewBuilder
