@@ -59,11 +59,12 @@ private final class AndyFaceLayer: CALayer {
         locations: [0.0, 0.28, 0.78, 1.0]
     )
 
+    // Subtle, tight halo gradients (no foggy rim spill)
     private static let haloGradient: CGGradient? = CGGradient(
         colorsSpace: colorSpace,
         colors: [
-            CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.42),
-            CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.14),
+            CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.26),
+            CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.08),
             CGColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.0)
         ] as CFArray,
         locations: [0.0, 0.55, 1.0]
@@ -72,8 +73,8 @@ private final class AndyFaceLayer: CALayer {
     private static let amberHaloGradient: CGGradient? = CGGradient(
         colorsSpace: colorSpace,
         colors: [
-            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.36),
-            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.10),
+            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.24),
+            CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.07),
             CGColor(red: 1.0, green: 0xB8 / 255.0, blue: 0x45 / 255.0, alpha: 0.0)
         ] as CFArray,
         locations: [0.0, 0.55, 1.0]
@@ -82,8 +83,8 @@ private final class AndyFaceLayer: CALayer {
     private static let chargeHaloGradient: CGGradient? = CGGradient(
         colorsSpace: colorSpace,
         colors: [
-            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.50),
-            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.18),
+            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.34),
+            CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.11),
             CGColor(red: 0x4C / 255.0, green: 1.0, blue: 0xB8 / 255.0, alpha: 0.0)
         ] as CFArray,
         locations: [0.0, 0.55, 1.0]
@@ -138,7 +139,7 @@ private final class AndyFaceLayer: CALayer {
         }
 
         if mode == .expanded {
-            ctx.setFillColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.022)
+            ctx.setFillColor(red: 0x12 / 255.0, green: 0xE5 / 255.0, blue: 0xE5 / 255.0, alpha: 0.018)
             var y: Double = 0
             while y < height {
                 ctx.fill(CGRect(x: 0, y: y, width: width, height: 1))
@@ -343,8 +344,8 @@ private final class AndyFaceLayer: CALayer {
         if let halo = Self.haloGradient {
             ctx.drawRadialGradient(
                 halo,
-                startCenter: .zero, startRadius: radius * 0.6,
-                endCenter: .zero, endRadius: radius * 1.45,
+                startCenter: .zero, startRadius: radius * 0.55,
+                endCenter: .zero, endRadius: radius * 1.35,
                 options: []
             )
         }
@@ -361,11 +362,6 @@ private final class AndyFaceLayer: CALayer {
             )
             ctx.restoreGState()
         }
-
-        ctx.setStrokeColor(red: 0, green: 0, blue: 0, alpha: 1)
-        ctx.setLineWidth(1.5)
-        ctx.addEllipse(in: CGRect(x: -radius, y: -radius, width: size, height: size))
-        ctx.strokePath()
         ctx.restoreGState()
     }
 
@@ -388,7 +384,7 @@ private final class AndyFaceLayer: CALayer {
         let hotspotX = AndyPetEngine.clamp(p(22, 0), -1, 1)
         let hotspotY = AndyPetEngine.clamp(p(23, 0), -1, 1)
 
-        upperLid = max(upperLid, snap.blinkProgress * 0.95)
+        upperLid = max(upperLid, snap.blinkProgress * 0.96)
 
         var width = 28.0 * eyeScale
         var height = 28.0 * eyeScale
@@ -398,7 +394,7 @@ private final class AndyFaceLayer: CALayer {
 
         switch snap.mood {
         case .happy, .content, .affectionate:
-            height *= 0.84; width *= 1.05
+            height *= 0.86; width *= 1.05
         case .sleeping, .sleepy:
             height *= 0.38; centerY += 6.0
         case .excited:
@@ -409,6 +405,14 @@ private final class AndyFaceLayer: CALayer {
             break
         }
 
+        // Sustained typing focus squint
+        if snap.typingFocusAmount > 0.01 {
+            let f = snap.typingFocusAmount
+            height *= AndyPetEngine.lerp(1.0, 0.78, f)
+            upperLid = max(upperLid, 0.16 * f)
+            lowerLid = max(lowerLid, 0.12 * f)
+        }
+
         if snap.isLowBattery && !snap.voicePhase.isActive && snap.mood != .sleeping {
             upperLid = max(upperLid, 0.28)
             height *= 0.88
@@ -417,30 +421,69 @@ private final class AndyFaceLayer: CALayer {
         }
 
         var extraGlow = 0.0
+        var curvedSmile = snap.happySmileAmount
         switch snap.specialEffect {
         case .chargeBurst:
             let s = sin(min(1.0, snap.effectProgress * 1.5) * .pi)
             width *= 1.0 + 0.08 * s
             height *= 1.0 + 0.06 * s
             extraGlow = 3.5 * s
+            curvedSmile = max(curvedSmile, s * 0.8)
         case .grumpyReturn:
             let s = sin(snap.effectProgress * .pi)
             upperLid = max(upperLid, 0.32 * s)
             upperLidAngle += (isLeft ? -0.22 : 0.22) * s
+            curvedSmile = 0
         case .startledWake:
             let s = sin(min(1.0, snap.effectProgress * 2.2) * .pi)
             width *= 1.0 + 0.14 * s
             height *= 1.0 + 0.16 * s
             upperLid *= (1.0 - s)
+            curvedSmile = 0
         case .dizzy:
             let s = 1.0 - snap.effectProgress
             let asym = sin(snap.effectProgress * .pi * 6.0 + (isLeft ? 0 : .pi)) * 0.14 * s
             height *= 1.0 + asym
             angle += asym * 0.8
+            curvedSmile = 0
         case .happyReturn:
             let s = sin(snap.effectProgress * .pi)
-            lowerLid = max(lowerLid, 0.22 * s)
             width *= 1.0 + 0.06 * s
+            curvedSmile = max(curvedSmile, s)
+        case .winkLeft:
+            let s = sin(snap.effectProgress * .pi)
+            if isLeft {
+                // Smoothly close winking eye into a cheeky curved wink
+                upperLid = max(upperLid, 0.82 * s)
+                lowerLid = max(lowerLid, 0.12 * s)
+                height *= AndyPetEngine.lerp(1.0, 0.85, s)
+            } else {
+                height *= 1.0 + 0.05 * s
+            }
+        case .winkRight:
+            let s = sin(snap.effectProgress * .pi)
+            if !isLeft {
+                upperLid = max(upperLid, 0.82 * s)
+                lowerLid = max(lowerLid, 0.12 * s)
+                height *= AndyPetEngine.lerp(1.0, 0.85, s)
+            } else {
+                height *= 1.0 + 0.05 * s
+            }
+        case .yawn:
+            // Slow squeeze-shut yawn peak, then relieved wide blink
+            let p = snap.effectProgress
+            let squeeze = p < 0.72 ? sin((p / 0.72) * .pi) : 0.0
+            let openRelief = p >= 0.72 ? sin(((p - 0.72) / 0.28) * .pi) : 0.0
+            upperLid = max(upperLid, 0.62 * squeeze)
+            lowerLid = max(lowerLid, 0.22 * squeeze)
+            width *= 1.0 + 0.07 * squeeze
+            height *= (1.0 - 0.18 * squeeze + 0.08 * openRelief)
+            curvedSmile = 0
+        case .appSwitchPerk:
+            let s = sin(snap.effectProgress * .pi)
+            width *= 1.0 + 0.06 * s
+            height *= 1.0 + 0.11 * s
+            upperLid *= (1.0 - 0.6 * s)
         case .none:
             break
         }
@@ -481,6 +524,7 @@ private final class AndyFaceLayer: CALayer {
             height = AndyPetEngine.lerp(height, Self.loaderDotSize, morph)
             upperLid *= (1.0 - morph)
             lowerLid *= (1.0 - morph)
+            curvedSmile *= (1.0 - morph)
             bounceY = loaderBounce(nowMs: snap.nowMs, index: dotIndex) * morph
             voiceGlow = max(voiceGlow, 2.2 * morph)
         }
@@ -501,22 +545,34 @@ private final class AndyFaceLayer: CALayer {
             ? Self.chargeEyeGradient
             : (useLowBatPalette ? Self.lowBatteryEyeGradient : (isSleepy ? Self.sleepyEyeGradient : Self.normalEyeGradient))
 
-        if let halo = haloGrad {
-            let glowBoost = 1.0 + min(0.60, (glow * 0.14 + snap.pulse * 0.08 + (voiceGlow + extraGlow) * 0.06))
-            let haloRadius = max(width, height) * 0.68 * glowBoost
+        // Compute the actually visible open band of the eye so the glow hugs ONLY the lit area
+        let topOpenY = -height / 2.0 + height * AndyPetEngine.clamp(upperLid, 0, 1)
+        let effectiveLower = max(lowerLid, curvedSmile * 0.26)
+        let bottomOpenY = height / 2.0 - height * AndyPetEngine.clamp(effectiveLower, 0, 1)
+        let visibleHeight = max(0.0, bottomOpenY - topOpenY)
+        let openness = AndyPetEngine.clamp(visibleHeight / max(1.0, height), 0, 1)
+        let visibleCenterY = (topOpenY + bottomOpenY) / 2.0
+
+        // 1) Draw soft glow halo centered strictly on the open lit band (zero bleed behind closed lids!)
+        if let halo = haloGrad, openness > 0.04 {
+            let glowBoost = 1.0 + min(0.45, (glow * 0.10 + snap.pulse * 0.06 + (voiceGlow + extraGlow) * 0.05))
+            let haloHalfW = (width * 0.58) * glowBoost
+            let haloHalfH = max(visibleHeight * 0.62, 4.5) * glowBoost
             ctx.saveGState()
-            ctx.scaleBy(x: width / max(width, height), y: height / max(width, height))
+            ctx.setAlpha(min(1.0, openness * 1.35))
+            ctx.translateBy(x: 0, y: visibleCenterY)
+            ctx.scaleBy(x: haloHalfW, y: haloHalfH)
             ctx.drawRadialGradient(
                 halo,
-                startCenter: .zero, startRadius: max(width, height) * 0.22,
-                endCenter: .zero, endRadius: haloRadius,
+                startCenter: .zero, startRadius: 0.35,
+                endCenter: .zero, endRadius: 1.0,
                 options: []
             )
             ctx.restoreGState()
         }
 
+        // 2) Fill the eye shape with radial gradient
         let eyePath = makeEyePath(width: width, height: height, params: params, roundness: morph)
-
         if let grad = eyeGrad {
             ctx.saveGState()
             ctx.addPath(eyePath)
@@ -529,16 +585,30 @@ private final class AndyFaceLayer: CALayer {
                 endRadius: width * 0.78,
                 options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
             )
-            drawLid(ctx, width: width, height: height, amount: upperLid, angle: upperLidAngle, isTop: true)
-            drawLid(ctx, width: width, height: height, amount: lowerLid, angle: lowerLidAngle, isTop: false)
             ctx.restoreGState()
         }
 
-        ctx.setStrokeColor(red: 0, green: 0, blue: 0, alpha: 1)
-        ctx.setLineWidth(1.5)
-        ctx.addPath(eyePath)
-        ctx.strokePath()
+        // 3) Draw solid black eyelids UNCLIPPED over both the eye and halo so zero glow or ghost border ever leaks!
+        drawLid(ctx, width: width, height: height, amount: upperLid, angle: upperLidAngle, isTop: true)
+        drawLid(ctx, width: width, height: height, amount: lowerLid, angle: lowerLidAngle, isTop: false)
 
+        // 4) Optional curved lower-lid smile arc (반달 눈웃음) for happy/affectionate/petting states
+        if curvedSmile > 0.05 && openness > 0.20 {
+            drawHappySmileArc(ctx, width: width, height: height, amount: curvedSmile)
+        }
+
+        ctx.restoreGState()
+    }
+
+    private func drawHappySmileArc(_ ctx: CGContext, width: Double, height: Double, amount: Double) {
+        // Soft black oval rising cleanly from the bottom center to carve a crescent-smile eye
+        let rise = height * 0.34 * AndyPetEngine.clamp(amount, 0, 1)
+        let rx = width * 0.56
+        let ry = height * 0.44
+        let cy = height / 2.0 + ry - rise
+        ctx.saveGState()
+        ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
+        ctx.fillEllipse(in: CGRect(x: -rx, y: cy - ry, width: rx * 2.0, height: ry * 2.0))
         ctx.restoreGState()
     }
 
@@ -584,9 +654,9 @@ private final class AndyFaceLayer: CALayer {
         ctx.rotate(by: angle * 0.38)
         ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
         if isTop {
-            ctx.fill(CGRect(x: -width * 1.6, y: -height / 2.0 - 12.0, width: width * 3.2, height: cover + 12.5))
+            ctx.fill(CGRect(x: -width * 1.6, y: -height / 2.0 - 22.0, width: width * 3.2, height: cover + 22.5))
         } else {
-            ctx.fill(CGRect(x: -width * 1.6, y: height / 2.0 - cover - 0.5, width: width * 3.2, height: cover + 12.0))
+            ctx.fill(CGRect(x: -width * 1.6, y: height / 2.0 - cover - 0.5, width: width * 3.2, height: cover + 22.5))
         }
         ctx.restoreGState()
     }

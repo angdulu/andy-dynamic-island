@@ -46,6 +46,10 @@ enum AndySpecialEffect: Equatable, Sendable {
     case grumpyReturn
     case startledWake
     case dizzy
+    case winkLeft
+    case winkRight
+    case yawn
+    case appSwitchPerk
 }
 
 struct AndyEmotions: Codable {
@@ -110,6 +114,8 @@ struct AndyFrameSnapshot: Sendable {
     let isCharging: Bool
     let isOffline: Bool
     let isLateNight: Bool
+    let typingFocusAmount: Double       // 0..1 smooth focused squint during sustained typing
+    let happySmileAmount: Double        // 0..1 curved lower-lid smile arc
     let specialEffect: AndySpecialEffect
     let effectProgress: Double
     let returnDropOffsetY: Double
@@ -208,11 +214,21 @@ final class AndyPetEngine {
     private var renderTilt: Double = 0
     private var renderSquash: Double = 1
 
+    // Special animations, everyday micro-routines & return physics
     private var specialEffect: AndySpecialEffect = .none
     private var effectStartedAtMs: Double = 0
     private var effectDurationMs: Double = 0
     private var returnDropStartedAtMs: Double = 0
     private var returnDropDurationMs: Double = 520
+    private var nextMicroRoutineAtMs: Double = 0
+    private var lastAppSwitchAtMs: Double = 0
+    private var lastActiveBundleID: String?
+
+    // Smooth everyday expression states
+    private var typingStartedAtMs: Double = 0
+    private var typingFocusAmount: Double = 0
+    private var happySmileAmount: Double = 0
+    private var smileBoostUntilMs: Double = 0
 
     private var isDistracted = false
     private var nextDistractionAtMs: Double = 0
@@ -324,6 +340,7 @@ final class AndyPetEngine {
         nextSaccadeAtMs = nowMs + 1000 + Double.random(in: 0...3000)
         nextGazeShiftAtMs = nowMs + 2000
         nextAmuseAtMs = nowMs + 30000 + Double.random(in: 0...45000)
+        nextMicroRoutineAtMs = nowMs + 16000 + Double.random(in: 0...22000)
 
         loadPersistedState()
         setupSystemObservers()
@@ -355,13 +372,12 @@ final class AndyPetEngine {
             let sinceWing = nowDate.timeIntervalSince(unmounted)
             let sinceExpanded = expandedUnmountedAt.map { nowDate.timeIntervalSince($0) } ?? .greatestFiniteMagnitude
             if let until = pendingChargeBurstUntil, nowDate <= until {
-                // Charging HUD just finished — play the spark burst now that Andy is actually visible
                 pendingChargeBurstUntil = nil
                 triggerReturnDrop()
                 triggerEffect(.chargeBurst, durationMs: 2200)
+                smileBoostUntilMs = Self.nowMs() + 2400
                 playBehaviorCategory("happy_react", immediate: true)
             } else if sawBatteryHUDWhileHidden {
-                // Low/full battery toast finished — drop back in calmly without getting grumpy
                 triggerReturnDrop()
             } else if sinceWing >= 2.5 && sinceExpanded > 2.0 {
                 triggerReturnDrop()
@@ -392,6 +408,7 @@ final class AndyPetEngine {
                 emotions.stimulation = min(100, emotions.stimulation + 15)
                 emotions.calmness = min(100, emotions.calmness + 8)
                 triggerEffect(.happyReturn, durationMs: 2400)
+                smileBoostUntilMs = Self.nowMs() + 2600
                 playBehaviorCategory(Double.random(in: 0...1) < 0.5 ? "excited_dance" : "happy_react", immediate: true)
             } else {
                 emotions.calmness = max(0, emotions.calmness - 30)
@@ -466,6 +483,11 @@ final class AndyPetEngine {
         } else {
             applyInteraction(.gentleClick)
             pokeCount = 0
+            smileBoostUntilMs = now + 2200
+            // Playful occasional wink on gentle tap
+            if Double.random(in: 0...1) < 0.35 && specialEffect == .none {
+                triggerEffect(Bool.random() ? .winkLeft : .winkRight, durationMs: 650)
+            }
         }
 
         gentleClickWindowMs.append(now)
@@ -475,6 +497,7 @@ final class AndyPetEngine {
         let rate = Double(gentleClickWindowMs.count) / 5.0
         if rate > 0.4 && rate < 1.5 && animQueue.isEmpty {
             applyInteraction(.petting)
+            smileBoostUntilMs = now + 3500
             let tag = rate < 0.7 ? "petting_lvl1" : (rate < 1.2 ? "petting_lvl2" : "petting_blissloop")
             playBehaviorCategory(tag)
         }
@@ -615,6 +638,15 @@ final class AndyPetEngine {
                 }
             }
         )
+        // Everyday event (never covered by Dynamic Island HUD): brief curious perk when switching apps
+        workspaceObservers.append(
+            wsCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+                let bundleID = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+                Task { @MainActor [weak self] in
+                    self?.handleAppSwitch(bundleID: bundleID)
+                }
+            }
+        )
 
         if let keyboardMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown], handler: { [weak self] _ in
             MainActor.assumeIsolated {
@@ -679,11 +711,11 @@ final class AndyPetEngine {
                     self.emotions.stimulation = min(100, self.emotions.stimulation + 22)
                     self.emotions.happiness = min(100, self.emotions.happiness + 18)
                     self.emotions.tiredness = max(0, self.emotions.tiredness - 20)
-                    // Queue a pending burst for when the Dynamic Island charging HUD finishes and wing returns
                     self.pendingChargeBurstUntil = Date().addingTimeInterval(10.0)
                     if !self.attachedViews.isEmpty && BatteryStatusViewModel.shared.activeTemporaryHUDKind == nil {
                         self.pendingChargeBurstUntil = nil
                         self.triggerEffect(.chargeBurst, durationMs: 2200)
+                        self.smileBoostUntilMs = Self.nowMs() + 2400
                         self.playBehaviorCategory("happy_react", immediate: true)
                     }
                 }
@@ -733,6 +765,7 @@ final class AndyPetEngine {
                         self.playBehaviorCategory("explore", immediate: true)
                     } else {
                         self.emotions.happiness = min(100, self.emotions.happiness + 8)
+                        self.smileBoostUntilMs = Self.nowMs() + 2000
                         self.playBehaviorCategory("happy_react")
                     }
                 }
@@ -741,6 +774,20 @@ final class AndyPetEngine {
         }
         monitor.start(queue: DispatchQueue.global(qos: .utility))
         pathMonitor = monitor
+    }
+
+    private func handleAppSwitch(bundleID: String?) {
+        guard let bundleID, bundleID != lastActiveBundleID else { return }
+        lastActiveBundleID = bundleID
+        // Ignore our own app activation (e.g. opening Settings)
+        if bundleID == Bundle.main.bundleIdentifier { return }
+        guard !attachedViews.isEmpty, !isScreenAsleep, !voicePhase.isActive, mood != .sleeping else { return }
+
+        let now = Self.nowMs()
+        guard now - lastAppSwitchAtMs > 8000, specialEffect == .none else { return }
+        lastAppSwitchAtMs = now
+        emotions.stimulation = min(100, emotions.stimulation + 4)
+        triggerEffect(.appSwitchPerk, durationMs: 750)
     }
 
     @objc private func updateThermalState() {
@@ -760,25 +807,29 @@ final class AndyPetEngine {
             wakeFromSleepIfNeeded(startle: true)
         }
 
+        let now = Self.nowMs()
+        if !isTyping {
+            isTyping = true
+            typingStartedAtMs = now
+            applyInteraction(.typing)
+        }
+
         typingBurstCount += 1
         let scanX = sin(Double(typingBurstCount) * 0.55) * 6.0
         lookOffsetX = scanX
         lookOffsetY = 14.0
 
-        if !isTyping {
-            isTyping = true
-            applyInteraction(.typing)
-        }
         typingResetTask?.cancel()
         let task = DispatchWorkItem { [weak self] in
             guard let self else { return }
             self.isTyping = false
             self.typingBurstCount = 0
+            self.typingStartedAtMs = 0
             self.lookOffsetX = 0
             self.lookOffsetY = 0
         }
         typingResetTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.15, execute: task)
     }
 
     private func handleMouseMovedEvent() {
@@ -920,6 +971,7 @@ final class AndyPetEngine {
         case .success:
             emotions.happiness = min(100, emotions.happiness + 10)
             emotions.confidence = min(100, emotions.confidence + 8)
+            smileBoostUntilMs = now + 1800
         case .error:
             emotions.confidence = max(0, emotions.confidence - 15)
             emotions.happiness = max(0, emotions.happiness - 8)
@@ -1004,6 +1056,7 @@ final class AndyPetEngine {
         updateBlink(now: now)
         updateSaccade(now: now)
         updateGazeTracking(now: now)
+        updateEverydayMicroRoutines(now: now)
 
         if !voicePhase.isActive && now > nextAnimationAtMs {
             playNextAnimation()
@@ -1047,6 +1100,24 @@ final class AndyPetEngine {
             }
         }
 
+        let dtScale = Self.clamp((currentTimerInterval > 0 ? currentTimerInterval : 1.0 / 30.0) * 30.0, 0.25, 2.5)
+
+        // Smooth sustained-typing focus squint (kicks in after 1.6s of continuous typing)
+        let focusTarget: Double = (isTyping && typingStartedAtMs > 0 && (now - typingStartedAtMs) > 1600 && !voicePhase.isActive) ? 1.0 : 0.0
+        typingFocusAmount += (focusTarget - typingFocusAmount) * (1.0 - pow(1.0 - 0.10, dtScale))
+        if typingFocusAmount < 0.004 { typingFocusAmount = 0 }
+
+        // Smooth curved happy smile arc (happy/affectionate moods or tap/petting/happy return)
+        let wantsSmile = !voicePhase.isActive && mood != .sleeping && mood != .sleepy && (
+            now < smileBoostUntilMs ||
+            mood == .happy ||
+            mood == .affectionate ||
+            specialEffect == .happyReturn
+        )
+        let smileTarget: Double = wantsSmile ? (now < smileBoostUntilMs || specialEffect == .happyReturn ? 1.0 : 0.65) : 0.0
+        happySmileAmount += (smileTarget - happySmileAmount) * (1.0 - pow(1.0 - 0.12, dtScale))
+        if happySmileAmount < 0.004 { happySmileAmount = 0 }
+
         let elapsed = max(0, now - clipStartedAtMs)
         let animTime = elapsed.truncatingRemainder(dividingBy: max(1, currentClip.durationMs))
         let rawFace = sampleFaceTrack(currentClip.faceFrames, at: animTime)
@@ -1087,6 +1158,23 @@ final class AndyPetEngine {
         case .chargeBurst:
             let pop = sin(min(1.0, effectProgress * 3.0) * .pi) * (1.0 - effectProgress * 0.4)
             targetSquash += pop * 0.08
+        case .winkLeft:
+            let s = sin(effectProgress * .pi)
+            targetTilt -= 0.075 * s
+            targetLookY -= 1.5 * s
+        case .winkRight:
+            let s = sin(effectProgress * .pi)
+            targetTilt += 0.075 * s
+            targetLookY -= 1.5 * s
+        case .yawn:
+            let s = sin(effectProgress * .pi)
+            targetLookY -= 3.2 * s
+            targetSquash -= 0.055 * s
+        case .appSwitchPerk:
+            let s = sin(effectProgress * .pi)
+            targetLookY -= 2.4 * s
+            targetTilt += 0.045 * s
+            targetSquash += 0.04 * s
         case .none:
             break
         }
@@ -1097,7 +1185,6 @@ final class AndyPetEngine {
             targetTilt = Self.lerp(targetTilt, 0, thinkMorph)
         }
 
-        let dtScale = Self.clamp((currentTimerInterval > 0 ? currentTimerInterval : 1.0 / 30.0) * 30.0, 0.25, 2.5)
         let poseEase = 1.0 - pow(1.0 - (isPerforming ? 0.08 : 0.12), dtScale)
         let swayEase = 1.0 - pow(1.0 - 0.06, dtScale)
         let tiltEase = 1.0 - pow(1.0 - 0.08, dtScale)
@@ -1147,6 +1234,8 @@ final class AndyPetEngine {
             isCharging: isCharging,
             isOffline: isOffline,
             isLateNight: lateNight,
+            typingFocusAmount: typingFocusAmount,
+            happySmileAmount: happySmileAmount,
             specialEffect: specialEffect,
             effectProgress: effectProgress,
             returnDropOffsetY: dropY,
@@ -1163,6 +1252,30 @@ final class AndyPetEngine {
 
         for entry in attachedViews.values {
             entry.view?.updateFrame(snapshot, force: forceDraw)
+        }
+    }
+
+    private func updateEverydayMicroRoutines(now: Double) {
+        guard !voicePhase.isActive, specialEffect == .none, mood != .sleeping else { return }
+        guard now > nextMicroRoutineAtMs else { return }
+
+        // Trigger charming everyday moments every ~24–48s while Andy is hanging out
+        nextMicroRoutineAtMs = now + 24_000 + Double.random(in: 0...24_000)
+
+        let hour = Calendar.current.component(.hour, from: Date())
+        let sleepyBias = (mood == .sleepy || mood == .bored || isLowBattery || hour >= 23 || hour < 6)
+
+        let roll = Double.random(in: 0...1)
+        if sleepyBias && roll < 0.60 {
+            triggerEffect(.yawn, durationMs: 1750)
+        } else if roll < 0.45 {
+            triggerEffect(Bool.random() ? .winkLeft : .winkRight, durationMs: 680)
+            smileBoostUntilMs = max(smileBoostUntilMs, now + 1100)
+        } else if roll < 0.72 {
+            triggerEffect(.yawn, durationMs: 1700)
+        } else {
+            // Brief happy smile moment
+            smileBoostUntilMs = max(smileBoostUntilMs, now + 2600)
         }
     }
 
