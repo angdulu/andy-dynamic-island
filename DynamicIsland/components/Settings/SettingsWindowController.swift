@@ -27,6 +27,7 @@ import Sparkle
 class SettingsWindowController: NSWindowController {
     static let shared = SettingsWindowController()
     private var updaterController: SPUStandardUpdaterController?
+    private var isContentInstalled = false
     
     private init() {
         let window = NSWindow(
@@ -57,6 +58,7 @@ class SettingsWindowController: NSWindowController {
         let settingsView = SettingsView(updaterController: updaterController)
         let hostingView = NSHostingView(rootView: settingsView)
         window.contentView = hostingView
+        isContentInstalled = true
     }
     
     private func setupWindow() {
@@ -90,7 +92,7 @@ class SettingsWindowController: NSWindowController {
         // Ensure window exists
         _ = window
 
-        if window?.contentView == nil {
+        if !isContentInstalled {
             installContentView()
         }
 
@@ -128,6 +130,7 @@ class SettingsWindowController: NSWindowController {
     private func relinquishFocus() {
         window?.orderOut(nil)
         window?.contentView = nil
+        isContentInstalled = false
         
         // Set app back to accessory mode immediately
         NSApp.setActivationPolicy(.accessory)
