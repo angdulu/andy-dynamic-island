@@ -73,7 +73,6 @@ public enum NotchState {
 public enum NotchViews {
     case home
     case shelf
-    case terminal
     case andy
     case extensionExperience
 }
@@ -188,108 +187,6 @@ enum LockScreenTimerSurfaceMode: String, CaseIterable, Defaults.Serializable, Id
             return String(localized: "Classic")
         case .glass:
             return String(localized: "Glass")
-        }
-    }
-}
-
-enum LockScreenWeatherWidgetStyle: String, CaseIterable, Defaults.Serializable, Identifiable {
-    case inline = "Inline"
-    case circular = "Circular"
-
-    var id: String { rawValue }
-    
-    var localizedName: String {
-        switch self {
-        case .inline:
-            return String(localized: "Inline")
-        case .circular:
-            return String(localized: "Circular")
-        }
-    }
-}
-
-enum LockScreenWeatherProviderSource: String, CaseIterable, Defaults.Serializable, Identifiable {
-    case wttr = "wttr.in"
-    case openMeteo = "Open Meteo"
-
-    var id: String { rawValue }
-
-    var displayName: String { rawValue }
-
-    var supportsAirQuality: Bool {
-        switch self {
-        case .wttr:
-            return false
-        case .openMeteo:
-            return true
-        }
-    }
-}
-
-enum LockScreenWeatherTemperatureUnit: String, CaseIterable, Defaults.Serializable, Identifiable {
-    case celsius = "Celsius"
-    case fahrenheit = "Fahrenheit"
-
-    var id: String { rawValue }
-
-    var usesMetricSystem: Bool { self == .celsius }
-
-    var symbol: String {
-        switch self {
-        case .celsius: return "°C"
-        case .fahrenheit: return "°F"
-        }
-    }
-
-    var openMeteoTemperatureParameter: String? {
-        switch self {
-        case .celsius: return nil
-        case .fahrenheit: return "fahrenheit"
-        }
-    }
-}
-
-enum LockScreenWeatherAirQualityScale: String, CaseIterable, Defaults.Serializable, Identifiable {
-    case us = "U.S. AQI"
-    case european = "EAQI"
-
-    var id: String { rawValue }
-
-    var displayName: String { rawValue }
-
-    var compactLabel: String {
-        switch self {
-        case .us:
-            return String(localized: "AQI")
-        case .european:
-            return String(localized: "EAQI")
-        }
-    }
-
-    var accessibilityLabel: String {
-        switch self {
-        case .us:
-            return String(localized: "AQI")
-        case .european:
-            return String(localized: "EAQI")
-        }
-    }
-
-    var queryParameter: String {
-        switch self {
-        case .us:
-            return "us_aqi"
-        case .european:
-            return "european_aqi"
-        }
-    }
-
-    var gaugeRange: ClosedRange<Double> {
-        switch self {
-        case .us:
-            return 0...500
-        case .european:
-            return 0...120
         }
     }
 }

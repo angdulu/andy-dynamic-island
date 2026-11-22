@@ -204,7 +204,6 @@ func applyProfileSettings(_ profiles: Set<String>) {
     // Developer Profile Settings
     let isDeveloper = profiles.contains("developer")
     if isDeveloper {
-        Defaults[.enableTerminalFeature] = true
         Defaults[.enableScreenAssistant] = true
         Defaults[.showMirror] = false
         Defaults[.enableMinimalisticUI] = false
@@ -250,9 +249,6 @@ func applyProfileSettings(_ profiles: Set<String>) {
     
     // Lyrics disabled by default for all profiles
     Defaults[.enableLyrics] = false
-    
-    // Weather widget defaults to inline style
-    Defaults[.lockScreenWeatherWidgetStyle] = .inline
     
     // Auto-detect notch: Dynamic Island for non-notch Macs, standard notch otherwise
     if mainScreenHasNotch() {

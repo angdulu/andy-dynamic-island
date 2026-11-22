@@ -272,12 +272,8 @@ final class LockScreenTimerWidgetPanelManager {
         let offset = CGFloat(clampedTimerOffset())
         var originY = baseY + offset
 
-        if let weatherFrame = LockScreenWeatherPanelManager.shared.latestFrame {
-            originY = min(originY, weatherFrame.minY - size.height - 20)
-        } else {
-            let topLimit = screen.frame.maxY - size.height - 72
-            originY = min(originY, topLimit)
-        }
+        let topLimit = screen.frame.maxY - size.height - 72
+        originY = min(originY, topLimit)
 
         if let musicFrame = LockScreenPanelManager.shared.latestFrame {
             let minAllowedY = musicFrame.maxY + 12

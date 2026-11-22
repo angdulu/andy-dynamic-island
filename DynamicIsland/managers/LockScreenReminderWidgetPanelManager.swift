@@ -146,7 +146,7 @@ final class LockScreenReminderWidgetPanelManager {
 
         let defaultWeatherBottom = screenFrame.midY + (screenFrame.height * 0.14)
         let minimumWeatherBottom = lowerBound + size.height + marginBelowWeather
-        let weatherBottom = LockScreenWeatherPanelManager.shared.latestFrame?.minY ?? min(screenFrame.maxY - 120, max(defaultWeatherBottom, minimumWeatherBottom))
+        let weatherBottom = min(screenFrame.maxY - 120, max(defaultWeatherBottom, minimumWeatherBottom))
 
         let upperBound = weatherBottom - marginBelowWeather - size.height
         let clampedUpperBound = max(upperBound, lowerBound)

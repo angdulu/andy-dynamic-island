@@ -24,7 +24,6 @@ private enum SettingsTabGroup: String, CaseIterable, Identifiable {
     case system
     case productivity
     case utilities
-    case developer
     case integrations
     case info
 
@@ -38,7 +37,6 @@ private enum SettingsTabGroup: String, CaseIterable, Identifiable {
         case .system:           return String(localized: "System")
         case .productivity:     return String(localized: "Productivity")
         case .utilities:        return String(localized: "Utilities")
-        case .developer:        return String(localized: "Developer")
         case .integrations:     return String(localized: "Integrations")
         case .info:             return nil
         }
@@ -61,7 +59,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case downloads
     case shelf
     case shortcuts
-    case terminal
     case about
 
     var id: String { rawValue }
@@ -75,7 +72,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .timer, .calendar:                                              return .productivity
         case .screenAssistant, .shelf,
              .downloads, .shortcuts:                                         return .utilities
-        case .terminal:                                                      return .developer
         case .extensions:                                                    return .integrations
         case .about:                                                         return .info
         }
@@ -98,7 +94,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .downloads: return String(localized: "Downloads")
         case .shelf: return String(localized: "Shelf")
         case .shortcuts: return String(localized: "Shortcuts")
-        case .terminal: return String(localized: "Terminal")
         case .about: return String(localized: "About")
         }
     }
@@ -120,7 +115,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .downloads: return "square.and.arrow.down"
         case .shelf: return "books.vertical"
         case .shortcuts: return "keyboard"
-        case .terminal: return "apple.terminal"
         case .about: return "info.circle"
         }
     }
@@ -142,7 +136,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .downloads: return .gray
         case .shelf: return .brown
         case .shortcuts: return .orange
-        case .terminal: return Color(red: 0.2, green: 0.8, blue: 0.4)
         case .about: return .secondary
         }
     }
@@ -464,7 +457,7 @@ struct SettingsView: View {
 
     private var availableTabs: [SettingsTab] {
         // Ordered to match group layout: core → media & display → system →
-        // productivity → utilities → developer → integrations → info.
+        // productivity → utilities → integrations → info.
         let ordered: [SettingsTab] = [
             // Core
             .general,
@@ -485,8 +478,6 @@ struct SettingsView: View {
             .shelf,
             .downloads,
             .shortcuts,
-            // Developer
-            .terminal,
             // Integrations
             .extensions,
             // Info
@@ -820,19 +811,6 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .lockScreen, title: "Timer glass material", keywords: ["frosted", "liquid", "timer material"], highlightID: SettingsTab.lockScreen.highlightID(for: "Timer glass material")),
             SettingsSearchEntry(tab: .lockScreen, title: "Timer liquid mode", keywords: ["timer", "standard", "custom"], highlightID: SettingsTab.lockScreen.highlightID(for: "Timer liquid mode")),
             SettingsSearchEntry(tab: .lockScreen, title: "Timer widget variant", keywords: ["timer variant", "liquid"], highlightID: SettingsTab.lockScreen.highlightID(for: "Timer widget variant")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show lock screen weather", keywords: ["weather widget"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show lock screen weather")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Layout", keywords: ["inline", "circular", "weather layout"], highlightID: SettingsTab.lockScreen.highlightID(for: "Layout")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Weather data provider", keywords: ["wttr", "open meteo"], highlightID: SettingsTab.lockScreen.highlightID(for: "Weather data provider")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Temperature unit", keywords: ["celsius", "fahrenheit"], highlightID: SettingsTab.lockScreen.highlightID(for: "Temperature unit")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show location label", keywords: ["location", "weather"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show location label")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show charging status", keywords: ["charging", "weather"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show charging status")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show charging percentage", keywords: ["charging percentage"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show charging percentage")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show battery indicator", keywords: ["battery gauge", "weather"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show battery indicator")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Use MacBook icon when on battery", keywords: ["laptop icon", "battery"], highlightID: SettingsTab.lockScreen.highlightID(for: "Use MacBook icon when on battery")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show Bluetooth battery", keywords: ["bluetooth", "gauge"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show Bluetooth battery")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Show AQI widget", keywords: ["air quality", "aqi"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show AQI widget")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Air quality scale", keywords: ["aqi", "scale"], highlightID: SettingsTab.lockScreen.highlightID(for: "Air quality scale")),
-            SettingsSearchEntry(tab: .lockScreen, title: "Use colored gauges", keywords: ["gauge tint", "monochrome"], highlightID: SettingsTab.lockScreen.highlightID(for: "Use colored gauges")),
             SettingsSearchEntry(tab: .lockScreen, title: "Show lock screen reminder", keywords: ["lock screen", "reminder widget"], highlightID: SettingsTab.lockScreen.highlightID(for: "Show lock screen reminder")),
             SettingsSearchEntry(tab: .lockScreen, title: "Chip color", keywords: ["reminder chip", "color"], highlightID: SettingsTab.lockScreen.highlightID(for: "Chip color")),
             SettingsSearchEntry(tab: .lockScreen, title: "Reminder alignment", keywords: ["reminder", "alignment", "position"], highlightID: SettingsTab.lockScreen.highlightID(for: "Reminder alignment")),
@@ -871,26 +849,12 @@ struct SettingsView: View {
 
 
 
-            // Terminal
-            SettingsSearchEntry(tab: .terminal, title: "Enable terminal", keywords: ["terminal", "guake", "shell"], highlightID: SettingsTab.terminal.highlightID(for: "Enable terminal")),
-            SettingsSearchEntry(tab: .terminal, title: "Shell path", keywords: ["shell", "zsh", "bash", "terminal"], highlightID: SettingsTab.terminal.highlightID(for: "Shell path")),
-            SettingsSearchEntry(tab: .terminal, title: "Font size", keywords: ["terminal", "font", "text size"], highlightID: SettingsTab.terminal.highlightID(for: "Font size")),
-            SettingsSearchEntry(tab: .terminal, title: "Terminal opacity", keywords: ["terminal", "opacity", "transparency", "blur", "background"], highlightID: SettingsTab.terminal.highlightID(for: "Terminal opacity")),
-            SettingsSearchEntry(tab: .terminal, title: "Maximum height", keywords: ["terminal", "height", "size"], highlightID: SettingsTab.terminal.highlightID(for: "Maximum height")),
-            SettingsSearchEntry(tab: .terminal, title: "Background color", keywords: ["terminal", "background", "color", "theme"], highlightID: SettingsTab.terminal.highlightID(for: "Background color")),
-            SettingsSearchEntry(tab: .terminal, title: "Foreground color", keywords: ["terminal", "foreground", "text color", "theme"], highlightID: SettingsTab.terminal.highlightID(for: "Foreground color")),
-            SettingsSearchEntry(tab: .terminal, title: "Cursor color", keywords: ["terminal", "cursor", "caret", "color"], highlightID: SettingsTab.terminal.highlightID(for: "Cursor color")),
-            SettingsSearchEntry(tab: .terminal, title: "Bold as bright", keywords: ["terminal", "bold", "bright", "colors"], highlightID: SettingsTab.terminal.highlightID(for: "Bold as bright")),
-            SettingsSearchEntry(tab: .terminal, title: "Cursor style", keywords: ["terminal", "cursor", "block", "underline", "bar", "blink"], highlightID: SettingsTab.terminal.highlightID(for: "Cursor style")),
-            SettingsSearchEntry(tab: .terminal, title: "Scrollback lines", keywords: ["terminal", "scrollback", "buffer", "history"], highlightID: SettingsTab.terminal.highlightID(for: "Scrollback lines")),
-            SettingsSearchEntry(tab: .terminal, title: "Option as Meta", keywords: ["terminal", "option", "meta", "alt", "key"], highlightID: SettingsTab.terminal.highlightID(for: "Option as Meta")),
-            SettingsSearchEntry(tab: .terminal, title: "Mouse reporting", keywords: ["terminal", "mouse", "reporting", "vim", "tmux"], highlightID: SettingsTab.terminal.highlightID(for: "Mouse reporting")),
         ]
     }
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .shelf, .terminal:
+        case .timer, .shelf:
             return !enableMinimalisticUI
         default:
             return true
@@ -960,10 +924,6 @@ struct SettingsView: View {
         case .shortcuts:
             SettingsForm(tab: .shortcuts) {
                 Shortcuts()
-            }
-        case .terminal:
-            SettingsForm(tab: .terminal) {
-                TerminalSettings()
             }
         case .about:
             if let controller = updaterController {
@@ -2974,16 +2934,7 @@ struct CalendarSettings: View {
     @Default(.hideCompletedReminders) var hideCompletedReminders
     @Default(.showFullEventTitles) var showFullEventTitles
     @Default(.autoScrollToNextEvent) var autoScrollToNextEvent
-    @Default(.lockScreenShowCalendarCountdown) private var lockScreenShowCalendarCountdown
-    @Default(.lockScreenShowCalendarEvent) private var lockScreenShowCalendarEvent
-    @Default(.lockScreenShowCalendarEventEntireDuration) private var lockScreenShowCalendarEventEntireDuration
-    @Default(.lockScreenShowCalendarEventAfterStartWindow) private var lockScreenShowCalendarEventAfterStartWindow
-    @Default(.lockScreenShowCalendarTimeRemaining) private var lockScreenShowCalendarTimeRemaining
-    @Default(.lockScreenShowCalendarStartTimeAfterBegins) private var lockScreenShowCalendarStartTimeAfterBegins
     @Default(.lockScreenCalendarEventLookaheadWindow) private var lockScreenCalendarEventLookaheadWindow
-    @Default(.lockScreenCalendarSelectionMode) private var lockScreenCalendarSelectionMode
-    @Default(.lockScreenSelectedCalendarIDs) private var lockScreenSelectedCalendarIDs
-    @Default(.lockScreenShowCalendarEventAfterStartEnabled) private var lockScreenShowCalendarEventAfterStartEnabled
     @Default(.enableThirdPartyCalendarApp) private var enableThirdPartyCalendarApp
     @Default(.selectedCalendarApp) private var selectedCalendarApp
     @Default(.fantasticalDefaultView) private var fantasticalDefaultView
@@ -3144,143 +3095,6 @@ struct CalendarSettings: View {
                     .settingsHighlight(id: highlightID("Chip color"))
                 }
 
-                Section(
-                    header: Text("Calendar Widget"),
-                    footer: Text("Displays your next upcoming calendar event above or below the weather capsule. Calendar selection here is independent from the Dynamic Island calendar filter.")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                ) {
-                    Defaults.Toggle(key: .lockScreenShowCalendarEvent) {
-                        Text("Show next calendar event")
-                    }
-                    .settingsHighlight(id: highlightID("Show next calendar event"))
-
-                    LabeledContent("Show events within the next") {
-                        HStack {
-                            Spacer(minLength: 0)
-                            Picker("", selection: $lockScreenCalendarEventLookaheadWindow) {
-                                ForEach(CalendarLookaheadOption.allCases) { option in
-                                    Text(option.title).tag(option.rawValue)
-                                }
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
-                    .disabled(!lockScreenShowCalendarEvent)
-                    .settingsHighlight(id: highlightID("Show events within the next"))
-
-                    Toggle("Show events from all calendars", isOn: Binding(
-                        get: { lockScreenCalendarSelectionMode == "all" },
-                        set: { useAll in
-                            if useAll {
-                                lockScreenCalendarSelectionMode = "all"
-                            } else {
-                                lockScreenCalendarSelectionMode = "selected"
-                                lockScreenSelectedCalendarIDs = Set(calendarManager.eventCalendars.map { $0.id })
-                            }
-                        }
-                    ))
-                    .disabled(!lockScreenShowCalendarEvent)
-                    .settingsHighlight(id: highlightID("Show events from all calendars"))
-
-                    if lockScreenCalendarSelectionMode != "all" {
-                        HStack {
-                            Spacer()
-                            Button("Deselect All") {
-                                lockScreenSelectedCalendarIDs = []
-                            }
-                            .buttonStyle(.link)
-                        }
-                        .padding(.top, 2)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(calendarManager.eventCalendars, id: \.id) { calendar in
-                                Toggle(isOn: Binding(
-                                    get: { lockScreenSelectedCalendarIDs.contains(calendar.id) },
-                                    set: { isOn in
-                                        if isOn {
-                                            lockScreenSelectedCalendarIDs.insert(calendar.id)
-                                        } else {
-                                            lockScreenSelectedCalendarIDs.remove(calendar.id)
-                                        }
-                                    }
-                                )) {
-                                    HStack(spacing: 8) {
-                                        Circle()
-                                            .fill(Color(calendar.color))
-                                            .frame(width: 8, height: 8)
-                                        Text(calendar.title)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.top, 4)
-                        .padding(.leading, 2)
-                        .disabled(!lockScreenShowCalendarEvent)
-                    }
-
-                    Defaults.Toggle(key: .lockScreenShowCalendarCountdown) {
-                        Text("Show countdown")
-                    }
-                    .disabled(!lockScreenShowCalendarEvent)
-                    .settingsHighlight(id: highlightID("Show countdown"))
-
-                    Defaults.Toggle(key: .lockScreenShowCalendarEventEntireDuration) {
-                        Text("Show event for entire duration")
-                    }
-                    .disabled(!lockScreenShowCalendarEvent)
-                    .settingsHighlight(id: highlightID("Show event for entire duration"))
-                    .onChange(of: Defaults[.lockScreenShowCalendarEventEntireDuration]) { _, newValue in
-                        if newValue {
-                            Defaults[.lockScreenShowCalendarEventAfterStartEnabled] = false
-                        }
-                    }
-
-                    Defaults.Toggle(key: .lockScreenShowCalendarEventAfterStartEnabled) {
-                        Text("Hide active event and show next upcoming event")
-                    }
-                    .disabled(!lockScreenShowCalendarEvent || lockScreenShowCalendarEventEntireDuration)
-                    .settingsHighlight(id: highlightID("Hide active event and show next upcoming event"))
-
-                    LabeledContent("Show event after it starts") {
-                        HStack {
-                            Spacer(minLength: 0)
-                            Picker("", selection: $lockScreenShowCalendarEventAfterStartWindow) {
-                                Text("1 min").tag("1m")
-                                Text("5 mins").tag("5m")
-                                Text("10 mins").tag("10m")
-                                Text("15 mins").tag("15m")
-                                Text("30 mins").tag("30m")
-                                Text("45 mins").tag("45m")
-                                Text("1 hour").tag("1h")
-                                Text("2 hours").tag("2h")
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
-                    .disabled(!lockScreenShowCalendarEvent || lockScreenShowCalendarEventEntireDuration || !lockScreenShowCalendarEventAfterStartEnabled)
-
-                    Text("Turn off 'Show event for entire duration' to use the post-start duration option.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Defaults.Toggle(key: .lockScreenShowCalendarTimeRemaining) {
-                        Text("Show time remaining")
-                    }
-                    .disabled(!lockScreenShowCalendarEvent)
-                    .settingsHighlight(id: highlightID("Show time remaining"))
-
-                    Defaults.Toggle(key: .lockScreenShowCalendarStartTimeAfterBegins) {
-                        Text("Show start time after event begins")
-                    }
-                    .disabled(!lockScreenShowCalendarEvent)
-                    .settingsHighlight(id: highlightID("Show start time after event begins"))
-                }
-                
                 // MARK: - Third-party Calendar Integration
                 Section {
                     Defaults.Toggle(key: .enableThirdPartyCalendarApp) {
@@ -4788,31 +4602,12 @@ struct LockScreenSettings: View {
     @Default(.enableLockScreenMediaWidget) private var enableLockScreenMediaWidget
     @Default(.lockScreenMusicFullscreenArtworkEnabled) private var lockScreenMusicFullscreenArtworkEnabled
     @Default(.enableLockScreenTimerWidget) private var enableLockScreenTimerWidget
-    @Default(.enableLockScreenWeatherWidget) private var enableLockScreenWeatherWidget
-    @Default(.enableLockScreenFocusWidget) private var enableLockScreenFocusWidget
-    @Default(.lockScreenWeatherWidgetStyle) private var lockScreenWeatherWidgetStyle
-    @Default(.lockScreenWeatherProviderSource) private var lockScreenWeatherProviderSource
-    @Default(.lockScreenWeatherTemperatureUnit) private var lockScreenWeatherTemperatureUnit
-    @Default(.lockScreenBatteryShowsCharging) private var lockScreenWeatherShowsCharging
-    @Default(.lockScreenBatteryShowsBatteryGauge) private var lockScreenWeatherShowsBatteryGauge
-    @Default(.lockScreenWeatherShowsAQI) private var lockScreenWeatherShowsAQI
-    @Default(.lockScreenWeatherShowsSunrise) private var lockScreenWeatherShowsSunrise
-    @Default(.lockScreenWeatherAQIScale) private var lockScreenWeatherAQIScale
     @Default(.enableLockScreenReminderWidget) private var enableLockScreenReminderWidget
     @Default(.lockScreenReminderChipStyle) private var lockScreenReminderChipStyle
     @Default(.lockScreenReminderWidgetHorizontalAlignment) private var lockScreenReminderWidgetHorizontalAlignment
     @Default(.lockScreenReminderWidgetVerticalOffset) private var lockScreenReminderWidgetVerticalOffset
     @Default(.showStandardMediaControls) private var showStandardMediaControls
-    @Default(.lockScreenShowCalendarCountdown) private var lockScreenShowCalendarCountdown
-    @Default(.lockScreenShowCalendarEvent) private var lockScreenShowCalendarEvent
-    @Default(.lockScreenShowCalendarEventEntireDuration) private var lockScreenShowCalendarEventEntireDuration
-    @Default(.lockScreenShowCalendarEventAfterStartWindow) private var lockScreenShowCalendarEventAfterStartWindow
-    @Default(.lockScreenShowCalendarTimeRemaining) private var lockScreenShowCalendarTimeRemaining
-    @Default(.lockScreenShowCalendarStartTimeAfterBegins) private var lockScreenShowCalendarStartTimeAfterBegins
     @Default(.lockScreenCalendarEventLookaheadWindow) private var lockScreenCalendarEventLookaheadWindow
-    @Default(.lockScreenCalendarSelectionMode) private var lockScreenCalendarSelectionMode
-    @Default(.lockScreenSelectedCalendarIDs) private var lockScreenSelectedCalendarIDs
-    @Default(.lockScreenShowCalendarEventAfterStartEnabled) private var lockScreenShowCalendarEventAfterStartEnabled
     @Default(.lockScreenMusicMergedAirPlayOutput) private var lockScreenMusicMergedAirPlayOutput
     @ObservedObject private var musicManager = MusicManager.shared
 
@@ -5121,82 +4916,6 @@ struct LockScreenSettings: View {
             }
 
             Section {
-                Defaults.Toggle(key: .enableLockScreenWeatherWidget) {
-                    Text("Show lock screen weather")
-                }
-                .settingsHighlight(id: highlightID("Show lock screen weather"))
-
-                if enableLockScreenWeatherWidget {
-                    Picker("Layout", selection: $lockScreenWeatherWidgetStyle) {
-                        ForEach(LockScreenWeatherWidgetStyle.allCases) { style in
-                            Text(style.rawValue).tag(style)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .settingsHighlight(id: highlightID("Layout"))
-
-                    Picker("Weather data provider", selection: $lockScreenWeatherProviderSource) {
-                        ForEach(LockScreenWeatherProviderSource.allCases) { source in
-                            Text(source.displayName).tag(source)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .settingsHighlight(id: highlightID("Weather data provider"))
-
-                    Picker("Temperature unit", selection: $lockScreenWeatherTemperatureUnit) {
-                        ForEach(LockScreenWeatherTemperatureUnit.allCases) { unit in
-                            Text(unit.rawValue).tag(unit)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .settingsHighlight(id: highlightID("Temperature unit"))
-
-                    Defaults.Toggle(key: .lockScreenWeatherShowsLocation) {
-                        Text("Show location label")
-                    }
-                    .disabled(lockScreenWeatherWidgetStyle == .circular)
-                    .settingsHighlight(id: highlightID("Show location label"))
-
-                    Defaults.Toggle(key: .lockScreenWeatherShowsSunrise) {
-                        Text("Show sunrise time")
-                    }
-                    .disabled(lockScreenWeatherWidgetStyle != .inline)
-                    .settingsHighlight(id: highlightID("Show sunrise time"))
-
-                    Defaults.Toggle(key: .lockScreenWeatherShowsAQI) {
-                        Text("Show AQI widget")
-                    }
-                    .disabled(!lockScreenWeatherProviderSource.supportsAirQuality)
-                    .settingsHighlight(id: highlightID("Show AQI widget"))
-
-                    if lockScreenWeatherShowsAQI && lockScreenWeatherProviderSource.supportsAirQuality {
-                        Picker("Air quality scale", selection: $lockScreenWeatherAQIScale) {
-                            ForEach(LockScreenWeatherAirQualityScale.allCases) { scale in
-                                Text(scale.displayName).tag(scale)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .settingsHighlight(id: highlightID("Air quality scale"))
-                    }
-
-                    if !lockScreenWeatherProviderSource.supportsAirQuality {
-                        Text("Air quality requires the Open Meteo provider.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Defaults.Toggle(key: .lockScreenWeatherUsesGaugeTint) {
-                        Text("Use colored gauges")
-                    }
-                    .settingsHighlight(id: highlightID("Use colored gauges"))
-                }
-            } header: {
-                Text("Weather Widget")
-            } footer: {
-                Text("Enable the weather capsule and configure its layout, provider, units, and optional battery/AQI indicators.")
-            }
-
-            Section {
                 Defaults.Toggle(key: .enableLockScreenReminderWidget) {
                     Text("Show lock screen reminder")
                 }
@@ -5237,191 +4956,6 @@ struct LockScreenSettings: View {
                 Text("Reminder Widget")
             } footer: {
                 Text("Controls the lock screen reminder chip and its positioning.")
-            }
-
-            if BatteryActivityManager.shared.hasBattery() {
-                Section {
-                    Defaults.Toggle(key: .lockScreenBatteryShowsBatteryGauge) {
-                        Text("Show battery indicator")
-                    }
-                    .settingsHighlight(id: highlightID("Show battery indicator"))
-
-                    if lockScreenWeatherShowsBatteryGauge {
-                        Defaults.Toggle(key: .lockScreenBatteryUsesLaptopSymbol) {
-                            Text("Use MacBook icon when on battery")
-                        }
-                        .settingsHighlight(id: highlightID("Use MacBook icon when on battery"))
-
-                        Defaults.Toggle(key: .lockScreenBatteryShowsCharging) {
-                            Text("Show charging status")
-                        }
-                        .settingsHighlight(id: highlightID("Show charging status"))
-
-                        if lockScreenWeatherShowsCharging {
-                            Defaults.Toggle(key: .lockScreenBatteryShowsChargingPercentage) {
-                                Text("Show charging percentage")
-                            }
-                            .settingsHighlight(id: highlightID("Show charging percentage"))
-                        }
-
-                        Defaults.Toggle(key: .lockScreenBatteryShowsBluetooth) {
-                            Text("Show Bluetooth battery")
-                        }
-                        .settingsHighlight(id: highlightID("Show Bluetooth battery"))
-                    }
-                } header: {
-                    Text("Battery Widget")
-                } footer: {
-                    Text("Enable the battery capsule and configure its layout.")
-                }
-            }
-
-            Section {
-                Defaults.Toggle(key: .enableLockScreenFocusWidget) {
-                    Text("Show focus widget")
-                }
-                .settingsHighlight(id: highlightID("Show focus widget"))
-            } header: {
-                Text("Focus Widget")
-            } footer: {
-                Text("Displays the current Focus state above the weather capsule whenever Focus detection is enabled.")
-            }
-
-            Section {
-                Defaults.Toggle(key: .lockScreenShowCalendarEvent) {
-                    Text("Show next calendar event")
-                }
-                .settingsHighlight(id: highlightID("Show next calendar event"))
-
-                LabeledContent("Show events within the next") {
-                    HStack {
-                        Spacer(minLength: 0)
-                        Picker("", selection: $lockScreenCalendarEventLookaheadWindow) {
-                            ForEach(CalendarLookaheadOption.allCases) { option in
-                                Text(option.title).tag(option.rawValue)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                .disabled(!lockScreenShowCalendarEvent)
-                .settingsHighlight(id: highlightID("Show events within the next"))
-
-                Toggle("Show events from all calendars", isOn: Binding(
-                    get: { lockScreenCalendarSelectionMode == "all" },
-                    set: { useAll in
-                        if useAll {
-                            lockScreenCalendarSelectionMode = "all"
-                        } else {
-                            lockScreenCalendarSelectionMode = "selected"
-                            lockScreenSelectedCalendarIDs = Set(calendarManager.eventCalendars.map { $0.id })
-                        }
-                    }
-                ))
-                .disabled(!lockScreenShowCalendarEvent)
-                .settingsHighlight(id: highlightID("Show events from all calendars"))
-
-                if lockScreenCalendarSelectionMode != "all" {
-                    HStack {
-                        Spacer()
-                        Button("Deselect All") {
-                            lockScreenSelectedCalendarIDs = []
-                        }
-                        .buttonStyle(.link)
-                    }
-                    .padding(.top, 2)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(calendarManager.eventCalendars, id: \.id) { calendar in
-                            Toggle(isOn: Binding(
-                                get: { lockScreenSelectedCalendarIDs.contains(calendar.id) },
-                                set: { isOn in
-                                    if isOn {
-                                        lockScreenSelectedCalendarIDs.insert(calendar.id)
-                                    } else {
-                                        lockScreenSelectedCalendarIDs.remove(calendar.id)
-                                    }
-                                }
-                            )) {
-                                HStack(spacing: 8) {
-                                    Circle()
-                                        .fill(Color(calendar.color))
-                                        .frame(width: 8, height: 8)
-                                    Text(calendar.title)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.top, 4)
-                    .padding(.leading, 2)
-                    .disabled(!lockScreenShowCalendarEvent)
-                }
-
-                Defaults.Toggle(key: .lockScreenShowCalendarCountdown) {
-                    Text("Show countdown")
-                }
-                .disabled(!lockScreenShowCalendarEvent)
-                .settingsHighlight(id: highlightID("Show countdown"))
-
-                Defaults.Toggle(key: .lockScreenShowCalendarEventEntireDuration) {
-                    Text("Show event for entire duration")
-                }
-                .disabled(!lockScreenShowCalendarEvent)
-                .settingsHighlight(id: highlightID("Show event for entire duration"))
-                .onChange(of: Defaults[.lockScreenShowCalendarEventEntireDuration]) { _, newValue in
-                    if newValue {
-                        Defaults[.lockScreenShowCalendarEventAfterStartEnabled] = false
-                    }
-                }
-
-                Defaults.Toggle(
-                    "Hide active event and show next upcoming event",
-                    key: .lockScreenShowCalendarEventAfterStartEnabled
-                )
-                .disabled(!lockScreenShowCalendarEvent || lockScreenShowCalendarEventEntireDuration)
-                .settingsHighlight(id: highlightID("Hide active event and show next upcoming event"))
-
-                LabeledContent("Show event after it starts") {
-                    HStack {
-                        Spacer(minLength: 0)
-                        Picker("", selection: $lockScreenShowCalendarEventAfterStartWindow) {
-                            Text("1 min").tag("1m")
-                            Text("5 mins").tag("5m")
-                            Text("10 mins").tag("10m")
-                            Text("15 mins").tag("15m")
-                            Text("30 mins").tag("30m")
-                            Text("45 mins").tag("45m")
-                            Text("1 hour").tag("1h")
-                            Text("2 hours").tag("2h")
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                .disabled(!lockScreenShowCalendarEvent || lockScreenShowCalendarEventEntireDuration || !lockScreenShowCalendarEventAfterStartEnabled)
-
-                Text("Turn off 'Show event for entire duration' to use the post-start duration option.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Defaults.Toggle(key: .lockScreenShowCalendarTimeRemaining) {
-                    Text("Show time remaining")
-                }
-                .disabled(!lockScreenShowCalendarEvent)
-                .settingsHighlight(id: highlightID("Show time remaining"))
-
-                Defaults.Toggle(key: .lockScreenShowCalendarStartTimeAfterBegins) {
-                    Text("Show start time after event begins")
-                }
-                .disabled(!lockScreenShowCalendarEvent)
-                .settingsHighlight(id: highlightID("Show start time after event begins"))
-            } header: {
-                Text("Calendar Widget")
-            } footer: {
-                Text("Displays your next upcoming calendar event above or below the weather capsule. Calendar selection here is independent from the Dynamic Island calendar filter.")
             }
 
             LockScreenPositioningControls()
@@ -5545,7 +5079,6 @@ private struct LockScreenGlassVariantPreviewCell: View {
 }
 
 private struct LockScreenPositioningControls: View {
-    @Default(.lockScreenWeatherVerticalOffset) private var weatherOffset
     @Default(.lockScreenMusicVerticalOffset) private var musicOffset
     @Default(.lockScreenTimerVerticalOffset) private var timerOffset
     @Default(.lockScreenMusicPanelWidth) private var musicWidth
@@ -5556,17 +5089,6 @@ private struct LockScreenPositioningControls: View {
 
     var body: some View {
         Section {
-            let weatherBinding = Binding<Double>(
-                get: { weatherOffset },
-                set: { newValue in
-                    let clampedValue = clampOffset(newValue)
-                    if weatherOffset != clampedValue {
-                        weatherOffset = clampedValue
-                    }
-                    propagateWeatherOffsetChange(animated: false)
-                }
-            )
-
             let timerBinding = Binding<Double>(
                 get: { timerOffset },
                 set: { newValue in
@@ -5612,7 +5134,6 @@ private struct LockScreenPositioningControls: View {
             )
 
             LockScreenPositioningPreview(
-                weatherOffset: weatherBinding,
                 timerOffset: timerBinding,
                 musicOffset: musicBinding,
                 musicWidth: musicWidthBinding,
@@ -5622,16 +5143,6 @@ private struct LockScreenPositioningControls: View {
             .padding(.vertical, 8)
 
             HStack(alignment: .top, spacing: 24) {
-                offsetColumn(
-                    title: String(localized: "Weather"),
-                    value: weatherOffset,
-                    resetTitle: String(localized: "Reset Weather"),
-                    resetAction: resetWeatherOffset
-                )
-
-                Divider()
-                    .frame(height: 64)
-
                 offsetColumn(
                     title: String(localized: "Timer"),
                     value: timerOffset,
@@ -5690,11 +5201,6 @@ private struct LockScreenPositioningControls: View {
         min(max(value, range.lowerBound), range.upperBound)
     }
 
-    private func resetWeatherOffset() {
-        weatherOffset = 0
-        propagateWeatherOffsetChange(animated: true)
-    }
-
     private func resetTimerOffset() {
         timerOffset = 0
         propagateTimerOffsetChange(animated: true)
@@ -5713,12 +5219,6 @@ private struct LockScreenPositioningControls: View {
     private func resetTimerWidth() {
         timerWidth = LockScreenTimerWidget.defaultWidth
         propagateTimerWidthChange(animated: true)
-    }
-
-    private func propagateWeatherOffsetChange(animated: Bool) {
-        Task { @MainActor in
-            LockScreenWeatherPanelManager.shared.refreshPositionForOffsets(animated: animated)
-        }
     }
 
     private func propagateTimerOffsetChange(animated: Bool) {
@@ -5808,16 +5308,13 @@ private struct LockScreenPositioningControls: View {
 }
 
 private struct LockScreenPositioningPreview: View {
-    @Binding var weatherOffset: Double
     @Binding var timerOffset: Double
     @Binding var musicOffset: Double
     @Binding var musicWidth: Double
     @Binding var timerWidth: Double
 
-    @State private var weatherStartOffset: Double = 0
     @State private var timerStartOffset: Double = 0
     @State private var musicStartOffset: Double = 0
-    @State private var isWeatherDragging = false
     @State private var isTimerDragging = false
     @State private var isMusicDragging = false
 
@@ -5834,10 +5331,8 @@ private struct LockScreenPositioningPreview: View {
                 height: geometry.size.height - (screenPadding * 2)
             )
             let centerX = screenRect.midX
-            let weatherBaseY = screenRect.minY + (screenRect.height * 0.28)
             let timerBaseY = screenRect.minY + (screenRect.height * 0.5)
             let musicBaseY = screenRect.minY + (screenRect.height * 0.78)
-            let weatherSize = CGSize(width: screenRect.width * 0.42, height: screenRect.height * 0.22)
             let defaultMusicWidth = Double(LockScreenMusicPanel.defaultCollapsedWidth)
             let musicWidthScale = CGFloat(musicWidth / defaultMusicWidth)
             let timerWidthScale = CGFloat(timerWidth / LockScreenTimerWidget.defaultWidth)
@@ -5861,10 +5356,6 @@ private struct LockScreenPositioningPreview: View {
                     .shadow(color: Color.black.opacity(0.22), radius: 20, x: 0, y: 18)
                     .position(x: screenRect.midX, y: screenRect.midY)
 
-                weatherPanel(size: weatherSize)
-                    .position(x: centerX, y: weatherBaseY - CGFloat(weatherOffset))
-                    .gesture(weatherDragGesture(in: screenRect, baseY: weatherBaseY, panelSize: weatherSize))
-
                 timerPanel(size: timerSize)
                     .position(x: centerX, y: timerBaseY - CGFloat(timerOffset))
                     .gesture(timerDragGesture(in: screenRect, baseY: timerBaseY, panelSize: timerSize))
@@ -5874,35 +5365,10 @@ private struct LockScreenPositioningPreview: View {
                     .gesture(musicDragGesture(in: screenRect, baseY: musicBaseY, panelSize: musicSize))
             }
         }
-        .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.82), value: weatherOffset)
         .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.82), value: musicOffset)
         .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.82), value: timerOffset)
         .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.82), value: musicWidth)
         .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.82), value: timerWidth)
-    }
-
-    private func weatherPanel(size: CGSize) -> some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.78), Color.blue.opacity(0.52)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: size.width, height: size.height)
-            .overlay(alignment: .leading) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("Weather", systemImage: "cloud.sun.fill")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.white)
-                    Text("Inline snapshot preview")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.72))
-                }
-                .padding(.horizontal, 16)
-            }
-            .shadow(color: Color.blue.opacity(0.22), radius: 10, x: 0, y: 8)
     }
 
     private func musicPanel(size: CGSize) -> some View {
@@ -5950,27 +5416,6 @@ private struct LockScreenPositioningPreview: View {
                 }
             }
             .shadow(color: Color.orange.opacity(0.3), radius: 12, x: 0, y: 8)
-    }
-
-    private func weatherDragGesture(in screenRect: CGRect, baseY: CGFloat, panelSize: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if !isWeatherDragging {
-                    isWeatherDragging = true
-                    weatherStartOffset = weatherOffset
-                }
-
-                let proposed = weatherStartOffset - Double(value.translation.height)
-                weatherOffset = clampedOffset(
-                    proposed,
-                    baseCenterY: baseY,
-                    panelHeight: panelSize.height,
-                    screenRect: screenRect
-                )
-            }
-            .onEnded { _ in
-                isWeatherDragging = false
-            }
     }
 
     private func musicDragGesture(in screenRect: CGRect, baseY: CGFloat, panelSize: CGSize) -> some Gesture {
@@ -6139,28 +5584,6 @@ struct Shortcuts: View {
                         .font(.caption)
                 }
 
-                Section {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            KeyboardShortcuts.Recorder("Toggle Terminal Tab:", name: .toggleTerminalTab)
-                                .disabled(!enableShortcuts || !Defaults[.enableTerminalFeature])
-                            if !Defaults[.enableTerminalFeature] {
-                                Text("Terminal feature is disabled")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 2)
-                            }
-                        }
-                        Spacer()
-                    }
-                } header: {
-                    Text("Terminal")
-                } footer: {
-                    Text("Opens the terminal tab in the notch. Default is Ctrl+`. Only works when terminal feature is enabled.")
-                        .multilineTextAlignment(.trailing)
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                }
 
 
             } else {
@@ -6968,284 +6391,6 @@ struct SettingsPermissionCallout: View {
 
 #Preview {
     HUD()
-}
-
-// MARK: - Terminal Settings
-
-struct TerminalSettings: View {
-    @ObservedObject var terminalManager = TerminalManager.shared
-    @Default(.enableTerminalFeature) var enableTerminalFeature
-    @Default(.terminalShellPath) var terminalShellPath
-    @Default(.terminalFontFamily) var terminalFontFamily
-    @Default(.terminalFontSize) var terminalFontSize
-    @Default(.terminalOpacity) var terminalOpacity
-    @Default(.terminalMaxHeightFraction) var terminalMaxHeightFraction
-    @Default(.terminalCursorStyle) var terminalCursorStyle
-    @Default(.terminalScrollbackLines) var terminalScrollbackLines
-    @Default(.terminalOptionAsMeta) var terminalOptionAsMeta
-    @Default(.terminalMouseReporting) var terminalMouseReporting
-    @Default(.terminalBoldAsBright) var terminalBoldAsBright
-    @Default(.terminalBackgroundColor) var terminalBackgroundColor
-    @Default(.terminalForegroundColor) var terminalForegroundColor
-    @Default(.terminalCursorColor) var terminalCursorColor
-
-    private func highlightID(_ title: String) -> String {
-        SettingsTab.terminal.highlightID(for: title)
-    }
-
-    private var formattedMaxHeight: String {
-        "\(Int(terminalMaxHeightFraction * 100))% of screen"
-    }
-
-    /// All monospaced font families available on the system.
-    private var monospacedFontFamilies: [String] {
-        NSFontManager.shared.availableFontFamilies.filter { family in
-            guard let font = NSFont(name: family, size: 12) else { return false }
-            return font.isFixedPitch
-                || font.fontDescriptor.symbolicTraits.contains(.monoSpace)
-        }
-        .sorted()
-    }
-
-    /// Display name for the font picker — shows "System Monospaced" when no custom font is set.
-    private var fontDisplayName: String {
-        terminalFontFamily.isEmpty ? "System Monospaced" : terminalFontFamily
-    }
-
-    private var cursorStyleBinding: Binding<TerminalCursorStyleOption> {
-        Binding(
-            get: { TerminalCursorStyleOption(rawValue: terminalCursorStyle) ?? .blinkBlock },
-            set: { terminalCursorStyle = $0.rawValue }
-        )
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                Defaults.Toggle(key: .enableTerminalFeature) {
-                    Text("Enable terminal")
-                }
-                .settingsHighlight(id: highlightID("Enable terminal"))
-
-                if enableTerminalFeature {
-                    Defaults.Toggle(key: .terminalStickyMode) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Keep terminal open until clicked outside")
-                            Text("Prevents the terminal from closing when the cursor accidentally leaves the notch area.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .settingsHighlight(id: highlightID("Keep terminal open"))
-                }
-            } header: {
-                Text("General")
-            } footer: {
-                Text("Adds a Guake-style dropdown terminal tab. The terminal session persists across notch open/close cycles.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            if enableTerminalFeature {
-                // MARK: Shell
-                Section {
-                    HStack {
-                        Text("Shell path")
-                        Spacer()
-                        TextField("", text: $terminalShellPath)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 200)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    .settingsHighlight(id: highlightID("Shell path"))
-                } header: {
-                    Text("Shell")
-                }
-
-                // MARK: Appearance
-                Section {
-                    Picker("Font family", selection: $terminalFontFamily) {
-                        Text("System Monospaced").tag("")
-                        Divider()
-                        ForEach(monospacedFontFamilies, id: \.self) { family in
-                            Text(family)
-                                .font(.custom(family, size: 13))
-                                .tag(family)
-                        }
-                    }
-                    .onChange(of: terminalFontFamily) { _, newValue in
-                        terminalManager.applyFontFamily(newValue)
-                    }
-                    .settingsHighlight(id: highlightID("Font family"))
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Font size")
-                            Spacer()
-                            Text("\(Int(terminalFontSize)) pt")
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                        Slider(value: $terminalFontSize, in: 8...24, step: 1)
-                            .onChange(of: terminalFontSize) { _, newValue in
-                                terminalManager.applyFontSize(newValue)
-                            }
-                    }
-                    .settingsHighlight(id: highlightID("Font size"))
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Terminal opacity")
-                            Spacer()
-                            Text("\(Int(terminalOpacity * 100))%")
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                        Slider(value: $terminalOpacity, in: 0.3...1.0, step: 0.05)
-                            .onChange(of: terminalOpacity) { _, newValue in
-                                terminalManager.applyOpacity(newValue)
-                            }
-                    }
-                    .settingsHighlight(id: highlightID("Terminal opacity"))
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Maximum height")
-                            Spacer()
-                            Text(formattedMaxHeight)
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                        Slider(value: $terminalMaxHeightFraction, in: 0.2...0.5, step: 0.05)
-                    }
-                    .settingsHighlight(id: highlightID("Maximum height"))
-                } header: {
-                    Text("Appearance")
-                } footer: {
-                    Text("Terminal opacity only affects the terminal backdrop; text stays fully opaque. Blur uses the system material behind the window.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                // MARK: Colors
-                Section {
-                    ColorPicker("Background", selection: $terminalBackgroundColor, supportsOpacity: false)
-                        .onChange(of: terminalBackgroundColor) { _, newValue in
-                            terminalManager.applyBackgroundColor(newValue)
-                        }
-                        .settingsHighlight(id: highlightID("Background color"))
-
-                    ColorPicker("Foreground", selection: $terminalForegroundColor, supportsOpacity: false)
-                        .onChange(of: terminalForegroundColor) { _, newValue in
-                            terminalManager.applyForegroundColor(newValue)
-                        }
-                        .settingsHighlight(id: highlightID("Foreground color"))
-
-                    ColorPicker("Cursor", selection: $terminalCursorColor, supportsOpacity: false)
-                        .onChange(of: terminalCursorColor) { _, newValue in
-                            terminalManager.applyCursorColor(newValue)
-                        }
-                        .settingsHighlight(id: highlightID("Cursor color"))
-
-                    Toggle("Bold text as bright colors", isOn: $terminalBoldAsBright)
-                        .onChange(of: terminalBoldAsBright) { _, newValue in
-                            terminalManager.applyBoldAsBright(newValue)
-                        }
-                        .settingsHighlight(id: highlightID("Bold as bright"))
-                } header: {
-                    Text("Colors")
-                } footer: {
-                    Text("When bold-as-bright is off, bold text uses a heavier font weight instead of bright ANSI colors.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                // MARK: Cursor
-                Section {
-                    Picker("Cursor style", selection: cursorStyleBinding) {
-                        ForEach(TerminalCursorStyleOption.allCases, id: \.self) { style in
-                            Text(style.displayName).tag(style)
-                        }
-                    }
-                    .onChange(of: terminalCursorStyle) { _, newValue in
-                        if let style = TerminalCursorStyleOption(rawValue: newValue) {
-                            terminalManager.applyCursorStyle(style)
-                        }
-                    }
-                    .settingsHighlight(id: highlightID("Cursor style"))
-                } header: {
-                    Text("Cursor")
-                }
-
-                // MARK: Scrollback
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Scrollback lines")
-                            Spacer()
-                            Text("\(terminalScrollbackLines)")
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                        Slider(
-                            value: Binding(
-                                get: { Double(terminalScrollbackLines) },
-                                set: { terminalScrollbackLines = Int($0) }
-                            ),
-                            in: 100...10000,
-                            step: 100
-                        )
-                        .onChange(of: terminalScrollbackLines) { _, newValue in
-                            terminalManager.applyScrollback(newValue)
-                        }
-                    }
-                    .settingsHighlight(id: highlightID("Scrollback lines"))
-                } header: {
-                    Text("Scrollback")
-                } footer: {
-                    Text("Number of lines kept in the scrollback buffer. Higher values use more memory.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                // MARK: Input
-                Section {
-                    Toggle("Option as Meta key", isOn: $terminalOptionAsMeta)
-                        .onChange(of: terminalOptionAsMeta) { _, newValue in
-                            terminalManager.applyOptionAsMeta(newValue)
-                        }
-                        .settingsHighlight(id: highlightID("Option as Meta"))
-
-                    Toggle("Allow mouse reporting", isOn: $terminalMouseReporting)
-                        .onChange(of: terminalMouseReporting) { _, newValue in
-                            terminalManager.applyMouseReporting(newValue)
-                        }
-                        .settingsHighlight(id: highlightID("Mouse reporting"))
-                } header: {
-                    Text("Input")
-                } footer: {
-                    Text("Option as Meta sends Esc+key instead of macOS special characters. Mouse reporting forwards mouse events to terminal applications like vim or tmux.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                // MARK: Actions
-                Section {
-                    Button("Restart Shell") {
-                        terminalManager.restartShell()
-                    }
-                    .disabled(!terminalManager.isProcessRunning)
-                } header: {
-                    Text("Actions")
-                } footer: {
-                    Text("Restarts the shell process. Any unsaved work in the terminal will be lost.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .navigationTitle("Terminal")
-    }
 }
 
 // MARK: - Reusable App Icon View

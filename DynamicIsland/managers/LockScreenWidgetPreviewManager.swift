@@ -95,21 +95,7 @@ final class LockScreenWidgetPreviewManager: ObservableObject {
 
     private func observeDefaults() {
         observeKey(.enableLockScreenMediaWidget)
-        observeKey(.enableLockScreenWeatherWidget)
         observeKey(.enableLockScreenTimerWidget)
-        observeKey(.lockScreenWeatherWidgetStyle)
-        observeKey(.lockScreenWeatherProviderSource)
-        observeKey(.lockScreenWeatherTemperatureUnit)
-        observeKey(.lockScreenWeatherShowsLocation)
-        observeKey(.lockScreenWeatherShowsSunrise)
-        observeKey(.lockScreenWeatherShowsAQI)
-        observeKey(.lockScreenWeatherAQIScale)
-        observeKey(.lockScreenBatteryShowsCharging)
-        observeKey(.lockScreenBatteryShowsChargingPercentage)
-        observeKey(.lockScreenBatteryShowsBatteryGauge)
-        observeKey(.lockScreenBatteryShowsBluetooth)
-        observeKey(.lockScreenBatteryUsesLaptopSymbol)
-        observeKey(.lockScreenWeatherUsesGaugeTint)
         observeKey(.lockScreenReminderChipStyle)
     }
 
@@ -120,80 +106,6 @@ final class LockScreenWidgetPreviewManager: ObservableObject {
                 self?.renderPreview()
             }
             .store(in: &cancellables)
-    }
-
-    private func mockWeatherSnapshot() -> LockScreenWeatherSnapshot {
-        let unit = Defaults[.lockScreenWeatherTemperatureUnit]
-        let temperatureValue: Double = unit == .celsius ? 21 : 72
-        let temperatureText = "\(Int(round(temperatureValue)))°"
-        let temperatureInfo = LockScreenWeatherSnapshot.TemperatureInfo(
-            current: temperatureValue,
-            minimum: temperatureValue - 5,
-            maximum: temperatureValue + 6,
-            unitSymbol: unit.symbol
-        )
-
-        let chargingInfo: LockScreenWeatherSnapshot.ChargingInfo? = Defaults[.lockScreenBatteryShowsCharging]
-            ? LockScreenWeatherSnapshot.ChargingInfo(
-                minutesRemaining: 42,
-                isCharging: true,
-                isPluggedIn: true,
-                batteryLevel: 78
-            )
-            : nil
-
-        let bluetoothInfo: LockScreenWeatherSnapshot.BluetoothInfo? = Defaults[.lockScreenBatteryShowsBluetooth]
-            ? LockScreenWeatherSnapshot.BluetoothInfo(
-                deviceName: "AirPods Pro",
-                batteryLevel: 74,
-                iconName: "airpodspro"
-            )
-            : nil
-
-        let batteryInfo: LockScreenWeatherSnapshot.BatteryInfo? = Defaults[.lockScreenBatteryShowsBatteryGauge]
-            ? LockScreenWeatherSnapshot.BatteryInfo(
-                batteryLevel: 63,
-                usesLaptopSymbol: Defaults[.lockScreenBatteryUsesLaptopSymbol]
-            )
-            : nil
-
-        let widgetStyle = Defaults[.lockScreenWeatherWidgetStyle]
-        let showLocation = widgetStyle == .inline && Defaults[.lockScreenWeatherShowsLocation]
-        let providerSource = Defaults[.lockScreenWeatherProviderSource]
-        let showsAQI = Defaults[.lockScreenWeatherShowsAQI] && providerSource.supportsAirQuality
-        let scale = Defaults[.lockScreenWeatherAQIScale]
-        let airQualityIndex = scale == .us ? 42 : 28
-        let airQuality = showsAQI
-            ? LockScreenWeatherSnapshot.AirQualityInfo(
-                index: airQualityIndex,
-                category: .init(index: airQualityIndex, scale: scale),
-                scale: scale
-            )
-            : nil
-
-        let showsSunrise = Defaults[.lockScreenWeatherShowsSunrise] && widgetStyle == .inline
-        let sunCycle = LockScreenWeatherSnapshot.SunCycleInfo(
-            sunrise: Date().addingTimeInterval(2 * 3600),
-            sunset: Date().addingTimeInterval(9 * 3600)
-        )
-
-        return LockScreenWeatherSnapshot(
-            temperatureText: temperatureText,
-            symbolName: "cloud.sun.fill",
-            description: "Partly Cloudy",
-            locationName: "Cupertino",
-            charging: chargingInfo,
-            bluetooth: bluetoothInfo,
-            battery: batteryInfo,
-            showsLocation: showLocation,
-            airQuality: airQuality,
-            widgetStyle: widgetStyle,
-            showsChargingPercentage: Defaults[.lockScreenBatteryShowsChargingPercentage],
-            temperatureInfo: temperatureInfo,
-            usesGaugeTint: Defaults[.lockScreenWeatherUsesGaugeTint],
-            sunCycle: sunCycle,
-            showsSunrise: showsSunrise
-        )
     }
 
     private func ensurePreviewWindow() {
@@ -220,8 +132,6 @@ final class LockScreenWidgetPreviewManager: ObservableObject {
 
         let scene = LockScreenPreviewScene(
             screenSize: screen.frame.size,
-            weatherSnapshot: mockWeatherSnapshot(),
-            showsWeather: Defaults[.enableLockScreenWeatherWidget],
             showsTimer: Defaults[.enableLockScreenTimerWidget],
             showsMediaPanel: Defaults[.enableLockScreenMediaWidget]
         )
@@ -245,8 +155,6 @@ final class LockScreenWidgetPreviewManager: ObservableObject {
         guard let screen = NSScreen.main else { return }
         let scene = LockScreenPreviewScene(
             screenSize: screen.frame.size,
-            weatherSnapshot: mockWeatherSnapshot(),
-            showsWeather: Defaults[.enableLockScreenWeatherWidget],
             showsTimer: Defaults[.enableLockScreenTimerWidget],
             showsMediaPanel: Defaults[.enableLockScreenMediaWidget]
         )
@@ -377,14 +285,10 @@ private final class PreviewWindowDelegate: NSObject, NSWindowDelegate {
 
 private struct LockScreenPreviewScene: View {
     let screenSize: CGSize
-    let weatherSnapshot: LockScreenWeatherSnapshot
-    let showsWeather: Bool
     let showsTimer: Bool
     let showsMediaPanel: Bool
 
-    @State private var weatherSize: CGSize = .zero
     @State private var musicSize: CGSize = .zero
-    @State private var inlineBaselineHeight: CGFloat = 0
     @StateObject private var panelAnimator = LockScreenPanelAnimator()
 
     var body: some View {
@@ -416,18 +320,6 @@ private struct LockScreenPreviewScene: View {
                         LockScreenTimerWidget()
                             .frame(width: timerFrame.width, height: timerFrame.height)
                             .position(centerPoint(for: swiftUIFrame(for: timerFrame)))
-                    }
-
-                    if showsWeather {
-                        LockScreenWeatherWidget(snapshot: weatherSnapshot)
-                            .fixedSize()
-                            .background(PreviewSizeReader(size: $weatherSize))
-                            .position(centerPoint(for: swiftUIFrame(for: weatherFrame)))
-                            .onChange(of: weatherSize) { _, newSize in
-                                if weatherSnapshot.widgetStyle == .inline {
-                                    inlineBaselineHeight = max(inlineBaselineHeight, newSize.height)
-                                }
-                            }
                     }
                 }
                 .frame(width: screenSize.width, height: screenSize.height, alignment: .topLeading)
@@ -467,45 +359,13 @@ private struct LockScreenPreviewScene: View {
         let offset = CGFloat(min(max(Defaults[.lockScreenTimerVerticalOffset], -160), 160))
         var originY = baseY + offset
 
-        if showsWeather {
-            originY = min(originY, weatherFrame.minY - size.height - 20)
-        } else {
-            let topLimit = screenFrame.maxY - size.height - 72
-            originY = min(originY, topLimit)
-        }
+        let topLimit = screenFrame.maxY - size.height - 72
+        originY = min(originY, topLimit)
 
         let minY = screenFrame.minY + 100
         originY = max(originY, minY)
 
         return CGRect(x: originX, y: originY, width: size.width, height: size.height)
-    }
-
-    private var weatherFrame: CGRect {
-        let size = weatherSize == .zero ? CGSize(width: 220, height: 60) : weatherSize
-        let screenFrame = CGRect(origin: .zero, size: screenSize)
-        let originX = screenFrame.midX - (size.width / 2)
-        let verticalOffset = screenFrame.height * 0.15
-        let isCircular = weatherSnapshot.widgetStyle == .circular
-        let topMargin: CGFloat = isCircular ? 120 : 48
-        let inlineBaseline = max(inlineBaselineHeight, 80)
-        let positionHeight = weatherSnapshot.widgetStyle == .inline
-            ? max(size.height, inlineBaseline)
-            : size.height
-        let maxY = screenFrame.maxY - positionHeight - topMargin
-        let baseY = min(maxY, screenFrame.midY + verticalOffset)
-        let loweredY = baseY - 36
-
-        let inlineLift: CGFloat = weatherSnapshot.widgetStyle == .inline ? 44 : 0
-        let circularDrop: CGFloat = isCircular ? 28 : 0
-        let sizeDropHeight = positionHeight
-        let sizeDrop = max(0, sizeDropHeight - 80) * 0.35
-        let userOffset = CGFloat(Defaults[.lockScreenWeatherVerticalOffset])
-        let clampedOffset = min(max(userOffset, -160), 160)
-        let adjustedY = loweredY + inlineLift + clampedOffset - circularDrop - sizeDrop
-        let upperClampedY = min(maxY, adjustedY)
-        let clampedY = max(screenFrame.minY + 80, upperClampedY)
-
-        return CGRect(x: originX, y: clampedY, width: size.width, height: size.height)
     }
 
     private func swiftUIFrame(for appKitFrame: CGRect) -> CGRect {

@@ -75,7 +75,6 @@ struct ContentView: View {
     @Default(.showStandardMediaControls) var showStandardMediaControls
     @Default(.externalDisplayStyle) var externalDisplayStyle
     @Default(.hideNonNotchUntilHover) var hideNonNotchUntilHover
-    @Default(.terminalStickyMode) var terminalStickyMode
     
     // Battery settings reactivity
     @Default(.showPowerStatusNotifications) var showPowerStatusNotifications
@@ -137,14 +136,6 @@ struct ContentView: View {
         
 
 
-        if coordinator.currentView == .terminal {
-            // Dynamic height: up to terminalMaxHeightFraction of screen, min 300pt
-            let screenHeight = NSScreen.main?.visibleFrame.height ?? 800
-            let maxFraction = Defaults[.terminalMaxHeightFraction]
-            let terminalHeight = min(screenHeight * maxFraction, max(300, screenHeight * maxFraction))
-            return CGSize(width: baseSize.width, height: terminalHeight)
-        }
-
         if coordinator.currentView == .extensionExperience {
             if let preferredHeight = extensionTabPreferredHeight(baseSize: baseSize) {
                 return CGSize(width: baseSize.width, height: preferredHeight)
@@ -167,7 +158,6 @@ struct ContentView: View {
     @State private var lastHapticTime: Date = Date()
     @State private var hoverClickMonitor: Any?
     @State private var hoverClickLocalMonitor: Any?
-    @State private var stickyTerminalClickMonitor: Any?
     @State private var hiddenEdgeHoverPollingTask: Task<Void, Never>?
     @State private var isHoveringClosedMusicWaveformControl: Bool = false
 
@@ -611,9 +601,6 @@ struct ContentView: View {
                 if newState != .closed {
                     isHoveringClosedMusicWaveformControl = false
                 }
-                if newState == .closed {
-                    removeStickyTerminalClickMonitor()
-                }
             }
             .onChange(of: vm.isBatteryPopoverActive) { _, newPopoverState in
                 runAfter(0.1) {
@@ -646,9 +633,6 @@ struct ContentView: View {
                         }
                     }
                 }
-            }
-            .onChange(of: coordinator.currentView) { _, newValue in
-                syncStickyTerminalOutsideClickMonitor()
             }
             .sensoryFeedback(.alignment, trigger: haptics)
             .contextMenu {
@@ -706,9 +690,6 @@ struct ContentView: View {
                 // Deterministic teardown for borderless panels (`.onDisappear` is
                 // unreliable); the window-cleanup path calls this before closing.
                 vm.onViewTeardown = { performViewTeardown() }
-            }
-            .onChange(of: terminalStickyMode) { _, _ in
-                syncStickyTerminalOutsideClickMonitor()
             }
             .onChange(of: vm.notchState) { _, state in
                 if state == .open {
@@ -1050,8 +1031,6 @@ struct ContentView: View {
                                   NotchHomeView(albumArtNamespace: albumArtNamespace)
                               case .shelf:
                                   NotchShelfView()
-                            case .terminal:
-                                NotchTerminalView()
                             case .andy:
                                 if enableAndyFeature {
                                     NotchAndyView(
@@ -1877,7 +1856,6 @@ struct ContentView: View {
     private func performViewTeardown() {
         hoverTask?.cancel()
         stopHoverClickMonitor()
-        removeStickyTerminalClickMonitor()
         stopHiddenEdgeHoverPolling()
         cancelMusicControlWindowSync()
         hideMusicControlWindow()
@@ -1976,37 +1954,6 @@ struct ContentView: View {
         }
     }
 
-    /// Installs the global outside-click monitor when Terminal + sticky mode are active (e.g. keyboard-opened terminal).
-    /// Removes the monitor when the tab, sticky setting, or open state no longer applies.
-    private func syncStickyTerminalOutsideClickMonitor() {
-        guard vm.notchState == .open, terminalStickyMode, coordinator.currentView == .terminal else {
-            removeStickyTerminalClickMonitor()
-            return
-        }
-        installStickyTerminalClickMonitor()
-    }
-
-    private func installStickyTerminalClickMonitor() {
-        guard stickyTerminalClickMonitor == nil else { return }
-        stickyTerminalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown]) { [weak vm] _ in
-            Task { @MainActor in
-                guard let vm, vm.notchState == .open else { return }
-                let clickLocation = NSEvent.mouseLocation
-                if self.isPointInsideNotchWindow(clickLocation) {
-                    return
-                }
-                vm.close()
-            }
-        }
-    }
-
-    private func removeStickyTerminalClickMonitor() {
-        if let stickyTerminalClickMonitor {
-            NSEvent.removeMonitor(stickyTerminalClickMonitor)
-            self.stickyTerminalClickMonitor = nil
-        }
-    }
-
     // MARK: - Hover Management
     
     /// Handle hover state changes with debouncing
@@ -2020,7 +1967,6 @@ struct ContentView: View {
 
         if hovering {
             startHoverClickMonitor()
-            removeStickyTerminalClickMonitor()
         } else {
             stopHoverClickMonitor()
             if isHoveringClosedMusicWaveformControl {
@@ -2078,12 +2024,6 @@ struct ContentView: View {
 
         if vm.notchState == .open && !shouldPreventAutoClose() {
             vm.close()
-        } else if vm.notchState == .open
-                    && Defaults[.terminalStickyMode]
-                    && coordinator.currentView == .terminal {
-            // Re-sync monitor state through one code path to avoid
-            // monitor lifecycle races between hover and state updates.
-            syncStickyTerminalOutsideClickMonitor()
         }
     }
 
@@ -2141,7 +2081,7 @@ struct ContentView: View {
     }
 
     private func shouldPreventAutoClose() -> Bool {
-        coordinator.firstLaunch || hasAnyActivePopovers() || vm.isAutoCloseSuppressed || SharingStateManager.shared.preventNotchClose || (Defaults[.terminalStickyMode] && coordinator.currentView == .terminal)
+        coordinator.firstLaunch || hasAnyActivePopovers() || vm.isAutoCloseSuppressed || SharingStateManager.shared.preventNotchClose
     }
     
     // Helper to prevent rapid haptic feedback
