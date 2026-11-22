@@ -553,7 +553,36 @@ private final class AndyFaceLayer: CALayer {
         let openness = AndyPetEngine.clamp(visibleHeight / max(1.0, height), 0, 1)
         let visibleCenterY = (topOpenY + bottomOpenY) / 2.0
 
-        // 1) Draw soft glow halo centered strictly on the open lit band (zero bleed behind closed lids!)
+        // Clip strictly to this eye's open region BEFORE drawing halo or eye.
+        // Because eyelids are applied as clips rather than painted black rectangles,
+        // one eye's lid can NEVER overlap or slice into the neighboring eye, and
+        // zero glow can ever bleed behind closed eyelids.
+        let clipExtent = max(width, height) * 3.0
+        if upperLid > 0.01 {
+            let yTopEdge = -height / 2.0 + height * AndyPetEngine.clamp(upperLid, 0, 1)
+            ctx.rotate(by: upperLidAngle * 0.38)
+            ctx.clip(to: CGRect(x: -clipExtent, y: yTopEdge, width: clipExtent * 2.0, height: clipExtent * 2.0))
+            ctx.rotate(by: -upperLidAngle * 0.38)
+        }
+        if lowerLid > 0.01 {
+            let yBottomEdge = height / 2.0 - height * AndyPetEngine.clamp(lowerLid, 0, 1)
+            ctx.rotate(by: lowerLidAngle * 0.38)
+            ctx.clip(to: CGRect(x: -clipExtent, y: yBottomEdge - clipExtent * 2.0, width: clipExtent * 2.0, height: clipExtent * 2.0))
+            ctx.rotate(by: -lowerLidAngle * 0.38)
+        }
+        if curvedSmile > 0.05 && openness > 0.20 {
+            let rise = height * 0.34 * AndyPetEngine.clamp(curvedSmile, 0, 1)
+            let rx = width * 0.56
+            let ry = height * 0.44
+            let cy = height / 2.0 + ry - rise
+            let smileClip = CGMutablePath()
+            smileClip.addRect(CGRect(x: -clipExtent, y: -clipExtent, width: clipExtent * 2.0, height: clipExtent * 2.0))
+            smileClip.addEllipse(in: CGRect(x: -rx, y: cy - ry, width: rx * 2.0, height: ry * 2.0))
+            ctx.addPath(smileClip)
+            ctx.clip(using: .evenOdd)
+        }
+
+        // 1) Soft glow halo centered on the open lit band (already masked by eyelid clips!)
         if let halo = haloGrad, openness > 0.04 {
             let glowBoost = 1.0 + min(0.45, (glow * 0.10 + snap.pulse * 0.06 + (voiceGlow + extraGlow) * 0.05))
             let haloHalfW = (width * 0.58) * glowBoost
@@ -571,7 +600,7 @@ private final class AndyFaceLayer: CALayer {
             ctx.restoreGState()
         }
 
-        // 2) Fill the eye shape with radial gradient
+        // 2) Fill the eye shape with radial gradient (already masked by eyelid clips!)
         let eyePath = makeEyePath(width: width, height: height, params: params, roundness: morph)
         if let grad = eyeGrad {
             ctx.saveGState()
@@ -588,27 +617,6 @@ private final class AndyFaceLayer: CALayer {
             ctx.restoreGState()
         }
 
-        // 3) Draw solid black eyelids UNCLIPPED over both the eye and halo so zero glow or ghost border ever leaks!
-        drawLid(ctx, width: width, height: height, amount: upperLid, angle: upperLidAngle, isTop: true)
-        drawLid(ctx, width: width, height: height, amount: lowerLid, angle: lowerLidAngle, isTop: false)
-
-        // 4) Optional curved lower-lid smile arc (반달 눈웃음) for happy/affectionate/petting states
-        if curvedSmile > 0.05 && openness > 0.20 {
-            drawHappySmileArc(ctx, width: width, height: height, amount: curvedSmile)
-        }
-
-        ctx.restoreGState()
-    }
-
-    private func drawHappySmileArc(_ ctx: CGContext, width: Double, height: Double, amount: Double) {
-        // Soft black oval rising cleanly from the bottom center to carve a crescent-smile eye
-        let rise = height * 0.34 * AndyPetEngine.clamp(amount, 0, 1)
-        let rx = width * 0.56
-        let ry = height * 0.44
-        let cy = height / 2.0 + ry - rise
-        ctx.saveGState()
-        ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
-        ctx.fillEllipse(in: CGRect(x: -rx, y: cy - ry, width: rx * 2.0, height: ry * 2.0))
         ctx.restoreGState()
     }
 
@@ -647,19 +655,6 @@ private final class AndyFaceLayer: CALayer {
         return path
     }
 
-    private func drawLid(_ ctx: CGContext, width: Double, height: Double, amount: Double, angle: Double, isTop: Bool) {
-        guard amount > 0.01 else { return }
-        let cover = height * AndyPetEngine.clamp(amount, 0, 1)
-        ctx.saveGState()
-        ctx.rotate(by: angle * 0.38)
-        ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
-        if isTop {
-            ctx.fill(CGRect(x: -width * 1.6, y: -height / 2.0 - 22.0, width: width * 3.2, height: cover + 22.5))
-        } else {
-            ctx.fill(CGRect(x: -width * 1.6, y: height / 2.0 - cover - 0.5, width: width * 3.2, height: cover + 22.5))
-        }
-        ctx.restoreGState()
-    }
 }
 
 final class AndyCanvasNSView: NSView {
