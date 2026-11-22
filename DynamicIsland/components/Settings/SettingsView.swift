@@ -57,8 +57,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case calendar
     case hudAndOSD
     case battery
-    case stats
-    case clipboard
     case screenAssistant
     case downloads
     case shelf
@@ -75,9 +73,9 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .media, .liveActivities, .lockScreen, .devices:                 return .mediaAndDisplay
         case .hudAndOSD, .battery:                                           return .system
         case .timer, .calendar:                                              return .productivity
-        case .clipboard, .screenAssistant, .shelf,
+        case .screenAssistant, .shelf,
              .downloads, .shortcuts:                                         return .utilities
-        case .stats, .terminal:                                              return .developer
+        case .terminal:                                                      return .developer
         case .extensions:                                                    return .integrations
         case .about:                                                         return .info
         }
@@ -96,8 +94,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .calendar: return String(localized: "Calendar")
         case .hudAndOSD: return String(localized: "Controls")
         case .battery: return String(localized: "Battery")
-        case .stats: return String(localized: "Stats")
-        case .clipboard: return String(localized: "Clipboard")
         case .screenAssistant: return String(localized: "Dictation")
         case .downloads: return String(localized: "Downloads")
         case .shelf: return String(localized: "Shelf")
@@ -120,8 +116,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .calendar: return "calendar"
         case .hudAndOSD: return "dial.medium.fill"
         case .battery: return "battery.100.bolt"
-        case .stats: return "chart.xyaxis.line"
-        case .clipboard: return "clipboard"
         case .screenAssistant: return "mic"
         case .downloads: return "square.and.arrow.down"
         case .shelf: return "books.vertical"
@@ -144,8 +138,6 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .calendar: return .cyan
         case .hudAndOSD: return .indigo
         case .battery: return Color(red: 0.202, green: 0.783, blue: 0.348, opacity: 1.000)
-        case .stats: return .teal
-        case .clipboard: return .mint
         case .screenAssistant: return .pink
         case .downloads: return .gray
         case .shelf: return .brown
@@ -494,7 +486,6 @@ struct SettingsView: View {
             .downloads,
             .shortcuts,
             // Developer
-            .stats,
             .terminal,
             // Integrations
             .extensions,
@@ -871,20 +862,8 @@ struct SettingsView: View {
             SettingsSearchEntry(tab: .timer, title: "Accent colour", keywords: ["accent", "timer"], highlightID: SettingsTab.timer.highlightID(for: "Accent colour")),
 
             // Stats
-            SettingsSearchEntry(tab: .stats, title: "Enable system stats monitoring", keywords: ["stats", "monitoring"], highlightID: SettingsTab.stats.highlightID(for: "Enable system stats monitoring")),
-            SettingsSearchEntry(tab: .stats, title: "Stop monitoring after closing the notch", keywords: ["stats", "auto stop"], highlightID: SettingsTab.stats.highlightID(for: "Stop monitoring after closing the notch")),
-            SettingsSearchEntry(tab: .stats, title: "CPU Usage", keywords: ["cpu", "graph"], highlightID: SettingsTab.stats.highlightID(for: "CPU Usage")),
-            SettingsSearchEntry(tab: .stats, title: "Temperature unit", keywords: ["cpu", "temperature", "celsius", "fahrenheit"], highlightID: SettingsTab.stats.highlightID(for: "Temperature unit")),
-            SettingsSearchEntry(tab: .stats, title: "Memory Usage", keywords: ["memory", "ram"], highlightID: SettingsTab.stats.highlightID(for: "Memory Usage")),
-            SettingsSearchEntry(tab: .stats, title: "GPU Usage", keywords: ["gpu", "graphics"], highlightID: SettingsTab.stats.highlightID(for: "GPU Usage")),
-            SettingsSearchEntry(tab: .stats, title: "Network Activity", keywords: ["network", "graph"], highlightID: SettingsTab.stats.highlightID(for: "Network Activity")),
-            SettingsSearchEntry(tab: .stats, title: "Disk I/O", keywords: ["disk", "io"], highlightID: SettingsTab.stats.highlightID(for: "Disk I/O")),
 
             // Clipboard
-            SettingsSearchEntry(tab: .clipboard, title: "Enable Clipboard Manager", keywords: ["clipboard", "manager"], highlightID: SettingsTab.clipboard.highlightID(for: "Enable Clipboard Manager")),
-            SettingsSearchEntry(tab: .clipboard, title: "Show Clipboard Icon", keywords: ["icon", "clipboard"], highlightID: SettingsTab.clipboard.highlightID(for: "Show Clipboard Icon")),
-            SettingsSearchEntry(tab: .clipboard, title: "Display Mode", keywords: ["list", "grid", "clipboard"], highlightID: SettingsTab.clipboard.highlightID(for: "Display Mode")),
-            SettingsSearchEntry(tab: .clipboard, title: "History Size", keywords: ["history", "clipboard"], highlightID: SettingsTab.clipboard.highlightID(for: "History Size")),
 
             // Dictation
             SettingsSearchEntry(tab: .screenAssistant, title: "Enable Dictation", keywords: ["dictation", "transcription", "voice", "whisper"], highlightID: SettingsTab.screenAssistant.highlightID(for: "Enable Dictation")),
@@ -914,7 +893,7 @@ struct SettingsView: View {
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .stats, .clipboard, .shelf, .terminal:
+        case .timer, .shelf, .terminal:
             return !enableMinimalisticUI
         default:
             return true
@@ -967,14 +946,6 @@ struct SettingsView: View {
         case .battery:
             SettingsForm(tab: .battery) {
                 Charge()
-            }
-        case .stats:
-            SettingsForm(tab: .stats) {
-                StatsSettings()
-            }
-        case .clipboard:
-            SettingsForm(tab: .clipboard) {
-                ClipboardSettings()
             }
         case .screenAssistant:
             SettingsForm(tab: .screenAssistant) {
@@ -6102,9 +6073,7 @@ private func copyLatestCrashReport() {
 
 struct Shortcuts: View {
     @Default(.enableTimerFeature) var enableTimerFeature
-    @Default(.enableClipboardManager) var enableClipboardManager
     @Default(.enableShortcuts) var enableShortcuts
-    @Default(.enableStatsFeature) var enableStatsFeature
 
     private func highlightID(_ title: String) -> String {
         SettingsTab.shortcuts.highlightID(for: title)
@@ -6146,29 +6115,6 @@ struct Shortcuts: View {
                     Text("Navigation")
                 } footer: {
                     Text("Toggle the Dynamic Island open or closed from anywhere.")
-                        .multilineTextAlignment(.trailing)
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                }
-
-                Section {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            KeyboardShortcuts.Recorder("Clipboard History:", name: .clipboardHistoryPanel)
-                                .disabled(!enableShortcuts || !enableClipboardManager)
-                            if !enableClipboardManager {
-                                Text("Clipboard feature is disabled")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 2)
-                            }
-                        }
-                        Spacer()
-                    }
-                } header: {
-                    Text("Clipboard")
-                } footer: {
-                    Text("Opens the clipboard history panel. Default is Cmd+Shift+V (similar to Windows+V on PC). Only works when clipboard feature is enabled.")
                         .multilineTextAlignment(.trailing)
                         .foregroundStyle(.secondary)
                         .font(.caption)
@@ -6480,439 +6426,6 @@ struct TimerSettings: View {
             Text("Appearance")
         } footer: {
             Text("Configure how the timer looks inside the closed notch. Progress can render as a ring around the icon or as horizontal bars.")
-        }
-    }
-}
-
-struct StatsSettings: View {
-    @ObservedObject var statsManager = StatsManager.shared
-    @Default(.enableStatsFeature) var enableStatsFeature
-    @Default(.statsStopWhenNotchCloses) var statsStopWhenNotchCloses
-    @Default(.statsUpdateInterval) var statsUpdateInterval
-    @Default(.showCpuGraph) var showCpuGraph
-    @Default(.showMemoryGraph) var showMemoryGraph
-    @Default(.showGpuGraph) var showGpuGraph
-    @Default(.showNetworkGraph) var showNetworkGraph
-    @Default(.showDiskGraph) var showDiskGraph
-    @Default(.cpuTemperatureUnit) var cpuTemperatureUnit
-
-    private func highlightID(_ title: String) -> String {
-        SettingsTab.stats.highlightID(for: title)
-    }
-
-    var enabledGraphsCount: Int {
-        [showCpuGraph, showMemoryGraph, showGpuGraph, showNetworkGraph, showDiskGraph].filter { $0 }.count
-    }
-
-    private var formattedUpdateInterval: String {
-        let seconds = Int(statsUpdateInterval.rounded())
-        if seconds >= 60 {
-            return "60 s (1 min)"
-        } else if seconds == 1 {
-            return "1 s"
-        } else {
-            return "\(seconds) s"
-        }
-    }
-
-    private var shouldShowStatsBatteryWarning: Bool {
-        !statsStopWhenNotchCloses && statsUpdateInterval <= 5
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                Defaults.Toggle(key: .enableStatsFeature) {
-                    Text("Enable system stats monitoring")
-                }
-                .settingsHighlight(id: highlightID("Enable system stats monitoring"))
-                .onChange(of: enableStatsFeature) { _, newValue in
-                    if !newValue {
-                        statsManager.stopMonitoring()
-                    }
-                    // Note: Smart monitoring will handle starting when switching to stats tab
-                }
-
-            } header: {
-                Text("General")
-            } footer: {
-                Text("When enabled, the Stats tab will display real-time system performance graphs. This feature requires system permissions and may use additional battery.")
-                    .multilineTextAlignment(.trailing)
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
-            }
-
-            if enableStatsFeature {
-                Section {
-                    Defaults.Toggle(key: .statsStopWhenNotchCloses) {
-                        Text("Stop monitoring after closing the notch")
-                    }
-                    .settingsHighlight(id: highlightID("Stop monitoring after closing the notch"))
-                    .help("When enabled, stats monitoring stops a few seconds after the notch closes.")
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Update interval")
-                            Spacer()
-                            Text(formattedUpdateInterval)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Slider(value: $statsUpdateInterval, in: 1...60, step: 1)
-                            .accessibilityLabel("Stats update interval")
-
-                        Text("Controls how often system metrics refresh while monitoring is active.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if shouldShowStatsBatteryWarning {
-                        Label {
-                            Text("High-frequency updates without a timeout can increase battery usage.")
-                        } icon: {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                        .padding(.top, 4)
-                    }
-                } header: {
-                    Text("Monitoring Behavior")
-                } footer: {
-                    Text("Sampling can continue while the notch is closed when the timeout is disabled.")
-                        .multilineTextAlignment(.trailing)
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                }
-
-                Section {
-                    Defaults.Toggle(key: .showCpuGraph) {
-                        Text("CPU Usage")
-                    }
-                    .settingsHighlight(id: highlightID("CPU Usage"))
-
-                    if showCpuGraph {
-                        Picker("Temperature unit", selection: $cpuTemperatureUnit) {
-                            ForEach(LockScreenWeatherTemperatureUnit.allCases) { unit in
-                                Text(unit.rawValue).tag(unit)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .settingsHighlight(id: highlightID("Temperature unit"))
-                    }
-                    Defaults.Toggle(key: .showMemoryGraph) {
-                        Text("Memory Usage")
-                    }
-                    .settingsHighlight(id: highlightID("Memory Usage"))
-                    Defaults.Toggle(key: .showGpuGraph) {
-                        Text("GPU Usage")
-                    }
-                    .settingsHighlight(id: highlightID("GPU Usage"))
-                    Defaults.Toggle(key: .showNetworkGraph) {
-                        Text("Network Activity")
-                    }
-                    .settingsHighlight(id: highlightID("Network Activity"))
-                    Defaults.Toggle(key: .showDiskGraph) {
-                        Text("Disk I/O")
-                    }
-                    .settingsHighlight(id: highlightID("Disk I/O"))
-                } header: {
-                    Text("Graph Visibility")
-                } footer: {
-                    if enabledGraphsCount >= 4 {
-                        Text("With \(enabledGraphsCount) graphs enabled, the Dynamic Island will expand horizontally to accommodate all graphs in a single row.")
-                            .multilineTextAlignment(.trailing)
-                            .foregroundStyle(.secondary)
-                            .font(.caption)
-                    } else {
-                        Text("Each graph can be individually enabled or disabled. Network activity shows download/upload speeds, and disk I/O shows read/write speeds.")
-                            .multilineTextAlignment(.trailing)
-                            .foregroundStyle(.secondary)
-                            .font(.caption)
-                    }
-                }
-
-                Section {
-                    HStack {
-                        Text("Monitoring Status")
-                        Spacer()
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(statsManager.isMonitoring ? .green : .red)
-                                .frame(width: 8, height: 8)
-                            Text(statsManager.isMonitoring ? "Active" : "Stopped")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    if statsManager.isMonitoring {
-                        if showCpuGraph {
-                            HStack {
-                                Text("CPU Usage")
-                                Spacer()
-                                Text(statsManager.cpuUsageString)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        if showMemoryGraph {
-                            HStack {
-                                Text("Memory Usage")
-                                Spacer()
-                                Text(statsManager.memoryUsageString)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        if showGpuGraph {
-                            HStack {
-                                Text("GPU Usage")
-                                Spacer()
-                                Text(statsManager.gpuUsageString)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        if showNetworkGraph {
-                            HStack {
-                                Text("Network Download")
-                                Spacer()
-                                Text(String(format: "%.1f MB/s", statsManager.networkDownload))
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            HStack {
-                                Text("Network Upload")
-                                Spacer()
-                                Text(String(format: "%.1f MB/s", statsManager.networkUpload))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        if showDiskGraph {
-                            HStack {
-                                Text("Disk Read")
-                                Spacer()
-                                Text(String(format: "%.1f MB/s", statsManager.diskRead))
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            HStack {
-                                Text("Disk Write")
-                                Spacer()
-                                Text(String(format: "%.1f MB/s", statsManager.diskWrite))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        HStack {
-                            Text("Last Updated")
-                            Spacer()
-                            Text(statsManager.lastUpdated, style: .relative)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                } header: {
-                    Text("Live Performance Data")
-                }
-
-                Section {
-                    HStack {
-                        Button(statsManager.isMonitoring ? "Stop Monitoring" : "Start Monitoring") {
-                            if statsManager.isMonitoring {
-                                statsManager.stopMonitoring()
-                            } else {
-                                statsManager.startMonitoring()
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .foregroundColor(statsManager.isMonitoring ? .red : .blue)
-
-                        Spacer()
-
-                        Button("Clear Data") {
-                            statsManager.clearHistory()
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(statsManager.isMonitoring)
-                    }
-                } header: {
-                    Text("Controls")
-                }
-            }
-        }
-        .navigationTitle("Stats")
-    }
-}
-
-struct ClipboardSettings: View {
-    @ObservedObject var clipboardManager = ClipboardManager.shared
-    @Default(.enableClipboardManager) var enableClipboardManager
-    @Default(.clipboardHistorySize) var clipboardHistorySize
-    @Default(.showClipboardIcon) var showClipboardIcon
-    @Default(.clipboardDisplayMode) var clipboardDisplayMode
-
-    private func highlightID(_ title: String) -> String {
-        SettingsTab.clipboard.highlightID(for: title)
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                Defaults.Toggle(key: .enableClipboardManager) {
-                    Text("Enable Clipboard Manager")
-                }
-                .settingsHighlight(id: highlightID("Enable Clipboard Manager"))
-                .onChange(of: enableClipboardManager) { _, enabled in
-                    if enabled {
-                        clipboardManager.startMonitoring()
-                    } else {
-                        clipboardManager.stopMonitoring()
-                    }
-                }
-            } header: {
-                Text("Clipboard Manager")
-            } footer: {
-                Text("Monitor clipboard changes and keep a history of recent copies. Use Cmd+Shift+V to quickly access clipboard history.")
-            }
-
-            if enableClipboardManager {
-                Section {
-                    Defaults.Toggle(key: .showClipboardIcon) {
-                        Text("Show Clipboard Icon")
-                    }
-                    .settingsHighlight(id: highlightID("Show Clipboard Icon"))
-
-                    HStack {
-                        Text("Display Mode")
-                        Spacer()
-                        Picker("", selection: $clipboardDisplayMode) {
-                            ForEach(ClipboardDisplayMode.allCases, id: \.self) { mode in
-                                Text(mode.displayName).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .frame(minWidth: 100)
-                    }
-                    .settingsHighlight(id: highlightID("Display Mode"))
-
-                    HStack {
-                        Text("History Size")
-                        Spacer()
-                        Picker("", selection: $clipboardHistorySize) {
-                            Text("3 items").tag(3)
-                            Text("5 items").tag(5)
-                            Text("7 items").tag(7)
-                            Text("10 items").tag(10)
-                        }
-                        .pickerStyle(.menu)
-                        .frame(minWidth: 100)
-                    }
-                    .settingsHighlight(id: highlightID("History Size"))
-
-                    HStack {
-                        Text("Current Items")
-                        Spacer()
-                        Text("\(clipboardManager.clipboardHistory.count)")
-                            .foregroundColor(.secondary)
-                    }
-
-                    HStack {
-                        Text("Pinned Items")
-                        Spacer()
-                        Text("\(clipboardManager.pinnedItems.count)")
-                            .foregroundColor(.secondary)
-                    }
-
-                    HStack {
-                        Text("Monitoring Status")
-                        Spacer()
-                        Text(clipboardManager.isMonitoring ? "Active" : "Stopped")
-                            .foregroundColor(clipboardManager.isMonitoring ? .green : .secondary)
-                    }
-                } header: {
-                    Text("Settings")
-                } footer: {
-                    switch clipboardDisplayMode {
-                    case .popover:
-                        Text("Popover mode shows clipboard as a dropdown attached to the clipboard button.")
-                    case .panel:
-                        Text("Panel mode shows clipboard in a floating window near the notch.")
-                    case .separateTab:
-                        Text("Separate Tab mode integrates Copied Items and Notes into a single view. If both are enabled, Notes appear on the right and Clipboard on the left.")
-                    }
-                }
-
-                Section {
-                    Button("Clear Clipboard History") {
-                        clipboardManager.clearHistory()
-                    }
-                    .foregroundColor(.red)
-                    .disabled(clipboardManager.clipboardHistory.isEmpty)
-
-                    Button("Clear Pinned Items") {
-                        clipboardManager.pinnedItems.removeAll()
-                        clipboardManager.savePinnedItemsToDefaults()
-                    }
-                    .foregroundColor(.red)
-                    .disabled(clipboardManager.pinnedItems.isEmpty)
-                } header: {
-                    Text("Actions")
-                } footer: {
-                    Text("Clear clipboard history removes recent copies. Clear pinned items removes your favorites. Both actions are permanent.")
-                }
-
-                if !clipboardManager.clipboardHistory.isEmpty {
-                    Section {
-                        ForEach(clipboardManager.clipboardHistory) { item in
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Image(systemName: item.type.icon)
-                                        .foregroundColor(.blue)
-                                        .frame(width: 16)
-                                    Text(item.type.displayName)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(timeAgoString(from: item.timestamp))
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                                Text(item.preview)
-                                    .font(.system(.body, design: .monospaced))
-                                    .lineLimit(2)
-                            }
-                            .padding(.vertical, 2)
-                        }
-                    } header: {
-                        Text("Current History")
-                    }
-                }
-            }
-        }
-        .formStyle(.grouped)
-        .navigationTitle("Clipboard")
-        .onAppear {
-            if enableClipboardManager && !clipboardManager.isMonitoring {
-                clipboardManager.startMonitoring()
-            }
-        }
-    }
-
-    private func timeAgoString(from date: Date) -> String {
-        let interval = Date().timeIntervalSince(date)
-
-        if interval < 60 {
-            return "Just now"
-        } else if interval < 3600 {
-            let minutes = Int(interval / 60)
-            return "\(minutes)m ago"
-        } else if interval < 86400 {
-            let hours = Int(interval / 3600)
-            return "\(hours)h ago"
-        } else {
-            let days = Int(interval / 86400)
-            return "\(days)d ago"
         }
     }
 }

@@ -537,11 +537,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             baseSize.height = min(screenHeight * maxFraction, max(300, screenHeight * maxFraction))
         }
         
-        let adjustedContentSize = statsAdjustedNotchSize(
-            from: baseSize,
-            isStatsTabActive: coordinator.currentView == .stats,
-            secondRowProgress: coordinator.statsSecondRowExpansion
-        )
+        let adjustedContentSize = baseSize
         var result = addShadowPadding(
             to: adjustedContentSize,
             isMinimalistic: Defaults[.enableMinimalisticUI]
@@ -714,31 +710,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }.store(in: &cancellables)
         
-        // Observe stats settings changes - use debounced updates
-        Defaults.publisher(.enableStatsFeature, options: []).sink { [weak self] _ in
-            self?.debouncedUpdateWindowSize()
-        }.store(in: &cancellables)
-        
-        Defaults.publisher(.showCpuGraph, options: []).sink { [weak self] _ in
-            self?.debouncedUpdateWindowSize()
-        }.store(in: &cancellables)
-        
-        Defaults.publisher(.showMemoryGraph, options: []).sink { [weak self] _ in
-            self?.debouncedUpdateWindowSize()
-        }.store(in: &cancellables)
-        
-        Defaults.publisher(.showGpuGraph, options: []).sink { [weak self] _ in
-            self?.debouncedUpdateWindowSize()
-        }.store(in: &cancellables)
-        
-        Defaults.publisher(.showNetworkGraph, options: []).sink { [weak self] _ in
-            self?.debouncedUpdateWindowSize()
-        }.store(in: &cancellables)
-        
-        Defaults.publisher(.showDiskGraph, options: []).sink { [weak self] _ in
-            self?.debouncedUpdateWindowSize()
-        }.store(in: &cancellables)
-
         Defaults.publisher(.openNotchWidth, options: []).sink { [weak self] _ in
             self?.debouncedUpdateWindowSize()
         }.store(in: &cancellables)
@@ -783,11 +754,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }.store(in: &cancellables)
 
-        Defaults.publisher(.enableClipboardManager, options: []).sink { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.updateFeatureShortcutAvailability()
-            }
-        }.store(in: &cancellables)
 
 
 
@@ -1165,40 +1131,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !optionalShortcutHandlersRegistered else { return }
         optionalShortcutHandlersRegistered = true
 
-        KeyboardShortcuts.onKeyDown(for: .clipboardHistoryPanel) { [weak self] in
-            guard let self else { return }
-            guard Defaults[.enableShortcuts], Defaults[.enableClipboardManager] else { return }
-            guard !Defaults[.dictationOnlyMode] else { return }
-
-            if !ClipboardManager.shared.isMonitoring {
-                ClipboardManager.shared.startMonitoring()
-            }
-
-            switch Defaults[.clipboardDisplayMode] {
-            case .panel:
-                ClipboardPanelManager.shared.toggleClipboardPanel()
-            case .popover:
-                if vm.notchState == .closed {
-                    vm.open()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        NotificationCenter.default.post(name: NSNotification.Name("ToggleClipboardPopover"), object: nil)
-                    }
-                } else {
-                    NotificationCenter.default.post(name: NSNotification.Name("ToggleClipboardPopover"), object: nil)
-                }
-            case .separateTab:
-                if vm.notchState == .closed {
-                    vm.open()
-                    coordinator.currentView = .clipboard
-                } else {
-                    if coordinator.currentView == .clipboard {
-                        vm.close()
-                    } else {
-                        coordinator.currentView = .clipboard
-                    }
-                }
-            }
-        }
 
 
 
@@ -1247,7 +1179,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func updateFeatureShortcutAvailability() {
         let isDictationOnly = Defaults[.dictationOnlyMode]
-        updateShortcut(.clipboardHistoryPanel, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableClipboardManager])
         updateShortcut(.screenAssistantPanel, isEnabled: Defaults[.enableShortcuts] && Defaults[.enableScreenAssistant])
         updateShortcut(.toggleTerminalTab, isEnabled: !isDictationOnly && Defaults[.enableShortcuts] && Defaults[.enableTerminalFeature])
     }
@@ -1439,8 +1370,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             dndManager.stopMonitoring()
             PrivacyIndicatorManager.shared.stopMonitoring()
             AudioTap.shared.stopCapture()
-            ClipboardManager.shared.stopMonitoring()
-            StatsManager.shared.stopMonitoring()
         } else {
             extensionXPCServiceHost.start()
             extensionRPCServer.start()

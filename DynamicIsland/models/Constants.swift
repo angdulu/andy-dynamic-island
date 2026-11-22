@@ -304,28 +304,6 @@ enum ThirdPartyCalendarApp: String, CaseIterable, Codable, Defaults.Serializable
     }
 }
 
-enum ClipboardDisplayMode: String, CaseIterable, Codable, Defaults.Serializable {
-    case popover = "popover"     // Traditional popover attached to button
-    case panel = "panel"         // Floating panel near notch
-    case separateTab = "separateTab" // Separate tab in Dynamic Island
-    
-    var displayName: String {
-        switch self {
-        case .popover: return String(localized: "Popover")
-        case .panel: return String(localized: "Panel")
-        case .separateTab: return String(localized: "Separate Tab")
-        }
-    }
-    
-    var description: String {
-        switch self {
-        case .popover: return "Shows clipboard as a dropdown attached to the clipboard button"
-        case .panel: return "Shows clipboard in a floating panel near the notch"
-        case .separateTab: return "Shows copied items in a separate tab within the Dynamic Island (merges with Notes if enabled)"
-        }
-    }
-}
-
 enum ScreenAssistantDisplayMode: String, CaseIterable, Codable, Defaults.Serializable {
     case popover = "popover"     // Traditional popover attached to button
     case panel = "panel"         // Floating panel near notch
@@ -1125,18 +1103,6 @@ extension Defaults.Keys {
     static let showBluetoothDeviceNameMarquee = Key<Bool>("showBluetoothDeviceNameMarquee", default: false)
     static let useBluetoothHUD3DIcon = Key<Bool>("useBluetoothHUD3DIcon", default: true)
     
-    // MARK: Stats Feature
-    static let enableStatsFeature = Key<Bool>("enableStatsFeature", default: false)
-    static let autoStartStatsMonitoring = Key<Bool>("autoStartStatsMonitoring", default: true)
-    static let statsStopWhenNotchCloses = Key<Bool>("statsStopWhenNotchCloses", default: true)
-    static let statsUpdateInterval = Key<Double>("statsUpdateInterval", default: 1.0)
-    static let showCpuGraph = Key<Bool>("showCpuGraph", default: true)
-    static let showMemoryGraph = Key<Bool>("showMemoryGraph", default: true)
-    static let showGpuGraph = Key<Bool>("showGpuGraph", default: true)
-    static let showNetworkGraph = Key<Bool>("showNetworkGraph", default: false)
-    static let showDiskGraph = Key<Bool>("showDiskGraph", default: false)
-    static let cpuTemperatureUnit = Key<LockScreenWeatherTemperatureUnit>("cpuTemperatureUnit", default: .celsius)
-    
     // MARK: Terminal Feature
     static let enableTerminalFeature = Key<Bool>("enableTerminalFeature", default: false)
     static let terminalShellPath = Key<String>("terminalShellPath", default: "/bin/zsh")
@@ -1172,11 +1138,6 @@ extension Defaults.Keys {
     static let reminderLeadTime = Key<Int>("reminderLeadTime", default: 5)
     static let reminderSneakPeekDuration = Key<Double>("reminderSneakPeekDuration", default: 5)
 
-    // MARK: Clipboard Feature
-    static let enableClipboardManager = Key<Bool>("enableClipboardManager", default: true)
-    static let clipboardHistorySize = Key<Int>("clipboardHistorySize", default: 3)
-    static let showClipboardIcon = Key<Bool>("showClipboardIcon", default: true)
-    static let clipboardDisplayMode = Key<ClipboardDisplayMode>("clipboardDisplayMode", default: .panel)
     
     // MARK: Andy Feature
     static let enableAndyFeature = Key<Bool>("enableAndyFeature", default: true)

@@ -50,7 +50,6 @@ struct TabSelectionView: View {
     @Default(.quickShareProvider) private var quickShareProvider
     @State private var showQuickSharePopover = false
     @Default(.enableTimerFeature) var enableTimerFeature
-    @Default(.enableStatsFeature) var enableStatsFeature
     @Default(.enableThirdPartyExtensions) private var enableThirdPartyExtensions
     @Default(.enableExtensionNotchExperiences) private var enableExtensionNotchExperiences
     @Default(.enableExtensionNotchTabs) private var enableExtensionNotchTabs
@@ -74,14 +73,6 @@ struct TabSelectionView: View {
         
         // Timer tab removed when idle; active system timers show via live activity / system bridge
 
-        // Stats tab only shown when stats feature is enabled
-        if Defaults[.enableStatsFeature] {
-            tabsArray.append(TabModel(label: "Stats", icon: "chart.xyaxis.line", view: .stats))
-        }
-
-        if Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab {
-            tabsArray.append(TabModel(label: "Clipboard", icon: "doc.on.clipboard", view: .clipboard))
-        }
         if enableAndyFeature {
             tabsArray.append(TabModel(label: "Andy", icon: "face.smiling", view: .andy))
         }

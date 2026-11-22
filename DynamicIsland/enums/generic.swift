@@ -74,8 +74,6 @@ public enum NotchViews {
     case home
     case shelf
     case timer
-    case stats
-    case clipboard
     case terminal
     case andy
     case extensionExperience
