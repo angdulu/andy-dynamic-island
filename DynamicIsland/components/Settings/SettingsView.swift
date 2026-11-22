@@ -202,7 +202,11 @@ private struct SettingsHighlightModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .id(id)
-            .background(highlightBackground)
+            .background {
+                if isActive {
+                    highlightBackground
+                }
+            }
             .onChange(of: isActive) { _, active in
                 animatePulse = active
             }
@@ -216,17 +220,17 @@ private struct SettingsHighlightModifier: ViewModifier {
     private var highlightBackground: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
             .stroke(
-                Color.accentColor.opacity(isActive ? (animatePulse ? 0.95 : 0.4) : 0),
+                Color.accentColor.opacity(animatePulse ? 0.95 : 0.4),
                 lineWidth: 2
             )
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.accentColor.opacity(isActive ? 0.08 : 0))
+                    .fill(Color.accentColor.opacity(0.08))
             )
             .padding(-4)
-            .shadow(color: Color.accentColor.opacity(isActive ? 0.25 : 0), radius: animatePulse ? 8 : 2)
+            .shadow(color: Color.accentColor.opacity(0.25), radius: animatePulse ? 8 : 2)
             .animation(
-                isActive ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) : .default,
+                .easeInOut(duration: 0.8).repeatForever(autoreverses: true),
                 value: animatePulse
             )
     }
@@ -338,13 +342,7 @@ struct SettingsView: View {
         .background {
             Group {
                 if #available(macOS 26.0, *) {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .glassEffect(
-                            .clear
-                                .tint(Color.white.opacity(0.1))
-                                .interactive(),
-                            in: .rect(cornerRadius: 18)
-                        )
+                    Color(NSColor.windowBackgroundColor)
                 } else {
                     ZStack {
                         Color(NSColor.windowBackgroundColor)

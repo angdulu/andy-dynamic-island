@@ -27,6 +27,7 @@ import Sparkle
 class SettingsWindowController: NSWindowController {
     static let shared = SettingsWindowController()
     private var updaterController: SPUStandardUpdaterController?
+    private var isContentInstalled = false
     
     private init() {
         let window = NSWindow(
@@ -47,8 +48,17 @@ class SettingsWindowController: NSWindowController {
     
     func setUpdaterController(_ controller: SPUStandardUpdaterController) {
         self.updaterController = controller
-        // Recreate the content view with the proper updater controller
-        setupWindow()
+        if window?.isVisible == true {
+            installContentView()
+        }
+    }
+
+    private func installContentView() {
+        guard let window = window else { return }
+        let settingsView = SettingsView(updaterController: updaterController)
+        let hostingView = NSHostingView(rootView: settingsView)
+        window.contentView = hostingView
+        isContentInstalled = true
     }
     
     private func setupWindow() {
@@ -58,7 +68,7 @@ class SettingsWindowController: NSWindowController {
         window.titlebarAppearsTransparent = false
         window.titleVisibility = .visible
         window.toolbarStyle = .unified
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.level = .normal
         
         // Make it behave like a regular app window with proper Spaces support
@@ -72,11 +82,6 @@ class SettingsWindowController: NSWindowController {
         window.isRestorable = true
         window.identifier = NSUserInterfaceItemIdentifier("DynamicIslandSettingsWindow")
         
-        // Create the SwiftUI content
-        let settingsView = SettingsView(updaterController: updaterController)
-        let hostingView = NSHostingView(rootView: settingsView)
-        window.contentView = hostingView
-        
         // Handle window closing
         window.delegate = self
         
@@ -86,6 +91,10 @@ class SettingsWindowController: NSWindowController {
     func showWindow() {
         // Ensure window exists
         _ = window
+
+        if !isContentInstalled {
+            installContentView()
+        }
 
         // Reassert regular window semantics in case any prior state mutated this window.
         window?.level = .normal
@@ -120,6 +129,8 @@ class SettingsWindowController: NSWindowController {
     
     private func relinquishFocus() {
         window?.orderOut(nil)
+        window?.contentView = nil
+        isContentInstalled = false
         
         // Set app back to accessory mode immediately
         NSApp.setActivationPolicy(.accessory)

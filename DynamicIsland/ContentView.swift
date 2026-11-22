@@ -2861,22 +2861,19 @@ private func musicMeasureText(_ text: String, font: MusicSupplementFont) -> CGFl
 }
 
 private struct NotchAndyView: View {
-    @ObservedObject private var stateManager = AndySystemStateManager.shared
     @Binding var isClosedAndyWingCollapsed: Bool
     let setClosedAndyWingCollapsed: (Bool) -> Void
-    @State private var reloadToken = UUID()
 
     var body: some View {
         VStack(spacing: 12) {
-            AndyNotchWebView(
-                rootURL: AndyNotchResources.rootURL,
-                stateManager: stateManager,
+            AndyFaceView(
+                mode: .expanded,
                 menuActions: AndyNotchWebViewMenuActions(
                     isCollapsed: {
                         isClosedAndyWingCollapsed
                     },
                     reload: {
-                        reloadToken = UUID()
+                        AndyPetEngine.shared.reload()
                     },
                     showInNotch: {
                         setClosedAndyWingCollapsed(false)
@@ -2886,7 +2883,6 @@ private struct NotchAndyView: View {
                     }
                 )
             )
-                .id(reloadToken)
                 .frame(width: 300, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .background(
@@ -2902,13 +2898,10 @@ private struct NotchAndyView: View {
 
 struct ClosedAndyWing: View {
     let size: CGFloat
-    @ObservedObject private var stateManager = AndySystemStateManager.shared
 
     var body: some View {
-        AndyNotchWebView(rootURL: AndyNotchResources.rootURL, stateManager: stateManager)
-            .frame(width: 128, height: 80)
-            .scaleEffect(max(size / 80 * 0.93, 0.01))
-            .frame(width: size, height: size)
+        AndyFaceView(mode: .wing)
+            .frame(width: max(size, 1), height: max(size, 1))
             .clipShape(RoundedRectangle(cornerRadius: max(size / 2, 1), style: .continuous))
             .background(
                 RoundedRectangle(cornerRadius: max(size / 2, 1), style: .continuous)
